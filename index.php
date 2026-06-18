@@ -73,17 +73,21 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 
 <!-- Dashboard Hero -->
 <div class="dash-hero mb-4">
+  <div class="hero-gold-line"></div>
   <div class="row align-items-center" style="position:relative;z-index:1">
     <div class="col">
-      <div class="greet"><?= $greet ?> 👋</div>
+      <div class="greet"><?= $greet ?>, welcome back</div>
       <div class="title"><?= Helper::sanitize($cu['name']) ?></div>
       <div class="subtitle">
-        <?= date('l, d F Y') ?> &nbsp;·&nbsp;
-        <?= Helper::sanitize($cu['branch_name'] ?? 'All Branches') ?>
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-top:-2px;opacity:.55"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        &nbsp;<?= date('l, d F Y') ?> &nbsp;·&nbsp;
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-top:-2px;opacity:.55"><path d="M3 21l18 0"/><path d="M3 7l9-4 9 4"/><path d="M4 21V8.5l8-4 8 4V21"/></svg>
+        &nbsp;<?= Helper::sanitize($cu['branch_name'] ?? 'All Branches') ?>
       </div>
     </div>
     <div class="col-auto d-flex gap-2 flex-wrap">
-      <a href="<?= BASE_URL ?>/modules/bookings/index.php" class="btn btn-sm" style="background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.25);border-radius:8px;font-weight:600;font-size:.8rem;">
+      <a href="<?= BASE_URL ?>/modules/bookings/index.php" class="btn btn-sm" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.9);border:1.5px solid rgba(255,255,255,.22);border-radius:8px;font-weight:600;font-size:.8rem;backdrop-filter:blur(4px);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="me-1"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/></svg>
         All Bookings
       </a>
       <a href="<?= BASE_URL ?>/modules/bookings/create.php" class="btn btn-vp-gold btn-sm">
