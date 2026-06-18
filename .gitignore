@@ -1,0 +1,9 @@
+/tmp/
+/uploads/*
+!/uploads/.gitkeep
+*.log
+.env
+config/config.php
+vendor/
+node_modules/
+*.DS_Store
