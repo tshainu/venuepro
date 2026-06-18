@@ -6,11 +6,12 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_mysql mysqli mbstring zip gd \
     && apt-get clean
 
-# Fix MPM conflict: disable event, enable prefork (must happen after PHP install)
-RUN a2dismod mpm_event || true \
-    && a2dismod mpm_worker || true \
-    && a2enmod mpm_prefork \
-    && a2enmod rewrite
+# Fix MPM conflict: forcefully remove all MPM configs, enable only prefork
+RUN cd /etc/apache2/mods-enabled && \
+    rm -f mpm_event.conf mpm_event.load mpm_worker.conf mpm_worker.load && \
+    ln -sf ../mods-available/mpm_prefork.conf mpm_prefork.conf && \
+    ln -sf ../mods-available/mpm_prefork.load mpm_prefork.load && \
+    a2enmod rewrite
 
 # Copy app
 COPY . /var/www/html/
