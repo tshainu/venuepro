@@ -12,6 +12,8 @@ class Database {
         ];
         try {
             $this->pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+            // Disable ONLY_FULL_GROUP_BY for compatibility
+            $this->pdo->exec("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))");
         } catch (PDOException $e) {
             die('Database connection failed: ' . $e->getMessage());
         }
