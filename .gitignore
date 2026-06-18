@@ -3,7 +3,7 @@
 !/uploads/.gitkeep
 *.log
 .env
-config/config.php
+# config/config.php — included for Railway (reads env vars)
 vendor/
 node_modules/
 *.DS_Store
