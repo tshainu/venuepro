@@ -1,9 +1,15 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
-Auth::check();
-$db = Database::getInstance();
 
 header('Content-Type: application/json');
+
+if (!Auth::isLoggedIn()) {
+    http_response_code(401);
+    echo json_encode(['conflict'=>false,'error'=>'Session expired.']);
+    exit;
+}
+
+$db = Database::getInstance();
 
 $hall_id    = (int)($_GET['hall_id'] ?? 0);
 $date       = trim($_GET['date'] ?? '');

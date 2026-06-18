@@ -1,10 +1,17 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
-Auth::check();
-$db = Database::getInstance();
-$cu = Auth::currentUser();
 
 header('Content-Type: application/json');
+
+// JSON-safe auth check — never redirect AJAX requests
+if (!Auth::isLoggedIn()) {
+    http_response_code(401);
+    echo json_encode(['success'=>false,'error'=>'Session expired. Please refresh the page.']);
+    exit;
+}
+
+$db = Database::getInstance();
+$cu = Auth::currentUser();
 
 $input = json_decode(file_get_contents('php://input'), true);
 if (!$input) { echo json_encode(['success'=>false,'error'=>'Invalid request.']); exit; }

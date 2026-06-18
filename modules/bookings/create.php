@@ -874,41 +874,50 @@ function openNewCustomerModal() {
   modal.show();
 }
 
-function saveNewCustomer() {
-  var name   = document.getElementById('nc_name').value.trim();
-  var mobile = document.getElementById('nc_mobile').value.trim();
+async function saveNewCustomer() {
   var errDiv = document.getElementById('modal-errors');
   errDiv.innerHTML = '';
-
+  var name   = document.getElementById('nc_name').value.trim();
+  var mobile = document.getElementById('nc_mobile').value.trim();
   if (!name)   { errDiv.innerHTML = '<div class="alert alert-danger py-2">Name is required.</div>'; return; }
   if (!mobile) { errDiv.innerHTML = '<div class="alert alert-danger py-2">Mobile is required.</div>'; return; }
 
   var btn = event.target;
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
-
-  fetch('<?= BASE_URL ?>/modules/customers/create_ajax.php', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      name:     name,
-      mobile:   mobile,
-      mobile2:  document.getElementById('nc_mobile2').value.trim(),
-      email:    document.getElementById('nc_email').value.trim(),
-      nic:      document.getElementById('nc_nic').value.trim(),
-      city:     document.getElementById('nc_city').value.trim(),
-      address:  document.getElementById('nc_address').value.trim(),
-      bride_name: document.getElementById('nc_bride').value.trim(),
-      groom_name: document.getElementById('nc_groom').value.trim(),
-      notes:    document.getElementById('nc_notes').value.trim(),
-    })
-  })
-  .then(r=>r.json())
-  .then(data=>{
+  var resetBtn = () => {
     btn.disabled = false;
-    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg> Save Customer';
+    btn.innerHTML = 'Save Customer';
+  };
+
+  try {
+    var resp = await fetch('<?= BASE_URL ?>/modules/customers/create_ajax.php', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name, mobile,
+        mobile2:    document.getElementById('nc_mobile2').value.trim(),
+        email:      document.getElementById('nc_email').value.trim(),
+        nic:        document.getElementById('nc_nic').value.trim(),
+        city:       document.getElementById('nc_city').value.trim(),
+        address:    document.getElementById('nc_address').value.trim(),
+        bride_name: document.getElementById('nc_bride').value.trim(),
+        groom_name: document.getElementById('nc_groom').value.trim(),
+        notes:      document.getElementById('nc_notes').value.trim(),
+      })
+    });
+
+    var text = await resp.text();
+    var data;
+    try { data = JSON.parse(text); }
+    catch(e) {
+      resetBtn();
+      errDiv.innerHTML = '<div class="alert alert-danger py-2">Server error. Response: ' + text.substring(0,200) + '</div>';
+      return;
+    }
+
+    resetBtn();
     if (data.success) {
-      // Add to dropdown and select
       var sel = document.getElementById('customer_select');
       var opt = new Option(data.name + ' · ' + data.mobile, data.id, true, true);
       opt.dataset.phone = data.mobile;
@@ -920,13 +929,14 @@ function saveNewCustomer() {
       showCustomerPreview(sel);
       bootstrap.Modal.getInstance(document.getElementById('newCustomerModal')).hide();
     } else {
-      errDiv.innerHTML = '<div class="alert alert-danger py-2">' + (data.error||'Error saving customer.') + '</div>';
+      errDiv.innerHTML = '<div class="alert alert-danger py-2">' + (data.error || 'Failed to save customer.') + '</div>';
     }
-  })
-  .catch(()=>{
-    btn.disabled = false;
-    errDiv.innerHTML = '<div class="alert alert-danger py-2">Network error. Please try again.</div>';
-  });
+
+  } catch(err) {
+    resetBtn();
+    errDiv.innerHTML = '<div class="alert alert-danger py-2">Request failed: ' + err.message + '</div>';
+    console.error('saveNewCustomer:', err);
+  }
 }
 </script>
 
