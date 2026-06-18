@@ -1,11 +1,11 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::hasRole(['super_admin','hall_manager'])) { Helper::flash('error',Lang::t('access_denied')); Helper::redirect(BASE_URL.'/modules/packages/index.php'); }
+if (!Auth::hasRole(['super_admin','hall_manager'])) { Helper::flash('error',Lang::t('access_denied')); Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=packages' : BASE_URL.'/modules/packages/index.php'); }
 $db = Database::getInstance();
 $id = (int)($_GET['id'] ?? 0);
 $pkg = $db->fetchOne("SELECT * FROM packages WHERE id=?", [$id]);
-if (!$pkg) { Helper::flash('error','Not found.'); Helper::redirect(BASE_URL.'/modules/packages/index.php'); }
+if (!$pkg) { Helper::flash('error','Not found.'); Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=packages' : BASE_URL.'/modules/packages/index.php'); }
 $existing_items = $db->fetchAll("SELECT * FROM package_items WHERE package_id=?", [$id]);
 $branches = $db->fetchAll("SELECT id,name FROM branches WHERE is_active=1");
 $errors = [];
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($iname) $db->insert("INSERT INTO package_items (package_id,item_name,quantity) VALUES (?,?,?)", [$id,$iname,$qty]);
         }
         Helper::flash('success','Package updated.');
-        Helper::redirect(BASE_URL.'/modules/packages/index.php');
+        Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=packages' : BASE_URL.'/modules/packages/index.php');
     }
 }
 
@@ -34,7 +34,7 @@ require_once __DIR__ . '/../../includes/header.php';
 <div class="page-header"><div class="row"><div class="col"><h1 class="vp-page-title">Edit Package</h1></div></div></div>
 <div class="card vp-card"><div class="card-body">
   <?php if ($errors): foreach ($errors as $e): ?><div class="alert alert-danger"><?= Helper::sanitize($e) ?></div><?php endforeach; endif; ?>
-  <form method="POST">
+  <form method="POST" id="mainForm">
     <div class="row g-3">
       <div class="col-md-6"><label class="form-label">Package Name *</label>
         <input type="text" name="name" class="form-control" required value="<?= htmlspecialchars($_POST['name'] ?? $pkg['name']) ?>"></div>

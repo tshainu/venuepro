@@ -1,22 +1,18 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::isSuperAdmin()) { Helper::flash('error','Super Admin only.'); Helper::redirect(BASE_URL.'/index.php'); }
 $db = Database::getInstance();
 $cu = Auth::currentUser();
 
 $branches = $db->fetchAll("SELECT id,name FROM branches WHERE is_active=1");
 $sel_branch = (int)($_GET['branch_id'] ?? ($cu['branch_id'] ?? $branches[0]['id'] ?? 1));
+$active_tab = $_GET['tab'] ?? 'general';
 
-// Load all settings for selected branch
-$settings_rows = $db->fetchAll("SELECT setting_key, setting_value FROM settings WHERE branch_id=? OR branch_id IS NULL", [$sel_branch]);
-$settings = [];
-foreach ($settings_rows as $s) $settings[$s['setting_key']] = $s['setting_value'];
-
-$errors = [];
+$errors  = [];
 $success = false;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save_settings') {
+    if (!Auth::isSuperAdmin()) { Helper::flash('error','Super Admin only.'); Helper::redirect(BASE_URL.'/modules/settings/index.php'); }
     $data = $_POST['settings'] ?? [];
     foreach ($data as $key => $val) {
         $key = preg_replace('/[^a-z0-9_]/','',$key);
@@ -29,101 +25,389 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     Helper::flash('success','Settings saved.');
-    Helper::redirect(BASE_URL.'/modules/settings/index.php?branch_id='.$sel_branch);
+    Helper::redirect(BASE_URL.'/modules/settings/index.php?branch_id='.$sel_branch.'&tab=general');
 }
 
-$pageTitle = 'Settings';
+// Load settings
+$settings_rows = $db->fetchAll("SELECT setting_key, setting_value FROM settings WHERE branch_id=? OR branch_id IS NULL", [$sel_branch]);
+$settings = [];
+foreach ($settings_rows as $s) $settings[$s['setting_key']] = $s['setting_value'];
+
+// Load halls, rooms, packages
+$bid = $cu['branch_id'];
+$halls    = $db->fetchAll("SELECT h.*, b.name as branch_name FROM halls h LEFT JOIN branches b ON h.branch_id=b.id WHERE 1 ".($bid?"AND h.branch_id=?":"")." ORDER BY h.name", $bid?[$bid]:[]);
+$rooms    = $db->fetchAll("SELECT r.*, rt.name as type_name, b.name as branch_name FROM rooms r LEFT JOIN room_types rt ON r.room_type_id=rt.id LEFT JOIN branches b ON r.branch_id=b.id WHERE 1 ".($bid?"AND r.branch_id=?":"")." ORDER BY r.room_number", $bid?[$bid]:[]);
+$packages = $db->fetchAll("SELECT p.*, b.name as branch_name FROM packages p LEFT JOIN branches b ON p.branch_id=b.id WHERE 1 ".($bid?"AND p.branch_id=?":"")." ORDER BY p.name", $bid?[$bid]:[]);
+
+$pageTitle   = 'Settings';
 $breadcrumbs = [['label'=>'Settings']];
 require_once ROOT_PATH . '/includes/header.php';
 ?>
+
+<style>
+.settings-tabs .nav-link { color: var(--vp-navy); font-weight: 600; font-size: .85rem; padding: .55rem 1.1rem; border-radius: 10px; transition: all .2s; }
+.settings-tabs .nav-link:hover { background: rgba(30,42,74,.07); }
+.settings-tabs .nav-link.active { background: var(--vp-navy); color: #fff !important; }
+.settings-tabs .nav-link .tab-icon { font-size: 1rem; margin-right: .4rem; }
+.settings-tabs { background: #fff; border-radius: 14px; padding: .5rem; border: 1px solid #e8eaf0; box-shadow: 0 2px 8px rgba(30,42,74,.06); margin-bottom: 1.5rem; }
+.tab-pane { animation: fadeInUp .18s ease; }
+@keyframes fadeInUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.settings-card { border-radius: 14px; border: 1px solid #e8eaf0; box-shadow: 0 2px 8px rgba(30,42,74,.06); margin-bottom: 1.2rem; }
+.settings-card .card-header { background: linear-gradient(135deg,#f8f9fb,#fff); border-bottom: 1px solid #e8eaf0; border-radius: 14px 14px 0 0; padding: 1rem 1.4rem; }
+.settings-card .card-header h3 { font-size: .9rem; font-weight: 700; color: var(--vp-navy); margin: 0; }
+.vp-item-row { display: flex; align-items: center; padding: .75rem 1.1rem; border-bottom: 1px solid #f0f2f5; gap: .75rem; transition: background .15s; }
+.vp-item-row:last-child { border-bottom: none; }
+.vp-item-row:hover { background: #f8f9fb; }
+.vp-item-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.vp-item-info { flex: 1; min-width: 0; }
+.vp-item-name { font-weight: 700; font-size: .88rem; color: var(--vp-navy); }
+.vp-item-meta { font-size: .75rem; color: #9ca3af; margin-top: 1px; }
+.vp-item-price { font-weight: 700; font-size: .9rem; color: var(--vp-gold); white-space: nowrap; }
+.vp-item-actions { display: flex; gap: .4rem; }
+.tab-add-btn { display: flex; align-items: center; gap: .4rem; font-weight: 700; font-size: .83rem; }
+.empty-tab { text-align: center; padding: 2.5rem 1rem; color: #9ca3af; }
+.empty-tab .empty-tab-icon { font-size: 2.2rem; margin-bottom: .5rem; }
+.empty-tab .empty-tab-text { font-size: .88rem; }
+</style>
+
 <div class="vp-page-header d-print-none">
-  <div class="d-flex align-items-center justify-content-between">
-    <h1 class="vp-page-title"><?= Lang::t('settings') ?></h1>
+  <div class="d-flex align-items-center justify-content-between w-100">
+    <div>
+      <h1 class="vp-page-title">Settings</h1>
+      <div class="vp-page-sub">Manage your venue configuration</div>
+    </div>
     <?php if (count($branches) > 1): ?>
-    <form method="get" class="d-flex gap-2">
-      <select name="branch_id" class="form-select" style="max-width:200px;" onchange="this.form.submit()">
-        <?php foreach ($branches as $b): ?><option value="<?= $b['id'] ?>" <?= $sel_branch==$b['id']?'selected':'' ?>><?= Helper::sanitize($b['name']) ?></option><?php endforeach; ?>
+    <form method="get" class="d-flex gap-2 align-items-center">
+      <input type="hidden" name="tab" value="<?= htmlspecialchars($active_tab) ?>">
+      <select name="branch_id" class="form-select form-select-sm" style="max-width:180px;" onchange="this.form.submit()">
+        <?php foreach ($branches as $b): ?>
+        <option value="<?= $b['id'] ?>" <?= $sel_branch==$b['id']?'selected':'' ?>><?= Helper::sanitize($b['name']) ?></option>
+        <?php endforeach; ?>
       </select>
     </form>
     <?php endif; ?>
   </div>
 </div>
 
-<form method="post">
-<div class="row">
-  <div class="col-lg-8">
+<!-- Tab Nav -->
+<ul class="nav settings-tabs mb-0 flex-row flex-wrap gap-1" id="settingsTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link <?= $active_tab==='general'?'active':'' ?>" data-bs-toggle="tab" data-bs-target="#tab-general" type="button" role="tab">
+      <span class="tab-icon">⚙️</span> General
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link <?= $active_tab==='halls'?'active':'' ?>" data-bs-toggle="tab" data-bs-target="#tab-halls" type="button" role="tab">
+      <span class="tab-icon">🏛️</span> Halls
+      <span class="badge bg-secondary ms-1" style="font-size:.68rem;"><?= count($halls) ?></span>
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link <?= $active_tab==='rooms'?'active':'' ?>" data-bs-toggle="tab" data-bs-target="#tab-rooms" type="button" role="tab">
+      <span class="tab-icon">🛏️</span> Rooms
+      <span class="badge bg-secondary ms-1" style="font-size:.68rem;"><?= count($rooms) ?></span>
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link <?= $active_tab==='packages'?'active':'' ?>" data-bs-toggle="tab" data-bs-target="#tab-packages" type="button" role="tab">
+      <span class="tab-icon">📦</span> Packages
+      <span class="badge bg-secondary ms-1" style="font-size:.68rem;"><?= count($packages) ?></span>
+    </button>
+  </li>
+</ul>
 
-    <!-- Company Info -->
-    <div class="card vp-card mb-3">
-      <div class="card-header"><h3 class="card-title">Company Information</h3></div>
-      <div class="card-body">
-        <div class="mb-3"><label class="form-label">Company Name</label><input type="text" name="settings[company_name]" class="form-control" value="<?= Helper::sanitize($settings['company_name']??APP_NAME) ?>"></div>
-        <div class="mb-3"><label class="form-label">Tagline</label><input type="text" name="settings[company_tagline]" class="form-control" value="<?= Helper::sanitize($settings['company_tagline']??'') ?>" placeholder="e.g. Your Dream Wedding, Our Expertise"></div>
-        <div class="mb-3"><label class="form-label">Address</label><textarea name="settings[company_address]" class="form-control" rows="2"><?= Helper::sanitize($settings['company_address']??'') ?></textarea></div>
-        <div class="row mb-3">
-          <div class="col-md-6"><label class="form-label">Phone</label><input type="text" name="settings[company_phone]" class="form-control" value="<?= Helper::sanitize($settings['company_phone']??'') ?>"></div>
-          <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="settings[company_email]" class="form-control" value="<?= Helper::sanitize($settings['company_email']??'') ?>"></div>
-        </div>
-        <div class="mb-3"><label class="form-label">Website</label><input type="text" name="settings[company_website]" class="form-control" value="<?= Helper::sanitize($settings['company_website']??'') ?>" placeholder="https://"></div>
-      </div>
-    </div>
+<div class="tab-content mt-0" id="settingsTabContent">
 
-    <!-- Invoice / Quotation -->
-    <div class="card vp-card mb-3">
-      <div class="card-header"><h3 class="card-title">Invoice &amp; Quotation</h3></div>
-      <div class="card-body">
-        <div class="mb-3"><label class="form-label">Invoice Terms &amp; Conditions</label><textarea name="settings[invoice_terms]" class="form-control" rows="3"><?= Helper::sanitize($settings['invoice_terms']??'') ?></textarea></div>
-        <div class="mb-3"><label class="form-label">Quotation Terms &amp; Conditions</label><textarea name="settings[quotation_terms]" class="form-control" rows="3"><?= Helper::sanitize($settings['quotation_terms']??'') ?></textarea></div>
-        <div class="row mb-3">
-          <div class="col-md-6"><label class="form-label">Default Tax % (VAT/NBT)</label><input type="number" name="settings[default_tax_percent]" class="form-control" step="0.01" min="0" max="100" value="<?= $settings['default_tax_percent']??'0' ?>"></div>
-          <div class="col-md-6"><label class="form-label">Invoice Due Days</label><input type="number" name="settings[invoice_due_days]" class="form-control" min="0" value="<?= $settings['invoice_due_days']??'7' ?>"></div>
-        </div>
-      </div>
-    </div>
+  <!-- ===== TAB: GENERAL ===== -->
+  <div class="tab-pane fade <?= $active_tab==='general'?'show active':'' ?>" id="tab-general" role="tabpanel">
+    <form method="post">
+      <input type="hidden" name="_action" value="save_settings">
+      <div class="row">
+        <div class="col-lg-8">
 
-    <!-- Bank Details -->
-    <div class="card vp-card mb-3">
-      <div class="card-header"><h3 class="card-title">Bank Details (for Invoices)</h3></div>
-      <div class="card-body">
-        <div class="row mb-3">
-          <div class="col-md-6"><label class="form-label">Bank Name</label><input type="text" name="settings[bank_name]" class="form-control" value="<?= Helper::sanitize($settings['bank_name']??'') ?>"></div>
-          <div class="col-md-6"><label class="form-label">Account Name</label><input type="text" name="settings[bank_account_name]" class="form-control" value="<?= Helper::sanitize($settings['bank_account_name']??'') ?>"></div>
-        </div>
-        <div class="row mb-3">
-          <div class="col-md-6"><label class="form-label">Account Number</label><input type="text" name="settings[bank_account_number]" class="form-control" value="<?= Helper::sanitize($settings['bank_account_number']??'') ?>"></div>
-          <div class="col-md-6"><label class="form-label">Branch</label><input type="text" name="settings[bank_branch]" class="form-control" value="<?= Helper::sanitize($settings['bank_branch']??'') ?>"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Notifications -->
-    <div class="card vp-card mb-3">
-      <div class="card-header"><h3 class="card-title">System</h3></div>
-      <div class="card-body">
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label class="form-label">Currency Symbol</label>
-            <input type="text" name="settings[currency_symbol]" class="form-control" value="<?= Helper::sanitize($settings['currency_symbol']??'Rs.') ?>">
+          <div class="card settings-card">
+            <div class="card-header"><h3>🏢 Company Information</h3></div>
+            <div class="card-body p-4">
+              <div class="mb-3"><label class="form-label">Company Name</label>
+                <input type="text" name="settings[company_name]" class="form-control" value="<?= Helper::sanitize($settings['company_name']??APP_NAME) ?>"></div>
+              <div class="mb-3"><label class="form-label">Tagline</label>
+                <input type="text" name="settings[company_tagline]" class="form-control" value="<?= Helper::sanitize($settings['company_tagline']??'') ?>" placeholder="Your Dream Wedding, Our Expertise"></div>
+              <div class="mb-3"><label class="form-label">Address</label>
+                <textarea name="settings[company_address]" class="form-control" rows="2"><?= Helper::sanitize($settings['company_address']??'') ?></textarea></div>
+              <div class="row mb-3">
+                <div class="col-md-6"><label class="form-label">Phone</label>
+                  <input type="text" name="settings[company_phone]" class="form-control" value="<?= Helper::sanitize($settings['company_phone']??'') ?>"></div>
+                <div class="col-md-6"><label class="form-label">Email</label>
+                  <input type="email" name="settings[company_email]" class="form-control" value="<?= Helper::sanitize($settings['company_email']??'') ?>"></div>
+              </div>
+              <div class="mb-0"><label class="form-label">Website</label>
+                <input type="text" name="settings[company_website]" class="form-control" value="<?= Helper::sanitize($settings['company_website']??'') ?>" placeholder="https://"></div>
+            </div>
           </div>
-          <div class="col-md-6">
-            <label class="form-label">Date Format</label>
-            <select name="settings[date_format]" class="form-select">
-              <option value="d M Y" <?= ($settings['date_format']??'d M Y')==='d M Y'?'selected':'' ?>>25 Jun 2026</option>
-              <option value="d/m/Y" <?= ($settings['date_format']??'')==='d/m/Y'?'selected':'' ?>>25/06/2026</option>
-              <option value="Y-m-d" <?= ($settings['date_format']??'')==='Y-m-d'?'selected':'' ?>>2026-06-25</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
 
+          <div class="card settings-card">
+            <div class="card-header"><h3>🧾 Invoice &amp; Quotation</h3></div>
+            <div class="card-body p-4">
+              <div class="mb-3"><label class="form-label">Invoice Terms &amp; Conditions</label>
+                <textarea name="settings[invoice_terms]" class="form-control" rows="3"><?= Helper::sanitize($settings['invoice_terms']??'') ?></textarea></div>
+              <div class="mb-3"><label class="form-label">Quotation Terms &amp; Conditions</label>
+                <textarea name="settings[quotation_terms]" class="form-control" rows="3"><?= Helper::sanitize($settings['quotation_terms']??'') ?></textarea></div>
+              <div class="row mb-0">
+                <div class="col-md-6"><label class="form-label">Default Tax % (VAT/NBT)</label>
+                  <input type="number" name="settings[default_tax_percent]" class="form-control" step="0.01" min="0" max="100" value="<?= $settings['default_tax_percent']??'0' ?>"></div>
+                <div class="col-md-6"><label class="form-label">Invoice Due Days</label>
+                  <input type="number" name="settings[invoice_due_days]" class="form-control" min="0" value="<?= $settings['invoice_due_days']??'7' ?>"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card settings-card">
+            <div class="card-header"><h3>🏦 Bank Details (for Invoices)</h3></div>
+            <div class="card-body p-4">
+              <div class="row mb-3">
+                <div class="col-md-6"><label class="form-label">Bank Name</label>
+                  <input type="text" name="settings[bank_name]" class="form-control" value="<?= Helper::sanitize($settings['bank_name']??'') ?>"></div>
+                <div class="col-md-6"><label class="form-label">Account Name</label>
+                  <input type="text" name="settings[bank_account_name]" class="form-control" value="<?= Helper::sanitize($settings['bank_account_name']??'') ?>"></div>
+              </div>
+              <div class="row mb-0">
+                <div class="col-md-6"><label class="form-label">Account Number</label>
+                  <input type="text" name="settings[bank_account_number]" class="form-control" value="<?= Helper::sanitize($settings['bank_account_number']??'') ?>"></div>
+                <div class="col-md-6"><label class="form-label">Branch</label>
+                  <input type="text" name="settings[bank_branch]" class="form-control" value="<?= Helper::sanitize($settings['bank_branch']??'') ?>"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card settings-card">
+            <div class="card-header"><h3>🌐 System</h3></div>
+            <div class="card-body p-4">
+              <div class="row mb-0">
+                <div class="col-md-6"><label class="form-label">Currency Symbol</label>
+                  <input type="text" name="settings[currency_symbol]" class="form-control" value="<?= Helper::sanitize($settings['currency_symbol']??'Rs.') ?>"></div>
+                <div class="col-md-6"><label class="form-label">Date Format</label>
+                  <select name="settings[date_format]" class="form-select">
+                    <option value="d M Y" <?= ($settings['date_format']??'d M Y')==='d M Y'?'selected':'' ?>>25 Jun 2026</option>
+                    <option value="d/m/Y" <?= ($settings['date_format']??'')==='d/m/Y'?'selected':'' ?>>25/06/2026</option>
+                    <option value="Y-m-d" <?= ($settings['date_format']??'')==='Y-m-d'?'selected':'' ?>>2026-06-25</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /col -->
+      </div><!-- /row -->
+
+      <div class="sticky-footer d-print-none" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e8e8;padding:12px 24px;z-index:100">
+        <button type="submit" class="btn btn-vp-gold">Save Settings</button>
+        <a href="<?= BASE_URL ?>/index.php" class="btn btn-ghost-secondary ms-2">Cancel</a>
+      </div>
+      <div style="height:70px"></div>
+    </form>
   </div>
-</div>
 
-<div class="sticky-footer d-print-none" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e8e8;padding:12px 24px;z-index:100">
-  <button type="submit" class="btn btn-vp-gold">Save Settings</button>
-  <a href="<?= BASE_URL ?>/index.php" class="btn btn-ghost-secondary ms-2">Cancel</a>
-</div>
-<div style="height:70px"></div>
-</form>
+  <!-- ===== TAB: HALLS ===== -->
+  <div class="tab-pane fade <?= $active_tab==='halls'?'show active':'' ?>" id="tab-halls" role="tabpanel">
+    <div class="card settings-card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h3>🏛️ Halls</h3>
+        <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+        <a href="<?= BASE_URL ?>/modules/halls/create.php?return=settings" class="btn btn-vp-gold btn-sm tab-add-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add Hall
+        </a>
+        <?php endif; ?>
+      </div>
+      <?php if ($halls): ?>
+      <div class="card-body p-0">
+        <?php foreach ($halls as $h): ?>
+        <div class="vp-item-row">
+          <div class="vp-item-icon" style="background:<?= $h['is_active']?'rgba(30,42,74,.08)':'rgba(200,200,200,.15)' ?>;">
+            <?php if ($h['image']): ?>
+              <img src="<?= BASE_URL ?>/uploads/halls/<?= $h['image'] ?>" style="width:38px;height:38px;object-fit:cover;border-radius:10px;" alt="">
+            <?php else: ?>
+              🏛️
+            <?php endif; ?>
+          </div>
+          <div class="vp-item-info">
+            <div class="vp-item-name"><?= Helper::sanitize($h['name']) ?>
+              <?php if (!$h['is_active']): ?><span class="badge bg-secondary ms-1" style="font-size:.65rem;">Inactive</span><?php endif; ?>
+            </div>
+            <div class="vp-item-meta">
+              <?= Helper::sanitize($h['branch_name']) ?> &nbsp;·&nbsp;
+              <?= number_format($h['capacity']) ?> guests &nbsp;·&nbsp;
+              <?= $h['facilities'] ? Helper::sanitize(substr($h['facilities'],0,40)).(strlen($h['facilities'])>40?'…':'') : 'No facilities listed' ?>
+            </div>
+          </div>
+          <div class="vp-item-price"><?= Helper::formatCurrency($h['price_per_day']) ?><span style="font-size:.7rem;font-weight:400;color:#9ca3af;">/day</span></div>
+          <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+          <div class="vp-item-actions">
+            <a href="<?= BASE_URL ?>/modules/halls/edit.php?id=<?= $h['id'] ?>&return=settings" class="btn btn-vp-primary btn-sm">Edit</a>
+            <a href="<?= BASE_URL ?>/modules/halls/delete.php?id=<?= $h['id'] ?>&return=settings" class="btn btn-vp-danger btn-sm" onclick="return confirm('Delete <?= addslashes($h['name']) ?>?')">Delete</a>
+          </div>
+          <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <?php else: ?>
+      <div class="card-body">
+        <div class="empty-tab">
+          <div class="empty-tab-icon">🏛️</div>
+          <div class="empty-tab-text">No halls configured yet.</div>
+          <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+          <a href="<?= BASE_URL ?>/modules/halls/create.php?return=settings" class="btn btn-vp-gold btn-sm mt-3 tab-add-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Add your first hall
+          </a>
+          <?php endif; ?>
+        </div>
+      </div>
+      <?php endif; ?>
+    </div>
+  </div>
+
+  <!-- ===== TAB: ROOMS ===== -->
+  <div class="tab-pane fade <?= $active_tab==='rooms'?'show active':'' ?>" id="tab-rooms" role="tabpanel">
+    <div class="card settings-card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h3>🛏️ Rooms</h3>
+        <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+        <a href="<?= BASE_URL ?>/modules/rooms/create.php?return=settings" class="btn btn-vp-gold btn-sm tab-add-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add Room
+        </a>
+        <?php endif; ?>
+      </div>
+      <?php if ($rooms): ?>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-vcenter vp-table mb-0">
+            <thead>
+              <tr>
+                <th style="padding-left:1.1rem;">Room No</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Capacity</th>
+                <th>Rate / Night</th>
+                <th>Status</th>
+                <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?><th></th><?php endif; ?>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($rooms as $r): ?>
+              <tr>
+                <td style="padding-left:1.1rem;"><span class="fw-700 text-vp-navy"><?= Helper::sanitize($r['room_number']) ?></span></td>
+                <td><?= Helper::sanitize($r['name']) ?></td>
+                <td><?= Helper::sanitize($r['type_name'] ?? '—') ?></td>
+                <td><?= $r['capacity'] ?> pax</td>
+                <td class="fw-600"><?= Helper::formatCurrency($r['rate_per_night']) ?></td>
+                <td><?= Helper::statusBadge($r['status']) ?></td>
+                <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+                <td>
+                  <div class="d-flex gap-1">
+                    <a href="<?= BASE_URL ?>/modules/rooms/edit.php?id=<?= $r['id'] ?>&return=settings" class="btn btn-vp-primary btn-sm">Edit</a>
+                    <a href="<?= BASE_URL ?>/modules/rooms/delete.php?id=<?= $r['id'] ?>&return=settings" class="btn btn-vp-danger btn-sm" onclick="return confirm('Delete this room?')">Delete</a>
+                  </div>
+                </td>
+                <?php endif; ?>
+              </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <?php else: ?>
+      <div class="card-body">
+        <div class="empty-tab">
+          <div class="empty-tab-icon">🛏️</div>
+          <div class="empty-tab-text">No rooms configured yet.</div>
+          <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+          <a href="<?= BASE_URL ?>/modules/rooms/create.php?return=settings" class="btn btn-vp-gold btn-sm mt-3 tab-add-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Add your first room
+          </a>
+          <?php endif; ?>
+        </div>
+      </div>
+      <?php endif; ?>
+    </div>
+  </div>
+
+  <!-- ===== TAB: PACKAGES ===== -->
+  <div class="tab-pane fade <?= $active_tab==='packages'?'show active':'' ?>" id="tab-packages" role="tabpanel">
+    <div class="card settings-card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h3>📦 Packages</h3>
+        <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+        <a href="<?= BASE_URL ?>/modules/packages/create.php?return=settings" class="btn btn-vp-gold btn-sm tab-add-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add Package
+        </a>
+        <?php endif; ?>
+      </div>
+      <?php if ($packages): ?>
+      <div class="card-body p-0">
+        <?php foreach ($packages as $p):
+          $items = $db->fetchAll("SELECT * FROM package_items WHERE package_id=?", [$p['id']]);
+        ?>
+        <div class="vp-item-row align-items-start">
+          <div class="vp-item-icon" style="background:rgba(30,42,74,.08);margin-top:2px;">📦</div>
+          <div class="vp-item-info">
+            <div class="vp-item-name"><?= Helper::sanitize($p['name']) ?></div>
+            <div class="vp-item-meta mb-1">
+              <?= Helper::sanitize($p['branch_name'] ?? 'All Branches') ?>
+              <?php if ($p['description']): ?> &nbsp;·&nbsp; <?= Helper::sanitize(substr($p['description'],0,50)) ?><?php endif; ?>
+            </div>
+            <?php if ($items): ?>
+            <div class="d-flex flex-wrap gap-1">
+              <?php foreach ($items as $it): ?>
+              <span class="badge" style="background:#f0f2f5;color:#4b5563;font-weight:500;font-size:.7rem;border-radius:6px;padding:.2rem .55rem;">
+                <?= Helper::sanitize($it['item_name']) ?><?= $it['quantity']>1?' ×'.$it['quantity']:'' ?>
+              </span>
+              <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+          </div>
+          <div class="vp-item-price ms-2"><?= Helper::formatCurrency($p['price']) ?></div>
+          <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+          <div class="vp-item-actions">
+            <a href="<?= BASE_URL ?>/modules/packages/edit.php?id=<?= $p['id'] ?>&return=settings" class="btn btn-vp-primary btn-sm">Edit</a>
+            <a href="<?= BASE_URL ?>/modules/packages/delete.php?id=<?= $p['id'] ?>&return=settings" class="btn btn-vp-danger btn-sm" onclick="return confirm('Delete <?= addslashes($p['name']) ?>?')">Delete</a>
+          </div>
+          <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <?php else: ?>
+      <div class="card-body">
+        <div class="empty-tab">
+          <div class="empty-tab-icon">📦</div>
+          <div class="empty-tab-text">No packages created yet.</div>
+          <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+          <a href="<?= BASE_URL ?>/modules/packages/create.php?return=settings" class="btn btn-vp-gold btn-sm mt-3 tab-add-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Add your first package
+          </a>
+          <?php endif; ?>
+        </div>
+      </div>
+      <?php endif; ?>
+    </div>
+  </div>
+
+</div><!-- /tab-content -->
+
+<script>
+// Persist active tab in URL without reload
+document.querySelectorAll('#settingsTabs button[data-bs-toggle="tab"]').forEach(btn => {
+  btn.addEventListener('shown.bs.tab', e => {
+    const tab = e.target.getAttribute('data-bs-target').replace('#tab-','');
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tab);
+    window.history.replaceState({}, '', url);
+  });
+});
+</script>
+
 <?php require_once ROOT_PATH . '/includes/footer.php'; ?>

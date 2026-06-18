@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             [$branch_id, $name, $description, $capacity, $price, $facilities, $image, $is_active]
         );
         Helper::flash('success', 'Hall added successfully.');
-        Helper::redirect(BASE_URL . '/modules/halls/index.php');
+        Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=halls' : BASE_URL.'/modules/halls/index.php');
     }
 }
 
@@ -53,7 +53,7 @@ require_once __DIR__ . '/../../includes/header.php';
     <?php if ($errors): foreach ($errors as $e): ?>
     <div class="alert alert-danger"><?= Helper::sanitize($e) ?></div>
     <?php endforeach; endif; ?>
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" id="mainForm" enctype="multipart/form-data">
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label">Hall Name *</label>
@@ -98,7 +98,7 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
         <div class="col-12">
           <button type="submit" class="btn btn-primary me-2">Save Hall</button>
-          <a href="<?= BASE_URL ?>/modules/halls/index.php" class="btn btn-vp-primary">Cancel</a>
+          <a href="<?= ($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=halls' : BASE_URL.'/modules/halls/index.php' ?>">Cancel</a>
         </div>
       </div>
     </form>

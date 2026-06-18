@@ -6,4 +6,4 @@ $db = Database::getInstance();
 $id = (int)($_GET['id'] ?? 0);
 $db->execute("DELETE FROM halls WHERE id=?", [$id]);
 Helper::flash('success', 'Hall deleted.');
-Helper::redirect(BASE_URL . '/modules/halls/index.php');
+Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=halls' : BASE_URL.'/modules/halls/index.php');

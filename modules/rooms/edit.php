@@ -1,11 +1,11 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::hasRole(['super_admin','hall_manager'])) { Helper::flash('error', Lang::t('access_denied')); Helper::redirect(BASE_URL.'/modules/rooms/index.php'); }
+if (!Auth::hasRole(['super_admin','hall_manager'])) { Helper::flash('error', Lang::t('access_denied')); Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=rooms' : BASE_URL.'/modules/rooms/index.php'); }
 $db = Database::getInstance();
 $id = (int)($_GET['id'] ?? 0);
 $room = $db->fetchOne("SELECT * FROM rooms WHERE id=?", [$id]);
-if (!$room) { Helper::flash('error', 'Room not found.'); Helper::redirect(BASE_URL.'/modules/rooms/index.php'); }
+if (!$room) { Helper::flash('error', 'Room not found.'); Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=rooms' : BASE_URL.'/modules/rooms/index.php'); }
 $branches   = $db->fetchAll("SELECT id,name FROM branches WHERE is_active=1");
 $room_types = $db->fetchAll("SELECT id,name FROM room_types ORDER BY name");
 $errors = [];
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             [$branch_id, $room_type_id ?: null, $room_number, $name, $capacity, $rate, $description, $status, $is_active, $id]
         );
         Helper::flash('success', 'Room updated.');
-        Helper::redirect(BASE_URL.'/modules/rooms/index.php');
+        Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=rooms' : BASE_URL.'/modules/rooms/index.php');
     }
 }
 
@@ -38,7 +38,7 @@ require_once __DIR__ . '/../../includes/header.php';
 <div class="page-header"><div class="row"><div class="col"><h1 class="vp-page-title">Edit Room</h1></div></div></div>
 <div class="card vp-card"><div class="card-body">
   <?php if ($errors): foreach ($errors as $e): ?><div class="alert alert-danger"><?= Helper::sanitize($e) ?></div><?php endforeach; endif; ?>
-  <form method="POST">
+  <form method="POST" id="mainForm">
     <div class="row g-3">
       <div class="col-md-4"><label class="form-label">Room Number *</label>
         <input type="text" name="room_number" class="form-control" required value="<?= htmlspecialchars($_POST['room_number'] ?? $room['room_number']) ?>"></div>
