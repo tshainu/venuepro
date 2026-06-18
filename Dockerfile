@@ -5,8 +5,10 @@ RUN apt-get update && apt-get install -y \
     libpng-dev libjpeg-dev libfreetype6-dev libzip-dev libonig-dev \
     && docker-php-ext-install pdo pdo_mysql mysqli mbstring zip gd
 
-# Enable mod_rewrite
-RUN a2enmod rewrite
+# Fix MPM conflict — disable event, enable prefork
+RUN a2dismod mpm_event 2>/dev/null || true \
+    && a2enmod mpm_prefork \
+    && a2enmod rewrite
 
 # Copy app
 COPY . /var/www/html/
