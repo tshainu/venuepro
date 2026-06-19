@@ -228,7 +228,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 .vp-qa {
   display:flex; flex-direction:column; align-items:center; gap:.5rem;
   padding:1.1rem .5rem; border-radius:14px;
-  border:1.5px solid #edf0f8; background:#fff;
+  border:2.5px solid #edf0f8; background:#fff;
   text-decoration:none; color:#374151;
   font-size:.72rem; font-weight:700; text-align:center;
   transition:all .2s; box-shadow:0 1px 4px rgba(12,26,53,.05);
@@ -473,8 +473,8 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   ];
   foreach ($actions as $a):
   ?>
-  <a href="<?= $a['href'] ?>" class="vp-qa" style="border-color:<?= $a['border'] ?>22;">
-    <div class="vp-qa-icon" style="background:<?= $a['bg'] ?>;border:1.5px solid <?= $a['border'] ?>33;"><?= $a['icon'] ?></div>
+  <a href="<?= $a['href'] ?>" class="vp-qa" style="border-color:<?= $a['border'] ?>cc;">
+    <div class="vp-qa-icon" style="background:<?= $a['bg'] ?>;border:2px solid <?= $a['border'] ?>88;"><?= $a['icon'] ?></div>
     <span><?= $a['label'] ?></span>
   </a>
   <?php endforeach; ?>
