@@ -7,6 +7,10 @@ $cu = Auth::currentUser();
 $booking_id = (int)($_GET['booking_id'] ?? 0);
 $booking = null;
 $prefill_items = [];
+
+// Prefill from modal
+$prefill_customer = (int)($_GET['prefill_customer'] ?? 0);
+$prefill_valid    = trim($_GET['prefill_valid'] ?? '');
 if ($booking_id) {
     $booking = $db->fetchOne(
         "SELECT b.*, c.name as customer_name, h.name as hall_name, p.name as package_name, p.price as package_price
@@ -88,7 +92,7 @@ require_once ROOT_PATH . '/includes/header.php';
             <select name="customer_id" class="form-select" required>
               <option value="">— Select —</option>
               <?php foreach ($customers as $c): ?>
-              <option value="<?= $c['id'] ?>" <?= (($booking['customer_id']??$_POST['customer_id']??'')==$c['id'])?'selected':'' ?>><?= Helper::sanitize($c['name']) ?> (<?= Helper::sanitize($c['phone']) ?>)</option>
+              <option value="<?= $c['id'] ?>" <?= (($booking['customer_id']??$_POST['customer_id']??$prefill_customer)==$c['id'])?'selected':'' ?>><?= Helper::sanitize($c['name']) ?> (<?= Helper::sanitize($c['phone']) ?>)</option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -105,7 +109,7 @@ require_once ROOT_PATH . '/includes/header.php';
         <div class="row mb-3">
           <div class="col-md-4">
             <label class="form-label">Valid Until</label>
-            <input type="date" name="valid_until" class="form-control" value="<?= $_POST['valid_until']??date('Y-m-d',strtotime('+7 days')) ?>">
+            <input type="date" name="valid_until" class="form-control" value="<?= $_POST['valid_until']??($prefill_valid?:date('Y-m-d',strtotime('+7 days'))) ?>">
           </div>
           <div class="col-md-4">
             <label class="form-label">Status</label>

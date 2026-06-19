@@ -14,7 +14,7 @@
           <div class="col-12 col-lg-auto mt-3 mt-lg-0">
             <ul class="list-inline list-inline-dots mb-0">
               <li class="list-inline-item">
-                <span class="text-muted">&copy; <?= date('Y') ?> VenuePro Lanka. All rights reserved.</span>
+                <span class="text-muted">&copy; <?= date('Y') ?> VenuePro — AxisXNOR (PVT) Ltd. All rights reserved.</span>
               </li>
             </ul>
           </div>

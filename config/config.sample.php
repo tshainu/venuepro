@@ -1,7 +1,7 @@
 <?php
 // VenuePro Lanka - Configuration
 // Copy this to config.php and fill in your values
-define('APP_NAME', 'VenuePro Lanka');
+define('APP_NAME', 'VenuePro');
 define('APP_VERSION', '1.0.0');
 
 // Dynamic BASE_URL — auto-detects from request host

@@ -1,6 +1,6 @@
 <?php return [
     // General
-    'app_name'          => 'VenuePro Lanka',
+    'app_name'          => 'VenuePro',
     'dashboard'         => 'Dashboard',
     'calendar'          => 'Calendar',
     'bookings'          => 'Bookings',

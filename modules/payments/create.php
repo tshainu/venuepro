@@ -6,7 +6,14 @@ $cu = Auth::currentUser();
 
 $booking_id = (int)($_GET['booking_id'] ?? 0);
 $invoice_id = (int)($_GET['invoice_id'] ?? 0);
-$booking = null; $invoice = null; $prefill_customer = null;
+$booking = null; $invoice = null;
+
+// Prefill from modal
+$prefill_customer = (int)($_GET['prefill_customer'] ?? 0);
+$prefill_amount   = (float)($_GET['prefill_amount']   ?? 0);
+$prefill_date     = trim($_GET['prefill_date']   ?? '');
+$prefill_method   = trim($_GET['prefill_method'] ?? 'cash');
+$prefill_ref      = trim($_GET['prefill_ref']    ?? '');
 
 if ($booking_id) {
     $booking = $db->fetchOne("SELECT b.*,c.name as customer_name FROM bookings b LEFT JOIN customers c ON b.customer_id=c.id WHERE b.id=?", [$booking_id]);
@@ -100,13 +107,13 @@ require_once ROOT_PATH . '/includes/header.php';
             <select name="customer_id" class="form-select" required>
               <option value="">— Select —</option>
               <?php foreach ($customers as $c): ?>
-              <option value="<?= $c['id'] ?>" <?= (($booking['customer_id']??$invoice['customer_id']??$_POST['customer_id']??'')==$c['id'])?'selected':'' ?>><?= Helper::sanitize($c['name']) ?> (<?= Helper::sanitize($c['phone']) ?>)</option>
+              <option value="<?= $c['id'] ?>" <?= (($booking['customer_id']??$invoice['customer_id']??$_POST['customer_id']??$prefill_customer)==$c['id'])?'selected':'' ?>><?= Helper::sanitize($c['name']) ?> (<?= Helper::sanitize($c['phone']) ?>)</option>
               <?php endforeach; ?>
             </select>
           </div>
           <div class="col-md-6">
             <label class="form-label required">Payment Date</label>
-            <input type="date" name="payment_date" class="form-control" value="<?= $_POST['payment_date']??date('Y-m-d') ?>" required>
+            <input type="date" name="payment_date" class="form-control" value="<?= $_POST['payment_date']??($prefill_date?:date('Y-m-d')) ?>" required>
           </div>
         </div>
 
@@ -114,13 +121,13 @@ require_once ROOT_PATH . '/includes/header.php';
           <div class="col-md-6">
             <label class="form-label required">Amount (Rs.)</label>
             <input type="number" name="amount" class="form-control" step="0.01" min="0.01"
-              value="<?= $_POST['amount']??($invoice['balance']??($booking['balance_amount']??'')) ?>" required>
+              value="<?= $_POST['amount']??($invoice['balance']??($booking['balance_amount']??($prefill_amount?:''))) ?>" required>
           </div>
           <div class="col-md-6">
             <label class="form-label required">Payment Method</label>
             <select name="payment_method" class="form-select" id="pay_method">
               <?php foreach (['cash'=>'Cash','bank_transfer'=>'Bank Transfer','card'=>'Card','cheque'=>'Cheque','online'=>'Online'] as $k=>$v): ?>
-              <option value="<?= $k ?>" <?= ($_POST['payment_method']??'cash')===$k?'selected':'' ?>><?= $v ?></option>
+              <option value="<?= $k ?>" <?= ($_POST['payment_method']??$prefill_method??'cash')===$k?'selected':'' ?>><?= $v ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -134,14 +141,14 @@ require_once ROOT_PATH . '/includes/header.php';
             </div>
             <div class="col-md-6">
               <label class="form-label">Reference / Cheque #</label>
-              <input type="text" name="reference_number" class="form-control" value="<?= Helper::sanitize($_POST['reference_number']??'') ?>">
+              <input type="text" name="reference_number" class="form-control" value="<?= Helper::sanitize($_POST['reference_number']??$prefill_ref??'') ?>">
             </div>
           </div>
         </div>
         <div id="card-fields" style="display:none">
           <div class="mb-3">
             <label class="form-label">Transaction Reference</label>
-            <input type="text" name="reference_number" class="form-control" value="<?= Helper::sanitize($_POST['reference_number']??'') ?>">
+            <input type="text" name="reference_number" class="form-control" value="<?= Helper::sanitize($_POST['reference_number']??$prefill_ref??'') ?>">
           </div>
         </div>
 

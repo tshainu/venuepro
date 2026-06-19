@@ -220,12 +220,19 @@
   .vp-topbar-right { display:flex; align-items:center; gap:.75rem; flex-shrink:0; }
 
   .vp-topbar-branch {
-    display: flex; align-items: center; gap: .4rem;
-    background: #f6f8fd; border: 1.5px solid #e2e8f4;
-    border-radius: 20px; padding: .3rem .85rem;
-    font-size: .73rem; font-weight: 700; color: #0c1a35;
+    display: flex; align-items: center; gap: .5rem;
+    background: linear-gradient(135deg,#0c1a35,#1a3060);
+    border: none;
+    border-radius: 24px; padding: .42rem 1.1rem .42rem .75rem;
+    font-size: .8rem; font-weight: 700; color: #fff;
+    letter-spacing: .01em;
+    box-shadow: 0 2px 10px rgba(12,26,53,.25);
   }
-  .vp-topbar-branch svg { width:13px; height:13px; stroke:#c9a84c; }
+  .vp-topbar-branch .branch-company {
+    color: #c9a84c; font-size: .68rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  }
+  .vp-topbar-branch .branch-sep { color: rgba(255,255,255,.3); }
+  .vp-topbar-branch svg { width:15px; height:15px; stroke:#c9a84c; flex-shrink:0; }
 
   .vp-topbar-user {
     display: flex; align-items: center; gap: .55rem;
@@ -281,7 +288,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
     <a href="<?= BASE_URL ?>/index.php" class="sb-logo">
       <div class="sb-logo-icon">🏛️</div>
       <div class="sb-logo-text">
-        <span class="sb-logo-name">VenuePro Lanka</span>
+        <span class="sb-logo-name">VenuePro</span>
         <span class="sb-logo-sub">Event Management</span>
       </div>
     </a>
@@ -511,7 +518,10 @@ function sbActive(string $path, string $match, bool $exact = false): string {
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 21h18M3 7l9-4 9 4M4 21V7.5L12 4l8 3.5V21"/>
           </svg>
-          <?= Helper::sanitize($cu['branch_name'] ?? 'All Branches') ?>
+          <div>
+            <div class="branch-company">VenuePro</div>
+            <div><?= Helper::sanitize($cu['branch_name'] ?? 'All Branches') ?></div>
+          </div>
         </div>
 
         <!-- User dropdown -->

@@ -1,5 +1,5 @@
 <?php
-define('APP_NAME', 'VenuePro Lanka');
+define('APP_NAME', 'VenuePro');
 define('APP_VERSION', '1.0.0');
 
 // Dynamic BASE_URL — respects Railway/nginx X-Forwarded-Proto

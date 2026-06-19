@@ -400,7 +400,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 </div>
 
 <!-- ═══════ KPI CARDS ═══════ -->
-<div class="row g-3 mb-4" style="margin-top:1.75rem;">
+<div class="row g-3 mb-4" style="margin-top:.875rem;">
   <div class="col-6 col-lg-3">
     <a href="<?= BASE_URL ?>/modules/bookings/index.php" class="vp-kpi vp-kpi-navy">
       <div class="vp-kpi-icon">
@@ -464,17 +464,17 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 <div class="vp-qa-grid mb-4">
   <?php
   $actions = [
-    ['href' => BASE_URL.'/modules/bookings/create.php',   'icon' => '📋', 'bg' => '#eff6ff', 'label' => 'New Booking'],
-    ['href' => BASE_URL.'/modules/customers/create.php',  'icon' => '👤', 'bg' => '#f0fdf4', 'label' => 'Add Customer'],
-    ['href' => BASE_URL.'/modules/quotations/create.php', 'icon' => '📄', 'bg' => '#fefce8', 'label' => 'Quotation'],
-    ['href' => BASE_URL.'/modules/invoices/create.php',   'icon' => '🧾', 'bg' => '#fff7ed', 'label' => 'Invoice'],
-    ['href' => BASE_URL.'/modules/payments/create.php',   'icon' => '💳', 'bg' => '#fdf4ff', 'label' => 'Payment'],
-    ['href' => BASE_URL.'/modules/reports/index.php',     'icon' => '📊', 'bg' => '#f0fdfa', 'label' => 'Reports'],
+    ['href' => BASE_URL.'/modules/bookings/create.php',   'icon' => '📋', 'bg' => '#eff6ff', 'border' => '#3b82f6', 'label' => 'New Booking'],
+    ['href' => BASE_URL.'/modules/customers/create.php',  'icon' => '👤', 'bg' => '#f0fdf4', 'border' => '#10b981', 'label' => 'Add Customer'],
+    ['href' => BASE_URL.'/modules/quotations/create.php', 'icon' => '📄', 'bg' => '#fefce8', 'border' => '#f59e0b', 'label' => 'Quotation'],
+    ['href' => BASE_URL.'/modules/invoices/create.php',   'icon' => '🧾', 'bg' => '#fff7ed', 'border' => '#f97316', 'label' => 'Invoice'],
+    ['href' => BASE_URL.'/modules/payments/create.php',   'icon' => '💳', 'bg' => '#fdf4ff', 'border' => '#a855f7', 'label' => 'Payment'],
+    ['href' => BASE_URL.'/modules/reports/index.php',     'icon' => '📊', 'bg' => '#f0fdfa', 'border' => '#06b6d4', 'label' => 'Reports'],
   ];
   foreach ($actions as $a):
   ?>
-  <a href="<?= $a['href'] ?>" class="vp-qa">
-    <div class="vp-qa-icon" style="background:<?= $a['bg'] ?>"><?= $a['icon'] ?></div>
+  <a href="<?= $a['href'] ?>" class="vp-qa" style="border-color:<?= $a['border'] ?>22;">
+    <div class="vp-qa-icon" style="background:<?= $a['bg'] ?>;border:1.5px solid <?= $a['border'] ?>33;"><?= $a['icon'] ?></div>
     <span><?= $a['label'] ?></span>
   </a>
   <?php endforeach; ?>
@@ -748,10 +748,11 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 
     var opts = {
       chart: {
-        type: 'bar', height: 240, stacked: false,
+        type: 'line', height: 240,
         toolbar: { show: false },
         fontFamily: 'Inter,system-ui,sans-serif',
-        animations: { enabled: true, speed: 400, animateGradually: { enabled: false } }
+        animations: { enabled: true, speed: 500 },
+        dropShadow: { enabled: true, top: 2, left: 0, blur: 4, opacity: 0.08 }
       },
       series: series,
       xaxis: {
@@ -775,18 +776,19 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
         tickAmount: 4
       },
       colors: colors,
-      plotOptions: { bar: { borderRadius: 4, columnWidth: colWidth, dataLabels: { position: 'top' } } },
+      stroke: { curve: 'smooth', width: 2.5 },
+      markers: { size: 3, strokeWidth: 2, hover: { size: 5 } },
+      fill: { type: 'gradient', gradient: { shade: 'light', type: 'vertical', opacityFrom: 0.18, opacityTo: 0.01 } },
       dataLabels: { enabled: false },
       legend: {
         position: 'top', fontSize: '11px', fontWeight: 600,
-        markers: { width: 9, height: 9, radius: 3 },
+        markers: { width: 9, height: 9, radius: 9 },
         itemMargin: { horizontal: 8 }
       },
       grid: { borderColor: '#f1f4fa', strokeDashArray: 4, xaxis: { lines: { show: false } } },
       tooltip: { theme: 'light', shared: true, intersect: false,
         y: { formatter: function(v){ return v + ' bookings'; } }
       },
-      stroke: { show: true, width: 2, colors: ['transparent'] },
     };
 
     if (chartInst) {

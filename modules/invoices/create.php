@@ -6,6 +6,12 @@ $cu = Auth::currentUser();
 
 $booking_id = (int)($_GET['booking_id'] ?? 0);
 $booking = null; $prefill_items = [];
+
+// Prefill from modal
+$prefill_customer = (int)($_GET['prefill_customer'] ?? 0);
+$prefill_type     = trim($_GET['prefill_type'] ?? '');
+$prefill_date     = trim($_GET['prefill_date'] ?? '');
+$prefill_due      = trim($_GET['prefill_due']  ?? '');
 if ($booking_id) {
     $booking = $db->fetchOne(
         "SELECT b.*, c.name as customer_name, h.name as hall_name, p.name as package_name, p.price as package_price
@@ -87,7 +93,7 @@ require_once ROOT_PATH . '/includes/header.php';
             <select name="customer_id" class="form-select" required>
               <option value="">— Select —</option>
               <?php foreach ($customers as $c): ?>
-              <option value="<?= $c['id'] ?>" <?= (($booking['customer_id']??$_POST['customer_id']??'')==$c['id'])?'selected':'' ?>><?= Helper::sanitize($c['name']) ?> (<?= Helper::sanitize($c['phone']) ?>)</option>
+              <option value="<?= $c['id'] ?>" <?= (($booking['customer_id']??$_POST['customer_id']??$prefill_customer)==$c['id'])?'selected':'' ?>><?= Helper::sanitize($c['name']) ?> (<?= Helper::sanitize($c['phone']) ?>)</option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -105,16 +111,16 @@ require_once ROOT_PATH . '/includes/header.php';
           <div class="col-md-3">
             <label class="form-label">Type</label>
             <select name="invoice_type" class="form-select">
-              <?php foreach (['advance','interim','final'] as $t): ?><option value="<?= $t ?>" <?= ($_POST['invoice_type']??'advance')===$t?'selected':'' ?>><?= ucfirst($t) ?></option><?php endforeach; ?>
+              <?php foreach (['advance','interim','final'] as $t): ?><option value="<?= $t ?>" <?= ($_POST['invoice_type']??$prefill_type??'advance')===$t?'selected':'' ?>><?= ucfirst($t) ?></option><?php endforeach; ?>
             </select>
           </div>
           <div class="col-md-3">
             <label class="form-label required">Invoice Date</label>
-            <input type="date" name="invoice_date" class="form-control" value="<?= $_POST['invoice_date']??date('Y-m-d') ?>" required>
+            <input type="date" name="invoice_date" class="form-control" value="<?= $_POST['invoice_date']??($prefill_date?:date('Y-m-d')) ?>" required>
           </div>
           <div class="col-md-3">
             <label class="form-label">Due Date</label>
-            <input type="date" name="due_date" class="form-control" value="<?= $_POST['due_date']??date('Y-m-d',strtotime('+7 days')) ?>">
+            <input type="date" name="due_date" class="form-control" value="<?= $_POST['due_date']??($prefill_due?:date('Y-m-d',strtotime('+7 days'))) ?>">
           </div>
           <div class="col-md-3">
             <label class="form-label">Status</label>

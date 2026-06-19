@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
     <div class="text-center text-secondary mt-3">
-      &copy; <?= date('Y') ?> <?= APP_NAME ?>
+      &copy; <?= date('Y') ?> <?= APP_NAME ?> · AxisXNOR (PVT) Ltd
     </div>
   </div>
 </div>
