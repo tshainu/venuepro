@@ -855,3 +855,4 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+
