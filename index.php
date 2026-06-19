@@ -41,17 +41,19 @@ $todayEvents = $db->fetchOne(
 )['c'] ?? 0;
 
 // ── Charts ───────────────────────────────────────────────────────────────
-// Bookings chart data — grouped by month with status breakdown
-// Fetch raw bookings for the last 12 months (we'll filter client-side via JS)
+// Bookings chart data — fetch daily data for last 12 months (JS handles range filtering)
 $bookingsChartData = $db->fetchAll(
-    "SELECT DATE_FORMAT(event_date,'%Y-%m') as ym,
-            DATE_FORMAT(event_date,'%b %Y') as label,
+    "SELECT DATE_FORMAT(event_date,'%Y-%m-%d') as ymd,
+            DATE_FORMAT(event_date,'%d %b') as day_label,
+            DATE_FORMAT(event_date,'%b %Y') as month_label,
+            DATE_FORMAT(event_date,'%Y-%m') as ym,
             status,
             COUNT(*) as cnt
      FROM bookings b
-     WHERE event_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH) " . ($bid ? "AND b.branch_id=?" : "") . "
-     GROUP BY ym, label, status
-     ORDER BY ym ASC",
+     WHERE event_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+       AND event_date <= DATE_ADD(CURDATE(), INTERVAL 6 MONTH) " . ($bid ? "AND b.branch_id=?" : "") . "
+     GROUP BY ymd, day_label, month_label, ym, status
+     ORDER BY ymd ASC",
     $bid ? [$bid] : []
 );
 $statusData = $db->fetchAll("SELECT status, COUNT(*) as cnt FROM bookings b WHERE 1 $bFilter GROUP BY status");
@@ -657,33 +659,8 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 </style>
 <script>
 (function(){
-  // ── Bookings chart data from PHP ───────────────────────────
+  // ── Bookings chart data from PHP ───────────────────────────────────────
   var rawData = <?= json_encode($bookingsChartData) ?>;
-
-  // Build a map: { 'YYYY-MM': { label, inquiry:0, tentative:0, confirmed:0, completed:0, cancelled:0 } }
-  var monthMap = {};
-  rawData.forEach(function(row) {
-    if (!monthMap[row.ym]) monthMap[row.ym] = { label: row.label, inquiry:0, tentative:0, confirmed:0, completed:0, cancelled:0 };
-    if (monthMap[row.ym][row.status] !== undefined) monthMap[row.ym][row.status] = parseInt(row.cnt);
-  });
-
-  var allMonths = Object.keys(monthMap).sort();
-
-  function getRangeMonths(range) {
-    var now = new Date();
-    var cutoff;
-    if (range === '1m') {
-      cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
-    } else if (range === '3m') {
-      cutoff = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-    } else if (range === '6m') {
-      cutoff = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-    } else { // year
-      cutoff = new Date(now.getFullYear(), 0, 1);
-    }
-    var cutStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth()+1).padStart(2,'0');
-    return allMonths.filter(function(m){ return m >= cutStr; });
-  }
 
   var statusDef = [
     { key:'confirmed',  label:'Confirmed',  color:'#059669' },
@@ -693,44 +670,130 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
     { key:'cancelled',  label:'Cancelled',  color:'#dc2626' },
   ];
 
+  // Build daily map: { 'YYYY-MM-DD': { day_label, month_label, ym, inquiry:0, ... } }
+  var dayMap = {};
+  rawData.forEach(function(row) {
+    if (!dayMap[row.ymd]) dayMap[row.ymd] = { day_label: row.day_label, month_label: row.month_label, ym: row.ym, inquiry:0, tentative:0, confirmed:0, completed:0, cancelled:0 };
+    if (dayMap[row.ymd][row.status] !== undefined) dayMap[row.ymd][row.status] = parseInt(row.cnt);
+  });
+  var allDays = Object.keys(dayMap).sort();
+
+  // Build monthly map: aggregate from day map
+  var monthMap = {};
+  allDays.forEach(function(d) {
+    var ym = dayMap[d].ym;
+    if (!monthMap[ym]) monthMap[ym] = { label: dayMap[d].month_label, inquiry:0, tentative:0, confirmed:0, completed:0, cancelled:0 };
+    statusDef.forEach(function(s){ monthMap[ym][s.key] += dayMap[d][s.key]; });
+  });
+  var allMonths = Object.keys(monthMap).sort();
+
+  function todayStr() {
+    var n = new Date();
+    return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0');
+  }
+  function monthCutStr(monthsBack) {
+    var n = new Date();
+    var y = n.getFullYear(), m = n.getMonth() - monthsBack;
+    while (m < 0) { m += 12; y--; }
+    return y + '-' + String(m+1).padStart(2,'0');
+  }
+
   var chartEl = document.getElementById('chart-bookings');
   var chartInst = null;
 
   function buildChart(range) {
-    var months = getRangeMonths(range);
-    var labels = months.map(function(m){ return monthMap[m] ? monthMap[m].label : m; });
-    var series = statusDef.map(function(s) {
-      return {
-        name: s.label,
-        data: months.map(function(m){ return monthMap[m] ? (monthMap[m][s.key]||0) : 0; })
-      };
-    });
+    var useDaily = (range === '1m' || range === '3m');
+    var labels, series, colWidth, rotateAngle;
+
+    if (useDaily) {
+      // Day-level: filter by date range
+      var cutDate;
+      if (range === '1m') {
+        var n = new Date(); n.setDate(n.getDate() - 30);
+        cutDate = n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0');
+      } else { // 3m
+        var n3 = new Date(); n3.setDate(n3.getDate() - 90);
+        cutDate = n3.getFullYear() + '-' + String(n3.getMonth()+1).padStart(2,'0') + '-' + String(n3.getDate()).padStart(2,'0');
+      }
+      var days = allDays.filter(function(d){ return d >= cutDate; });
+      labels = days.map(function(d){ return dayMap[d].day_label; });
+      series = statusDef.map(function(s){
+        return { name: s.label, data: days.map(function(d){ return dayMap[d][s.key]||0; }) };
+      });
+      colWidth = days.length > 20 ? '70%' : '50%';
+      rotateAngle = days.length > 15 ? -45 : 0;
+    } else {
+      // Month-level
+      var cutMonth = range === '6m' ? monthCutStr(5) : (new Date().getFullYear() + '-01');
+      var months = allMonths.filter(function(m){ return m >= cutMonth; });
+      labels = months.map(function(m){ return monthMap[m] ? monthMap[m].label : m; });
+      series = statusDef.map(function(s){
+        return { name: s.label, data: months.map(function(m){ return monthMap[m] ? monthMap[m][s.key]||0 : 0; }) };
+      });
+      colWidth = '60%';
+      rotateAngle = 0;
+    }
+
     var colors = statusDef.map(function(s){ return s.color; });
 
+    // Show empty state if no data
+    if (!labels.length) {
+      chartEl.innerHTML = '<div style="height:230px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9ca3af;">' +
+        '<div style="font-size:2rem;margin-bottom:.5rem;">📊</div>' +
+        '<div style="font-size:.82rem;font-weight:600;">No booking data for this period</div></div>';
+      return;
+    }
+    chartEl.innerHTML = '';
+
     var opts = {
-      chart: { type:'bar', height:230, stacked:false, toolbar:{show:false},
-               fontFamily:'Inter,system-ui,sans-serif', animations:{enabled:true,speed:500} },
+      chart: {
+        type: 'bar', height: 240, stacked: false,
+        toolbar: { show: false },
+        fontFamily: 'Inter,system-ui,sans-serif',
+        animations: { enabled: true, speed: 400, animateGradually: { enabled: false } }
+      },
       series: series,
-      xaxis:  { categories: labels.length ? labels : ['No data'],
-                labels:{style:{fontSize:'11px',fontWeight:600,colors:'#9ca3af'}, rotate:-30} },
-      yaxis:  { labels:{ formatter:function(v){ return Math.round(v); }, style:{fontSize:'10px',colors:'#9ca3af'} }, min:0, forceNiceScale:true },
+      xaxis: {
+        categories: labels,
+        labels: {
+          style: { fontSize: '10px', fontWeight: 600, colors: '#9ca3af' },
+          rotate: rotateAngle,
+          hideOverlappingLabels: true,
+          trim: false
+        },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+      },
+      yaxis: {
+        labels: {
+          formatter: function(v){ return Number.isInteger(v) ? v : ''; },
+          style: { fontSize: '10px', colors: '#9ca3af' }
+        },
+        min: 0,
+        forceNiceScale: true,
+        tickAmount: 4
+      },
       colors: colors,
-      plotOptions:{ bar:{ borderRadius:4, columnWidth:'55%', dataLabels:{position:'top'} } },
-      dataLabels:{ enabled:false },
-      legend:{ position:'top', fontSize:'11px', fontWeight:600,
-               markers:{width:10,height:10,radius:3},
-               itemMargin:{horizontal:8} },
-      grid:   { borderColor:'#f1f4fa', strokeDashArray:4, padding:{left:0,right:0} },
-      tooltip:{ theme:'light', shared:true, intersect:false },
-      stroke: { show:true, width:2, colors:['transparent'] },
+      plotOptions: { bar: { borderRadius: 4, columnWidth: colWidth, dataLabels: { position: 'top' } } },
+      dataLabels: { enabled: false },
+      legend: {
+        position: 'top', fontSize: '11px', fontWeight: 600,
+        markers: { width: 9, height: 9, radius: 3 },
+        itemMargin: { horizontal: 8 }
+      },
+      grid: { borderColor: '#f1f4fa', strokeDashArray: 4, xaxis: { lines: { show: false } } },
+      tooltip: { theme: 'light', shared: true, intersect: false,
+        y: { formatter: function(v){ return v + ' bookings'; } }
+      },
+      stroke: { show: true, width: 2, colors: ['transparent'] },
     };
 
     if (chartInst) {
-      chartInst.updateOptions(opts, true, true);
-    } else {
-      chartInst = new ApexCharts(chartEl, opts);
-      chartInst.render();
+      chartInst.destroy();
+      chartInst = null;
     }
+    chartInst = new ApexCharts(chartEl, opts);
+    chartInst.render();
   }
 
   buildChart('1m');

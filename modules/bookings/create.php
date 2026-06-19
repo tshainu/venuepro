@@ -138,8 +138,16 @@ require_once ROOT_PATH . '/includes/header.php';
   background:#fff; border-radius:16px;
   border:1px solid #edf0f8;
   box-shadow:0 2px 14px rgba(12,26,53,.07);
-  margin-bottom:1.2rem; overflow:hidden;
+  margin-bottom:1.2rem; overflow:visible;
 }
+/* Tom Select dropdown fix — must not be clipped */
+.ts-wrapper { position:relative; z-index:100; }
+.ts-dropdown { z-index:9999 !important; border-radius:12px !important; border:1.5px solid #e5e7eb !important; box-shadow:0 8px 32px rgba(12,26,53,.14) !important; overflow:hidden; }
+.ts-dropdown .ts-dropdown-content { max-height:240px; }
+.ts-dropdown .option { padding:.45rem .75rem !important; font-size:.82rem; }
+.ts-control { border-radius:9px !important; border:1.5px solid #e5e7eb !important; padding:.55rem .9rem !important; font-size:.83rem !important; min-height:unset !important; }
+.ts-control:focus-within, .ts-wrapper.focus .ts-control { border-color:#c9a84c !important; box-shadow:0 0 0 3px rgba(201,168,76,.12) !important; }
+.ts-wrapper .ts-control input { font-size:.83rem !important; }
 .evt-card-head {
   padding:.95rem 1.4rem; border-bottom:1px solid #f1f4fa;
   display:flex; align-items:center; gap:.7rem;
@@ -895,29 +903,36 @@ recalc();
   var ts = new TomSelect('#customer_select', {
     placeholder: 'Search by name or phone...',
     searchField: ['text'],
-    maxOptions: 200,
+    maxOptions: 300,
     plugins: ['dropdown_input'],
+    dropdownParent: 'body',
     onChange: function(val) {
       var sel = document.getElementById('customer_select');
       showCustomerPreview(sel);
     },
     render: {
       option: function(data, escape) {
-        // data.text is "Name · Phone"
         var parts = data.text.split('·');
         var name  = parts[0] ? parts[0].trim() : data.text;
         var phone = parts[1] ? parts[1].trim() : '';
-        return '<div style="display:flex;align-items:center;gap:.6rem;padding:.35rem .5rem;">' +
-          '<div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#0c1a35,#1a3060);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:800;flex-shrink:0;">' + escape(name.charAt(0).toUpperCase()) + '</div>' +
+        return '<div style="display:flex;align-items:center;gap:.6rem;padding:.4rem .6rem;">' +
+          '<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#0c1a35,#1a3060);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:800;flex-shrink:0;">' + escape(name.charAt(0).toUpperCase()) + '</div>' +
           '<div><div style="font-size:.82rem;font-weight:700;color:#0c1a35;">' + escape(name) + '</div>' +
           (phone ? '<div style="font-size:.7rem;color:#6b7280;">' + escape(phone) + '</div>' : '') +
           '</div></div>';
+      },
+      item: function(data, escape) {
+        var parts = data.text.split('·');
+        var name  = parts[0] ? parts[0].trim() : data.text;
+        var phone = parts[1] ? parts[1].trim() : '';
+        return '<div style="display:flex;align-items:center;gap:.4rem;">' +
+          '<span style="font-size:.82rem;font-weight:700;color:#0c1a35;">' + escape(name) + '</span>' +
+          (phone ? '<span style="font-size:.72rem;color:#6b7280;">· ' + escape(phone) + '</span>' : '') +
+          '</div>';
       }
     }
   });
 
-  // When new customer is added via modal, add to Tom Select too
-  var _origSaveNew = window.saveNewCustomer;
   window._tsInstance = ts;
 })();
 

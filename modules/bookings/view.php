@@ -57,10 +57,13 @@ require_once ROOT_PATH . '/includes/header.php';
     <div class="d-flex gap-2 flex-wrap align-items-center">
       <?= Helper::statusBadge($bk['status']) ?>
       <?php if (!in_array($bk['status'],['completed','cancelled'])): ?>
-      <a href="<?= BASE_URL ?>/modules/bookings/edit.php?id=<?= $id ?>" class="btn btn-vp-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,.3);">Edit</a>
+      <a href="<?= BASE_URL ?>/modules/bookings/edit.php?id=<?= $id ?>" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.35);border-radius:8px;font-weight:600;padding:.42rem .9rem;backdrop-filter:blur(4px);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="me-1"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </a>
       <?php endif; ?>
       <a href="<?= BASE_URL ?>/modules/invoices/create.php?booking_id=<?= $id ?>" class="btn btn-vp-gold btn-sm">+ Invoice</a>
-      <a href="<?= BASE_URL ?>/modules/quotations/create.php?booking_id=<?= $id ?>" class="btn btn-vp-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,.3);">+ Quotation</a>
+      <a href="<?= BASE_URL ?>/modules/quotations/create.php?booking_id=<?= $id ?>" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.35);border-radius:8px;font-weight:600;padding:.42rem .9rem;backdrop-filter:blur(4px);">+ Quotation</a>
       <a href="<?= BASE_URL ?>/modules/payments/create.php?booking_id=<?= $id ?>" class="btn btn-sm" style="background:#059669;color:#fff;border:none;border-radius:8px;font-weight:600;padding:.42rem .9rem;">+ Payment</a>
     </div>
   </div>
