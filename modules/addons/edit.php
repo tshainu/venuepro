@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::hasRole(['super_admin','hall_manager'])) { Helper::flash('error','Access denied.'); Helper::redirect(BASE_URL.'/modules/addons/index.php'); }
+if (!Auth::hasRole(['super_admin','admin','hall_manager'])) { Helper::flash('error','Access denied.'); Helper::redirect(BASE_URL.'/modules/addons/index.php'); }
 $db = Database::getInstance();
 $cu = Auth::currentUser();
 $id = (int)($_GET['id'] ?? 0);

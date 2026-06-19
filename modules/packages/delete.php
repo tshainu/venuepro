@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::hasRole(['super_admin','hall_manager'])) { Helper::flash('error','Access denied.'); Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=packages' : BASE_URL.'/modules/packages/index.php'); }
+if (!Auth::hasRole(['super_admin','admin','hall_manager'])) { Helper::flash('error','Access denied.'); Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=packages' : BASE_URL.'/modules/packages/index.php'); }
 $db = Database::getInstance();
 $id = (int)($_GET['id'] ?? 0);
 $pkg = $db->fetchOne("SELECT * FROM packages WHERE id=?", [$id]);

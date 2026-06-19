@@ -212,7 +212,7 @@ require_once ROOT_PATH . '/includes/header.php';
     <div class="card settings-card">
       <div class="card-header d-flex align-items-center justify-content-between">
         <h3>🏛️ Halls</h3>
-        <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+        <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
         <a href="<?= BASE_URL ?>/modules/halls/create.php?return=settings" class="btn btn-vp-gold btn-sm tab-add-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
           Add Hall
@@ -241,7 +241,7 @@ require_once ROOT_PATH . '/includes/header.php';
             </div>
           </div>
           <div class="vp-item-price"><?= Helper::formatCurrency($h['price_per_day']) ?><span style="font-size:.7rem;font-weight:400;color:#9ca3af;">/day</span></div>
-          <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+          <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
           <div class="vp-item-actions">
             <a href="<?= BASE_URL ?>/modules/halls/edit.php?id=<?= $h['id'] ?>&return=settings" class="btn btn-vp-primary btn-sm">Edit</a>
             <a href="<?= BASE_URL ?>/modules/halls/delete.php?id=<?= $h['id'] ?>&return=settings" class="btn btn-vp-danger btn-sm" onclick="return confirm('Delete <?= addslashes($h['name']) ?>?')">Delete</a>
@@ -255,7 +255,7 @@ require_once ROOT_PATH . '/includes/header.php';
         <div class="empty-tab">
           <div class="empty-tab-icon">🏛️</div>
           <div class="empty-tab-text">No halls configured yet.</div>
-          <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+          <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
           <a href="<?= BASE_URL ?>/modules/halls/create.php?return=settings" class="btn btn-vp-gold btn-sm mt-3 tab-add-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Add your first hall
@@ -272,7 +272,7 @@ require_once ROOT_PATH . '/includes/header.php';
     <div class="card settings-card">
       <div class="card-header d-flex align-items-center justify-content-between">
         <h3>🛏️ Rooms</h3>
-        <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+        <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
         <a href="<?= BASE_URL ?>/modules/rooms/create.php?return=settings" class="btn btn-vp-gold btn-sm tab-add-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
           Add Room
@@ -291,7 +291,7 @@ require_once ROOT_PATH . '/includes/header.php';
                 <th>Capacity</th>
                 <th>Rate / Night</th>
                 <th>Status</th>
-                <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?><th></th><?php endif; ?>
+                <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?><th></th><?php endif; ?>
               </tr>
             </thead>
             <tbody>
@@ -303,7 +303,7 @@ require_once ROOT_PATH . '/includes/header.php';
                 <td><?= $r['capacity'] ?> pax</td>
                 <td class="fw-600"><?= Helper::formatCurrency($r['rate_per_night']) ?></td>
                 <td><?= Helper::statusBadge($r['status']) ?></td>
-                <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+                <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
                 <td>
                   <div class="d-flex gap-1">
                     <a href="<?= BASE_URL ?>/modules/rooms/edit.php?id=<?= $r['id'] ?>&return=settings" class="btn btn-vp-primary btn-sm">Edit</a>
@@ -322,7 +322,7 @@ require_once ROOT_PATH . '/includes/header.php';
         <div class="empty-tab">
           <div class="empty-tab-icon">🛏️</div>
           <div class="empty-tab-text">No rooms configured yet.</div>
-          <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+          <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
           <a href="<?= BASE_URL ?>/modules/rooms/create.php?return=settings" class="btn btn-vp-gold btn-sm mt-3 tab-add-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Add your first room
@@ -339,7 +339,7 @@ require_once ROOT_PATH . '/includes/header.php';
     <div class="card settings-card">
       <div class="card-header d-flex align-items-center justify-content-between">
         <h3>📦 Packages</h3>
-        <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+        <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
         <a href="<?= BASE_URL ?>/modules/packages/create.php?return=settings" class="btn btn-vp-gold btn-sm tab-add-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
           Add Package
@@ -370,7 +370,7 @@ require_once ROOT_PATH . '/includes/header.php';
             <?php endif; ?>
           </div>
           <div class="vp-item-price ms-2"><?= Helper::formatCurrency($p['price']) ?></div>
-          <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+          <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
           <div class="vp-item-actions">
             <a href="<?= BASE_URL ?>/modules/packages/edit.php?id=<?= $p['id'] ?>&return=settings" class="btn btn-vp-primary btn-sm">Edit</a>
             <a href="<?= BASE_URL ?>/modules/packages/delete.php?id=<?= $p['id'] ?>&return=settings" class="btn btn-vp-danger btn-sm" onclick="return confirm('Delete <?= addslashes($p['name']) ?>?')">Delete</a>
@@ -384,7 +384,7 @@ require_once ROOT_PATH . '/includes/header.php';
         <div class="empty-tab">
           <div class="empty-tab-icon">📦</div>
           <div class="empty-tab-text">No packages created yet.</div>
-          <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+          <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
           <a href="<?= BASE_URL ?>/modules/packages/create.php?return=settings" class="btn btn-vp-gold btn-sm mt-3 tab-add-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Add your first package

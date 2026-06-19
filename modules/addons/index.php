@@ -142,7 +142,7 @@ require_once ROOT_PATH . '/includes/header.php';
     <h1 class="vp-page-title">✨ <?= Lang::t('addons') ?></h1>
     <div class="vp-page-sub"><?= $total ?> add-on<?= $total !== 1 ? 's' : '' ?> available</div>
   </div>
-  <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+  <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
   <button type="button" class="btn btn-vp-gold" onclick="openAddonModal()">
     <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
     New Add-on
@@ -205,7 +205,7 @@ $ci = 0;
         <?= $a['is_available'] ? '● Available' : '○ Unavailable' ?>
       </span>
     </div>
-    <?php if (Auth::hasRole(['super_admin','hall_manager'])): ?>
+    <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
     <div class="addon-actions">
       <a href="<?= BASE_URL ?>/modules/addons/edit.php?id=<?= $a['id'] ?>" class="btn btn-vp-primary btn-sm flex-1" style="flex:1;text-align:center;">Edit</a>
       <a href="<?= BASE_URL ?>/modules/addons/delete.php?id=<?= $a['id'] ?>" class="btn btn-vp-danger btn-sm" onclick="return confirm('Delete this add-on?')">
