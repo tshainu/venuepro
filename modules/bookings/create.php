@@ -656,7 +656,7 @@ $evtType = $_POST['event_type'] ?? ($fromInquiry['event_type'] ?? '');
         </div>
       </div>
       <div class="evt-card-body">
-        <textarea name="notes" class="form-control" rows="3" placeholder="Any special requirements, dietary needs, decorations, or important notes about this event..."><?= htmlspecialchars($_POST['notes'] ?: ($fromInquiry['notes'] ?? '')) ?></textarea>
+        <textarea name="notes" class="form-control" rows="3" placeholder="Any special requirements, dietary needs, decorations, or important notes about this event..."><?= htmlspecialchars(($_POST['notes'] ?? '') ?: ($fromInquiry['notes'] ?? '')) ?></textarea>
       </div>
     </div>
 
