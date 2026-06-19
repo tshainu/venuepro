@@ -184,11 +184,12 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 }
 .vp-kpi:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(12,26,53,.15); }
 .vp-kpi-icon {
-  width:50px; height:50px; border-radius:14px;
+  width:72px; height:72px; border-radius:14px;
   display:flex; align-items:center; justify-content:center;
   font-size:1.35rem; margin-bottom:1rem;
-  flex-shrink:0;
+  flex-shrink:0; background:transparent;
 }
+.vp-kpi-icon img { width:72px; height:72px; object-fit:contain; }
 .vp-kpi-val {
   font-size:1.7rem; font-weight:800; color:#0c1a35;
   letter-spacing:-.04em; line-height:1;
@@ -215,10 +216,10 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 .vp-kpi-green::before { background:linear-gradient(180deg,#059669,#34d399); }
 .vp-kpi-red::before   { background:linear-gradient(180deg,#dc2626,#f87171); }
 
-.vp-kpi-navy  .vp-kpi-icon { background:#eef1f8; color:#0c1a35; }
-.vp-kpi-gold  .vp-kpi-icon { background:#fdf5e0; color:#92640c; }
-.vp-kpi-green .vp-kpi-icon { background:#ecfdf5; color:#059669; }
-.vp-kpi-red   .vp-kpi-icon { background:#fef2f2; color:#dc2626; }
+.vp-kpi-navy  .vp-kpi-icon,
+.vp-kpi-gold  .vp-kpi-icon,
+.vp-kpi-green .vp-kpi-icon,
+.vp-kpi-red   .vp-kpi-icon { background:transparent; }
 
 /* ── QUICK ACTIONS ────────────────────────────────── */
 .vp-qa-grid {
@@ -403,7 +404,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   <div class="col-6 col-lg-3">
     <a href="<?= BASE_URL ?>/modules/bookings/index.php" class="vp-kpi vp-kpi-navy">
       <div class="vp-kpi-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg>
+        <img src="<?= BASE_URL ?>/assets/img/icons/kpi-bookings.gif" alt="Bookings">
       </div>
       <div class="vp-kpi-val"><?= number_format($totalBookings) ?></div>
       <div class="vp-kpi-lbl">Total Bookings</div>
@@ -418,7 +419,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   <div class="col-6 col-lg-3">
     <a href="<?= BASE_URL ?>/modules/reports/index.php" class="vp-kpi vp-kpi-gold">
       <div class="vp-kpi-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10l18 0"/><path d="M8 3v3M16 3v3"/></svg>
+        <img src="<?= BASE_URL ?>/assets/img/icons/kpi-revenue.gif" alt="Revenue">
       </div>
       <div class="vp-kpi-val" style="font-size:1.35rem;"><?= Helper::formatCurrency($monthlyRevenue) ?></div>
       <div class="vp-kpi-lbl">Monthly Revenue</div>
@@ -431,7 +432,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   <div class="col-6 col-lg-3">
     <a href="<?= BASE_URL ?>/modules/calendar/index.php" class="vp-kpi vp-kpi-green">
       <div class="vp-kpi-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2z"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
+        <img src="<?= BASE_URL ?>/assets/img/icons/kpi-events.gif" alt="Events">
       </div>
       <div class="vp-kpi-val"><?= number_format($upcomingEvents) ?></div>
       <div class="vp-kpi-lbl">Upcoming Events</div>
@@ -444,7 +445,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   <div class="col-6 col-lg-3">
     <a href="<?= BASE_URL ?>/modules/payments/index.php" class="vp-kpi vp-kpi-red">
       <div class="vp-kpi-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        <img src="<?= BASE_URL ?>/assets/img/icons/kpi-pending.gif" alt="Pending">
       </div>
       <div class="vp-kpi-val" style="font-size:1.35rem;"><?= Helper::formatCurrency($pendingBalance) ?></div>
       <div class="vp-kpi-lbl">Outstanding Balance</div>
