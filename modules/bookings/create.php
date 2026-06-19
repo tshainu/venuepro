@@ -143,7 +143,7 @@ require_once ROOT_PATH . '/includes/header.php';
 }
 /* Tom Select dropdown fix — must not be clipped */
 .ts-wrapper { position:relative; z-index:100; }
-.ts-dropdown { z-index:99999 !important; border-radius:12px !important; border:1.5px solid #e5e7eb !important; box-shadow:0 8px 32px rgba(12,26,53,.14) !important; overflow:hidden; }
+.ts-dropdown { z-index:99999 !important; position:absolute !important; border-radius:12px !important; border:1.5px solid #e5e7eb !important; box-shadow:0 8px 32px rgba(12,26,53,.14) !important; }
 .ts-dropdown .ts-dropdown-content { max-height:240px; }
 .ts-dropdown .option { padding:.45rem .75rem !important; font-size:.82rem; }
 .ts-control { border-radius:9px !important; border:1.5px solid #e5e7eb !important; padding:.55rem .9rem !important; font-size:.83rem !important; min-height:unset !important; }

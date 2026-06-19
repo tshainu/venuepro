@@ -464,17 +464,17 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 <div class="vp-qa-grid mb-4">
   <?php
   $actions = [
-    ['href' => BASE_URL.'/modules/bookings/create.php',   'icon' => '📋', 'bg' => '#eff6ff', 'border' => '#3b82f6', 'label' => 'New Booking'],
-    ['href' => BASE_URL.'/modules/customers/create.php',  'icon' => '👤', 'bg' => '#f0fdf4', 'border' => '#10b981', 'label' => 'Add Customer'],
-    ['href' => BASE_URL.'/modules/quotations/create.php', 'icon' => '📄', 'bg' => '#fefce8', 'border' => '#f59e0b', 'label' => 'Quotation'],
-    ['href' => BASE_URL.'/modules/invoices/create.php',   'icon' => '🧾', 'bg' => '#fff7ed', 'border' => '#f97316', 'label' => 'Invoice'],
-    ['href' => BASE_URL.'/modules/payments/create.php',   'icon' => '💳', 'bg' => '#fdf4ff', 'border' => '#a855f7', 'label' => 'Payment'],
-    ['href' => BASE_URL.'/modules/reports/index.php',     'icon' => '📊', 'bg' => '#f0fdfa', 'border' => '#06b6d4', 'label' => 'Reports'],
+    ['href' => BASE_URL.'/modules/bookings/create.php',   'bg' => '#eff6ff', 'border' => '#3b82f6', 'color' => '#1d4ed8', 'label' => 'New Booking',   'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>'],
+    ['href' => BASE_URL.'/modules/customers/create.php',  'bg' => '#f0fdf4', 'border' => '#10b981', 'color' => '#047857', 'label' => 'Add Customer',  'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>'],
+    ['href' => BASE_URL.'/modules/quotations/create.php', 'bg' => '#fefce8', 'border' => '#f59e0b', 'color' => '#b45309', 'label' => 'Quotation',     'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>'],
+    ['href' => BASE_URL.'/modules/invoices/create.php',   'bg' => '#fff7ed', 'border' => '#f97316', 'color' => '#c2410c', 'label' => 'Invoice',        'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>'],
+    ['href' => BASE_URL.'/modules/payments/create.php',   'bg' => '#fdf4ff', 'border' => '#a855f7', 'color' => '#7e22ce', 'label' => 'Payment',        'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/><path d="M7 15h.01M11 15h2"/></svg>'],
+    ['href' => BASE_URL.'/modules/reports/index.php',     'bg' => '#f0fdfa', 'border' => '#06b6d4', 'color' => '#0e7490', 'label' => 'Reports',        'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>'],
   ];
   foreach ($actions as $a):
   ?>
   <a href="<?= $a['href'] ?>" class="vp-qa" style="border-color:<?= $a['border'] ?>cc;">
-    <div class="vp-qa-icon" style="background:<?= $a['bg'] ?>;border:2px solid <?= $a['border'] ?>88;"><?= $a['icon'] ?></div>
+    <div class="vp-qa-icon" style="background:<?= $a['bg'] ?>;border:2px solid <?= $a['border'] ?>88;color:<?= $a['color'] ?>;"><?= $a['svg'] ?></div>
     <span><?= $a['label'] ?></span>
   </a>
   <?php endforeach; ?>

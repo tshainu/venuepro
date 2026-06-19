@@ -8,8 +8,6 @@ $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name        = trim($_POST['name'] ?? '');
-    $bride_name  = trim($_POST['bride_name'] ?? '');
-    $groom_name  = trim($_POST['groom_name'] ?? '');
     $nic         = trim($_POST['nic'] ?? '');
     $address     = trim($_POST['address'] ?? '');
     $city        = trim($_POST['city'] ?? '');
@@ -24,8 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         $db->insert(
-            "INSERT INTO customers (branch_id,name,bride_name,groom_name,nic,address,city,mobile,mobile2,email,notes,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-            [$branch_id,$name,$bride_name,$groom_name,$nic,$address,$city,$mobile,$mobile2,$email,$notes,$cu['id']]
+            "INSERT INTO customers (branch_id,name,nic,address,city,mobile,mobile2,email,notes,created_by) VALUES (?,?,?,?,?,?,?,?,?,?)",
+            [$branch_id,$name,$nic,$address,$city,$mobile,$mobile2,$email,$notes,$cu['id']]
         );
         Helper::flash('success', 'Customer added successfully.');
         Helper::redirect(BASE_URL.'/modules/customers/index.php');
@@ -191,10 +189,6 @@ require_once __DIR__ . '/../../includes/header.php';
       </div>
       <div class="cust-hero-pill">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg>
-        Wedding Couple Details
-      </div>
-      <div class="cust-hero-pill">
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg>
         Full Booking History
       </div>
     </div>
@@ -306,48 +300,6 @@ require_once __DIR__ . '/../../includes/header.php';
       </div>
     </div>
 
-    <!-- Wedding Details -->
-    <div class="cust-section">
-      <div class="cust-section-head">
-        <div class="cust-section-icon" style="background:#fdf5e0;">💍</div>
-        <div>
-          <div class="cust-section-title">Wedding Details</div>
-          <div class="cust-section-sub">Optional — for wedding & engagement bookings</div>
-        </div>
-        <div class="ms-auto">
-          <span style="background:#fdf5e0;border:1px solid rgba(201,168,76,.3);border-radius:20px;padding:.2rem .75rem;font-size:.68rem;font-weight:700;color:#92640c;">OPTIONAL</span>
-        </div>
-      </div>
-      <div class="cust-section-body">
-        <div class="wedding-section">
-          <div class="wedding-section-title">
-            <span>💍</span> Couple Names
-            <span style="font-weight:500;color:#b08030;font-size:.68rem;text-transform:none;letter-spacing:0;">Pre-fill these for faster booking creation</span>
-          </div>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">👰 Bride's Full Name</label>
-              <div class="input-with-icon">
-                <span class="input-prefix">💍</span>
-                <input type="text" name="bride_name" id="f_bride" class="form-control" placeholder="e.g. Sanduni Perera" value="<?= htmlspecialchars($_POST['bride_name']??'') ?>" oninput="updatePreview()">
-              </div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">🤵 Groom's Full Name</label>
-              <div class="input-with-icon">
-                <span class="input-prefix">💍</span>
-                <input type="text" name="groom_name" id="f_groom" class="form-control" placeholder="e.g. Nuwan Silva" value="<?= htmlspecialchars($_POST['groom_name']??'') ?>" oninput="updatePreview()">
-              </div>
-            </div>
-          </div>
-          <div class="mt-3 p-2" style="background:rgba(201,168,76,.08);border-radius:8px;font-size:.74rem;color:#92640c;display:flex;align-items:center;gap:.5rem;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-            These names will auto-fill when creating a Wedding or Engagement booking for this customer.
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Notes -->
     <div class="cust-section">
       <div class="cust-section-head">
@@ -406,10 +358,6 @@ require_once __DIR__ . '/../../includes/header.php';
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h4M7 13h2"/></svg>
           NIC not set
         </div>
-        <div class="lp-pill empty" id="lp-couple" style="display:none;">
-          <span>💍</span>
-          <span id="lp-couple-text"></span>
-        </div>
       </div>
 
       <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.08);">
@@ -439,9 +387,6 @@ function updatePreview() {
   var email  = document.getElementById('f_email').value.trim();
   var nic    = document.getElementById('f_nic').value.trim();
   var city   = document.getElementById('f_city').value.trim();
-  var bride  = document.getElementById('f_bride').value.trim();
-  var groom  = document.getElementById('f_groom').value.trim();
-
   // Avatar
   var avatarEl = document.getElementById('lp-avatar');
   var nameEl   = document.getElementById('lp-name');
@@ -455,21 +400,10 @@ function updatePreview() {
   setPill('lp-email',  email,  '✉ '+email,   '✉ Email not set');
   setPill('lp-nic',    nic,    '🪪 '+nic,     '🪪 NIC not set');
 
-  // Couple
-  var coupleEl = document.getElementById('lp-couple');
-  var coupleTx = document.getElementById('lp-couple-text');
-  if (bride || groom) {
-    coupleEl.style.display = 'flex';
-    coupleEl.classList.remove('empty');
-    coupleTx.textContent = (bride||'Bride') + ' & ' + (groom||'Groom');
-  } else {
-    coupleEl.style.display = 'none';
-  }
-
   // Checklist
   setCheck('chk-name',   !!name,   'Name ✓', 'Name required');
   setCheck('chk-mobile', !!mobile, 'Mobile ✓','Mobile required');
-  var hasOpt = !!(email || nic || city || bride || groom);
+  var hasOpt = !!(email || nic || city);
   setCheck('chk-opt', hasOpt, 'Optional fields filled', 'Optional fields', true);
 
   // Progress bar
