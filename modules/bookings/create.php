@@ -15,6 +15,23 @@ $errors = [];
 // Pre-fill date from calendar click
 $prefillDate = $_GET['date'] ?? '';
 
+// ── Inquiry → Booking conversion prefill ──────────────────────────────────
+$fromInquiry  = null;
+$inqCustomer  = null; // matched customer row
+if (!empty($_GET['inquiry_id'])) {
+    $fromInquiry = $db->fetchOne(
+        "SELECT i.*, h.name as hall_name FROM inquiries i LEFT JOIN halls h ON h.id=i.hall_id WHERE i.id=?",
+        [(int)$_GET['inquiry_id']]
+    );
+    if ($fromInquiry && $fromInquiry['mobile']) {
+        // Try to match existing customer by mobile
+        $inqCustomer = $db->fetchOne(
+            "SELECT id,name,mobile,email FROM customers WHERE mobile=? LIMIT 1",
+            [$fromInquiry['mobile']]
+        );
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $branch_id      = $cu['branch_id'] ?? (int)($_POST['branch_id'] ?? 1);
     $customer_id    = (int)($_POST['customer_id'] ?? 0);
@@ -72,6 +89,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     [$booking_id,$aid,$adrow['name'],$qty,$adrow['price'],$adrow['tax_percent'],$adrow['price']*$qty]
                 );
             }
+        }
+
+        // Mark source inquiry as converted
+        $inquiry_id_from = (int)($_POST['inquiry_id'] ?? 0);
+        if ($inquiry_id_from) {
+            $db->execute("UPDATE inquiries SET status='converted' WHERE id=?", [$inquiry_id_from]);
         }
 
         Helper::flash('success', "Booking $booking_ref created successfully.");
@@ -299,8 +322,8 @@ require_once ROOT_PATH . '/includes/header.php';
 </style>
 
 <?php
-$prefillDateVal = $prefillDate ?: ($_POST['event_date'] ?? '');
-$evtType = $_POST['event_type'] ?? '';
+$prefillDateVal = $prefillDate ?: ($fromInquiry['event_date'] ?? '') ?: ($_POST['event_date'] ?? '');
+$evtType = $_POST['event_type'] ?? ($fromInquiry['event_type'] ?? '');
 ?>
 
 <!-- Hero -->
@@ -320,6 +343,50 @@ $evtType = $_POST['event_type'] ?? '';
     <?php endif; ?>
   </div>
 </div>
+
+<?php if ($fromInquiry): ?>
+<div class="alert mb-3 d-flex align-items-start gap-3" style="border-radius:14px;background:#fffbeb;border:1.5px solid #f59e0b;padding:1rem 1.2rem;">
+  <div style="font-size:1.4rem;line-height:1;">🔄</div>
+  <div style="flex:1;">
+    <div style="font-weight:700;color:#92400e;font-size:.95rem;margin-bottom:.4rem;">
+      Converting Inquiry <span style="font-family:monospace;"><?= Helper::sanitize($fromInquiry['inquiry_ref']) ?></span> → Booking
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem .8rem;font-size:.83rem;color:#78350f;">
+      <?php if ($fromInquiry['name']): ?>
+      <span>👤 <strong><?= Helper::sanitize($fromInquiry['name']) ?></strong></span>
+      <?php endif; ?>
+      <?php if ($fromInquiry['mobile']): ?>
+      <span>📞 <?= Helper::sanitize($fromInquiry['mobile']) ?></span>
+      <?php endif; ?>
+      <?php if ($fromInquiry['email']): ?>
+      <span>✉️ <?= Helper::sanitize($fromInquiry['email']) ?></span>
+      <?php endif; ?>
+      <?php if ($fromInquiry['event_type']): ?>
+      <span>🎉 <?= Helper::sanitize($fromInquiry['event_type']) ?></span>
+      <?php endif; ?>
+      <?php if ($fromInquiry['event_date']): ?>
+      <span>📅 <?= Helper::formatDate($fromInquiry['event_date']) ?></span>
+      <?php endif; ?>
+      <?php if ($fromInquiry['guest_count']): ?>
+      <span>👥 <?= (int)$fromInquiry['guest_count'] ?> guests</span>
+      <?php endif; ?>
+      <?php if ($fromInquiry['hall_name']): ?>
+      <span>🏛️ <?= Helper::sanitize($fromInquiry['hall_name']) ?></span>
+      <?php endif; ?>
+    </div>
+    <?php if (!$inqCustomer): ?>
+    <div style="margin-top:.5rem;font-size:.8rem;color:#b45309;background:#fef3c7;padding:.35rem .65rem;border-radius:8px;display:inline-block;">
+      ⚠️ No existing customer matched for <strong><?= Helper::sanitize($fromInquiry['mobile']) ?></strong> — please select or create a customer below.
+    </div>
+    <?php else: ?>
+    <div style="margin-top:.5rem;font-size:.8rem;color:#065f46;background:#d1fae5;padding:.35rem .65rem;border-radius:8px;display:inline-block;">
+      ✅ Customer matched: <strong><?= Helper::sanitize($inqCustomer['name']) ?></strong>
+    </div>
+    <?php endif; ?>
+  </div>
+</div>
+<input type="hidden" name="inquiry_id" value="<?= (int)$_GET['inquiry_id'] ?>">
+<?php endif; ?>
 
 <?php if ($errors): ?>
 <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" style="border-radius:12px;">
@@ -421,7 +488,7 @@ $evtType = $_POST['event_type'] ?? '';
             <label class="form-label">Guest Count</label>
             <div class="input-icon-wrap">
               <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-              <input type="number" name="guest_count" class="form-control" min="0" value="<?= intval($_POST['guest_count']??'') ?>" placeholder="e.g. 200">
+              <input type="number" name="guest_count" class="form-control" min="0" value="<?= intval($_POST['guest_count'] ?: ($fromInquiry['guest_count'] ?? '')) ?>" placeholder="e.g. 200">
             </div>
           </div>
         </div>
@@ -461,7 +528,7 @@ $evtType = $_POST['event_type'] ?? '';
             <select name="hall_id" class="form-select" id="hall_select" onchange="checkHallConflict()">
               <option value="">— Select Hall —</option>
               <?php foreach ($halls as $h): ?>
-              <option value="<?= $h['id'] ?>" data-capacity="<?= $h['capacity'] ?>" data-price="<?= $h['price_per_day'] ?>" <?= ($_POST['hall_id']??'')==$h['id']?'selected':'' ?>>
+              <option value="<?= $h['id'] ?>" data-capacity="<?= $h['capacity'] ?>" data-price="<?= $h['price_per_day'] ?>" <?= (($_POST['hall_id'] ?? '') ?: ($fromInquiry['hall_id'] ?? ''))==$h['id']?'selected':'' ?>>
                 <?= Helper::sanitize($h['name']) ?> (cap. <?= number_format($h['capacity']) ?>)
               </option>
               <?php endforeach; ?>
@@ -589,7 +656,7 @@ $evtType = $_POST['event_type'] ?? '';
         </div>
       </div>
       <div class="evt-card-body">
-        <textarea name="notes" class="form-control" rows="3" placeholder="Any special requirements, dietary needs, decorations, or important notes about this event..."><?= htmlspecialchars($_POST['notes']??'') ?></textarea>
+        <textarea name="notes" class="form-control" rows="3" placeholder="Any special requirements, dietary needs, decorations, or important notes about this event..."><?= htmlspecialchars($_POST['notes'] ?: ($fromInquiry['notes'] ?? '')) ?></textarea>
       </div>
     </div>
 
@@ -937,6 +1004,20 @@ recalc();
   });
 
   window._tsInstance = ts;
+
+  // ── Inquiry prefill: auto-select matched customer ──
+  <?php if ($fromInquiry && $inqCustomer): ?>
+  ts.setValue(<?= (int)$inqCustomer['id'] ?>, true);
+  // Trigger preview
+  var sel = document.getElementById('customer_select');
+  showCustomerPreview(sel);
+  <?php endif; ?>
+
+  // ── Inquiry prefill: trigger hall conflict check if hall preselected ──
+  <?php if ($fromInquiry && $fromInquiry['hall_id'] && $fromInquiry['event_date']): ?>
+  checkHallConflict();
+  recalc();
+  <?php endif; ?>
 })();
 
 // ── New Customer Modal ────────────────────────────────────────
