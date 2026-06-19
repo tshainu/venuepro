@@ -2,7 +2,12 @@
 require_once __DIR__ . '/core/bootstrap.php';
 
 if (Auth::isLoggedIn()) {
-    Helper::redirect(BASE_URL . '/index.php');
+    // Redirect super admin to their panel, others to main dashboard
+    if (Auth::hasRole(['super_admin'])) {
+        Helper::redirect(BASE_URL . '/superadmin/');
+    } else {
+        Helper::redirect(BASE_URL . '/index.php');
+    }
 }
 
 $error = '';
@@ -12,7 +17,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = trim($_POST['password'] ?? '');
     $auth = new Auth();
     if ($auth->loginWithUserId($user_id, $email, $password)) {
-        Helper::redirect(BASE_URL . '/index.php');
+        // Route super admin to SA panel
+        if (Auth::hasRole(['super_admin'])) {
+            Helper::redirect(BASE_URL . '/superadmin/');
+        } else {
+            Helper::redirect(BASE_URL . '/index.php');
+        }
     } else {
         $error = 'Invalid User ID, email or password.';
     }
