@@ -464,17 +464,17 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 <div class="vp-qa-grid mb-4">
   <?php
   $actions = [
-    ['href' => BASE_URL.'/modules/bookings/create.php',   'bg' => '#eff6ff', 'border' => '#3b82f6', 'color' => '#1d4ed8', 'label' => 'New Booking',   'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z"/><path d="M16 3v4M8 3v4M4 11h16"/><path d="M9 16l2 2 4-4"/></svg>'],
-    ['href' => BASE_URL.'/modules/customers/create.php',  'bg' => '#f0fdf4', 'border' => '#10b981', 'color' => '#047857', 'label' => 'Add Customer',  'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 11h6m-3-3v6"/></svg>'],
-    ['href' => BASE_URL.'/modules/quotations/create.php', 'bg' => '#fefce8', 'border' => '#f59e0b', 'color' => '#b45309', 'label' => 'Quotation',     'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><rect x="8" y="3" width="12" height="10" rx="2"/><path d="M11 7h6m-6 4h4"/></svg>'],
-    ['href' => BASE_URL.'/modules/invoices/create.php',   'bg' => '#fff7ed', 'border' => '#f97316', 'color' => '#c2410c', 'label' => 'Invoice',        'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a1 1 0 0 1 1 1v16l-3-2-2 2-2-2-2 2-2-2-3 2V4a1 1 0 0 1 1-1z"/><path d="M9 7h6m-6 4h6m-6 4h4"/></svg>'],
-    ['href' => BASE_URL.'/modules/payments/create.php',   'bg' => '#fdf4ff', 'border' => '#a855f7', 'color' => '#7e22ce', 'label' => 'Payment',        'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="7" cy="15" r="1" fill="currentColor"/><path d="M11 15h4"/></svg>'],
-    ['href' => BASE_URL.'/modules/reports/index.php',     'bg' => '#f0fdfa', 'border' => '#06b6d4', 'color' => '#0e7490', 'label' => 'Reports',        'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" rx="1"/><rect x="12" y="8" width="3" height="10" rx="1"/><rect x="17" y="5" width="3" height="13" rx="1"/></svg>'],
+    ['href' => BASE_URL.'/modules/bookings/create.php',   'bg' => '#eff6ff', 'border' => '#3b82f6', 'color' => '#1d4ed8', 'label' => 'New Booking',   'gif' => BASE_URL.'/assets/img/qa-booking.gif'],
+    ['href' => BASE_URL.'/modules/customers/create.php',  'bg' => '#f0fdf4', 'border' => '#10b981', 'color' => '#047857', 'label' => 'Add Customer',  'gif' => BASE_URL.'/assets/img/qa-customer.gif'],
+    ['href' => BASE_URL.'/modules/quotations/create.php', 'bg' => '#fefce8', 'border' => '#f59e0b', 'color' => '#b45309', 'label' => 'Quotation',     'gif' => BASE_URL.'/assets/img/qa-quotation.gif'],
+    ['href' => BASE_URL.'/modules/invoices/create.php',   'bg' => '#fff7ed', 'border' => '#f97316', 'color' => '#c2410c', 'label' => 'Invoice',        'gif' => BASE_URL.'/assets/img/qa-invoice.gif'],
+    ['href' => BASE_URL.'/modules/payments/create.php',   'bg' => '#fdf4ff', 'border' => '#a855f7', 'color' => '#7e22ce', 'label' => 'Payment',        'gif' => BASE_URL.'/assets/img/qa-payment.gif'],
+    ['href' => BASE_URL.'/modules/reports/index.php',     'bg' => '#f0fdfa', 'border' => '#06b6d4', 'color' => '#0e7490', 'label' => 'Reports',        'gif' => BASE_URL.'/assets/img/qa-report.gif'],
   ];
   foreach ($actions as $a):
   ?>
   <a href="<?= $a['href'] ?>" class="vp-qa" style="border-color:<?= $a['border'] ?>cc;">
-    <div class="vp-qa-icon" style="background:<?= $a['bg'] ?>;border:2px solid <?= $a['border'] ?>88;color:<?= $a['color'] ?>;"><?= $a['svg'] ?></div>
+    <div class="vp-qa-icon" style="background:<?= $a['bg'] ?>;border:2px solid <?= $a['border'] ?>88;"><img src="<?= $a['gif'] ?>" alt="<?= $a['label'] ?>" style="width:40px;height:40px;object-fit:contain;"></div>
     <span><?= $a['label'] ?></span>
   </a>
   <?php endforeach; ?>
