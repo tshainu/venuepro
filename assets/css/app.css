@@ -616,3 +616,24 @@ body {
   background: linear-gradient(135deg, var(--vp-navy), var(--vp-navy-3)) !important;
   color: #fff !important; font-weight: 700 !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FILTER / PILL BUTTONS  (reusable across all modules)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.vp-filter-btn {
+  font-size: .75rem; font-weight: 700; padding: .35rem .85rem;
+  border-radius: 20px; border: 1.5px solid #e0e3ee;
+  background: #fff !important; color: var(--vp-navy) !important;
+  cursor: pointer; transition: all .15s;
+}
+.vp-filter-btn:hover,
+.vp-filter-btn.active {
+  background: var(--vp-navy) !important;
+  color: #fff !important;
+  border-color: var(--vp-navy) !important;
+}
+
+/* Prevent Tabler from overriding button active/focus text colour */
+button.active:not(.btn):not(.nav-link):not([class*="tabler"]) {
+  color: inherit;
+}
