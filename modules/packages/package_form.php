@@ -85,8 +85,10 @@ $quickPick = [
 
 /* Quick pick */
 .qp-cats { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.qp-cat-btn { font-size: .75rem; font-weight: 700; padding: .35rem .85rem; border-radius: 20px; border: 1.5px solid #e0e3ee; background: #fff !important; color: var(--vp-navy) !important; cursor: pointer; transition: all .15s; }
-.qp-cat-btn:hover, .qp-cat-btn.active { background: var(--vp-navy) !important; color: #fff !important; border-color: var(--vp-navy) !important; }
+.qp-cat-btn { font-size: .75rem; font-weight: 700; padding: .35rem .85rem; border-radius: 20px; border: 1.5px solid #e0e3ee; background: #ffffff !important; color: #0c1a35 !important; cursor: pointer; transition: all .15s; outline: none !important; box-shadow: none !important; }
+.qp-cat-btn:hover { background: #0c1a35 !important; color: #ffffff !important; border-color: #0c1a35 !important; }
+.qp-cat-btn.active { background: #0c1a35 !important; color: #ffffff !important; border-color: #0c1a35 !important; }
+.qp-cat-btn:active, .qp-cat-btn:focus { background: #0c1a35 !important; color: #ffffff !important; border-color: #0c1a35 !important; }
 .qp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .5rem; }
 .qp-chip { display: flex; align-items: center; gap: .5rem; padding: .5rem .75rem; border-radius: 10px; border: 1.5px solid #e0e3ee; background: #fff; cursor: pointer; font-size: .8rem; font-weight: 600; color: #374151; transition: all .15s; user-select: none; }
 .qp-chip:hover { border-color: var(--vp-gold); background: #fffbf0; color: var(--vp-navy); }

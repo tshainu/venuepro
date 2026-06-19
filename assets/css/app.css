@@ -623,17 +623,19 @@ body {
 .vp-filter-btn {
   font-size: .75rem; font-weight: 700; padding: .35rem .85rem;
   border-radius: 20px; border: 1.5px solid #e0e3ee;
-  background: #fff !important; color: var(--vp-navy) !important;
+  background: #ffffff !important; color: #0c1a35 !important;
   cursor: pointer; transition: all .15s;
+  outline: none !important; box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
 }
-.vp-filter-btn:hover,
-.vp-filter-btn.active {
-  background: var(--vp-navy) !important;
-  color: #fff !important;
-  border-color: var(--vp-navy) !important;
-}
+.vp-filter-btn:hover { background: #0c1a35 !important; color: #ffffff !important; border-color: #0c1a35 !important; }
+.vp-filter-btn.active { background: #0c1a35 !important; color: #ffffff !important; border-color: #0c1a35 !important; }
+.vp-filter-btn:active, .vp-filter-btn:focus { background: #0c1a35 !important; color: #ffffff !important; border-color: #0c1a35 !important; }
 
-/* Prevent Tabler from overriding button active/focus text colour */
-button.active:not(.btn):not(.nav-link):not([class*="tabler"]) {
-  color: inherit;
+/* Prevent Tabler CSS variables from leaking into custom buttons */
+.qp-cat-btn, .vp-filter-btn {
+  --tblr-btn-color: #0c1a35;
+  --tblr-btn-active-color: #ffffff;
+  --tblr-btn-active-bg: #0c1a35;
+  --tblr-btn-active-border-color: #0c1a35;
 }
