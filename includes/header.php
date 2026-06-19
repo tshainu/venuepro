@@ -306,6 +306,16 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Dashboard</span>
       </a>
 
+      <a href="<?= BASE_URL ?>/modules/inquiries/index.php" class="sb-item <?= sbActive($p, '/inquiries') ?>">
+        <div class="sb-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            <path d="M8 10h8M8 14h5"/>
+          </svg>
+        </div>
+        <span class="sb-label">Inquiries</span>
+      </a>
+
       <a href="<?= BASE_URL ?>/modules/calendar/index.php" class="sb-item <?= sbActive($p, '/calendar') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

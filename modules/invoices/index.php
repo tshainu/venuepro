@@ -31,6 +31,24 @@ $invoices = $db->fetchAll(
 $statusStats = $db->fetchAll("SELECT i.status, COUNT(*) as cnt, COALESCE(SUM(i.total),0) as total, COALESCE(SUM(i.balance),0) as balance FROM invoices i WHERE 1 " . ($cu['branch_id'] ? "AND i.branch_id=".(int)$cu['branch_id'] : "") . " GROUP BY i.status");
 $stMap = []; foreach ($statusStats as $s) $stMap[$s['status']] = $s;
 
+// Unpaid bookings (balance > 0, not cancelled, no active unpaid invoice)
+$bk_cond = $cu['branch_id'] ? "AND b.branch_id=".(int)$cu['branch_id'] : "";
+$unpaid_bookings = $db->fetchAll(
+    "SELECT b.id, b.booking_ref, b.event_date, b.event_type, b.final_amount, b.advance_amount, b.balance_amount,
+            c.name as customer_name, h.name as hall_name
+     FROM bookings b
+     LEFT JOIN customers c ON b.customer_id=c.id
+     LEFT JOIN halls h ON b.hall_id=h.id
+     WHERE b.balance_amount > 0
+       AND b.status NOT IN ('cancelled')
+       AND NOT EXISTS (
+           SELECT 1 FROM invoices i
+           WHERE i.booking_id=b.id AND i.status NOT IN ('cancelled')
+       )
+       $bk_cond
+     ORDER BY b.event_date ASC LIMIT 50"
+);
+
 $customers = $db->fetchAll("SELECT id,name FROM customers ORDER BY name");
 $branches  = $db->fetchAll("SELECT id,name FROM branches WHERE is_active=1");
 
@@ -115,6 +133,58 @@ require_once ROOT_PATH . '/includes/header.php';
     New Invoice
   </button>
 </div>
+
+<!-- ═══ Unpaid Bookings Panel ═══ -->
+<?php if ($unpaid_bookings): ?>
+<div class="card vp-card mb-3" style="border-left:4px solid #dc2626;">
+  <div class="card-header d-flex align-items-center justify-content-between" style="cursor:pointer;background:#fef2f2;" onclick="this.nextElementSibling.classList.toggle('d-none')">
+    <div class="d-flex align-items-center gap-2">
+      <span style="font-size:1rem;">⚠️</span>
+      <span class="fw-800" style="color:#dc2626;">Bookings Without Invoice</span>
+      <span class="badge" style="background:#dc2626;color:#fff;border-radius:99px;font-size:.7rem;padding:.2rem .65rem;"><?= count($unpaid_bookings) ?></span>
+    </div>
+    <span style="font-size:.75rem;color:#6b7280;font-weight:600;">These bookings have a balance but no invoice yet — click to expand ▾</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-vcenter vp-table mb-0" style="font-size:.82rem;">
+      <thead style="background:#fef2f2;">
+        <tr>
+          <th>Booking</th><th>Customer</th><th>Hall</th><th>Event Date</th>
+          <th>Event Type</th><th class="text-end">Total</th>
+          <th class="text-end">Advance Paid</th><th class="text-end">Balance Due</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($unpaid_bookings as $ub): ?>
+        <tr>
+          <td><a href="<?= BASE_URL ?>/modules/bookings/view.php?id=<?= $ub['id'] ?>" class="vp-ref-chip"><?= Helper::sanitize($ub['booking_ref']) ?></a></td>
+          <td class="fw-600"><?= Helper::sanitize($ub['customer_name']) ?></td>
+          <td style="color:#6b7280;"><?= Helper::sanitize($ub['hall_name']??'—') ?></td>
+          <td><?= Helper::formatDate($ub['event_date']) ?></td>
+          <td><?= Helper::sanitize($ub['event_type']??'—') ?></td>
+          <td class="text-end fw-700"><?= Helper::formatCurrency($ub['final_amount']) ?></td>
+          <td class="text-end text-success"><?= Helper::formatCurrency($ub['advance_amount']) ?></td>
+          <td class="text-end fw-800 text-danger"><?= Helper::formatCurrency($ub['balance_amount']) ?></td>
+          <td>
+            <a href="<?= BASE_URL ?>/modules/invoices/create.php?booking_id=<?= $ub['id'] ?>" class="btn btn-sm" style="background:#dc2626;color:#fff;border-radius:8px;font-size:.72rem;font-weight:700;padding:.25rem .75rem;">
+              Create Invoice
+            </a>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+      <tfoot style="background:#fef2f2;">
+        <tr>
+          <td colspan="7" class="text-end fw-700" style="font-size:.75rem;color:#6b7280;">TOTAL OUTSTANDING</td>
+          <td class="text-end fw-800 text-danger"><?= Helper::formatCurrency(array_sum(array_column($unpaid_bookings,'balance_amount'))) ?></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+<?php endif; ?>
 
 <!-- Status strip -->
 <div class="vp-stat-strip">

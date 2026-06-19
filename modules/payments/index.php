@@ -21,6 +21,21 @@ $wstr         = implode(' AND ', $where);
 $total        = $db->fetchOne("SELECT COUNT(*) as cnt FROM payments p LEFT JOIN customers c ON p.customer_id=c.id WHERE $wstr", $params)['cnt'];
 $total_amount = $db->fetchOne("SELECT SUM(p.amount) as total FROM payments p LEFT JOIN customers c ON p.customer_id=c.id WHERE $wstr", $params)['total'] ?? 0;
 
+// Pending balances — confirmed/tentative bookings with balance > 0
+$pb_cond = $cu['branch_id'] ? "AND b.branch_id=".(int)$cu['branch_id'] : "";
+$pending_balances = $db->fetchAll(
+    "SELECT b.id, b.booking_ref, b.event_date, b.event_type, b.final_amount,
+            b.advance_amount, b.balance_amount, b.status,
+            c.name as customer_name, c.mobile as customer_phone, h.name as hall_name
+     FROM bookings b
+     LEFT JOIN customers c ON b.customer_id=c.id
+     LEFT JOIN halls h ON b.hall_id=h.id
+     WHERE b.balance_amount > 0
+       AND b.status IN ('confirmed','tentative','completed')
+       $pb_cond
+     ORDER BY b.event_date ASC LIMIT 50"
+);
+
 // Method breakdown (unfiltered by method for KPI purposes)
 $method_params = array_filter([$cu['branch_id'] ?? null]);
 $method_cond = $cu['branch_id'] ? 'WHERE p.branch_id=?' : '';
@@ -81,6 +96,59 @@ require_once ROOT_PATH . '/includes/header.php';
     Record Payment
   </button>
 </div>
+
+<!-- ═══ Pending Balances Panel ═══ -->
+<?php if ($pending_balances): ?>
+<div class="card vp-card mb-3" style="border-left:4px solid #d97706;">
+  <div class="card-header d-flex align-items-center justify-content-between" style="cursor:pointer;background:#fffbeb;" onclick="this.nextElementSibling.classList.toggle('d-none')">
+    <div class="d-flex align-items-center gap-2">
+      <span style="font-size:1rem;">💰</span>
+      <span class="fw-800" style="color:#d97706;">Pending Balances</span>
+      <span class="badge" style="background:#d97706;color:#fff;border-radius:99px;font-size:.7rem;padding:.2rem .65rem;"><?= count($pending_balances) ?></span>
+    </div>
+    <span style="font-size:.75rem;color:#6b7280;font-weight:600;">Confirmed/Tentative bookings with outstanding balance ▾</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-vcenter vp-table mb-0" style="font-size:.82rem;">
+      <thead style="background:#fffbeb;">
+        <tr>
+          <th>Booking</th><th>Customer</th><th>Phone</th><th>Hall</th>
+          <th>Event Date</th><th>Status</th>
+          <th class="text-end">Total</th><th class="text-end">Paid</th>
+          <th class="text-end">Balance</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($pending_balances as $pb): ?>
+        <tr>
+          <td><a href="<?= BASE_URL ?>/modules/bookings/view.php?id=<?= $pb['id'] ?>" class="vp-ref"><?= Helper::sanitize($pb['booking_ref']) ?></a></td>
+          <td class="fw-600"><?= Helper::sanitize($pb['customer_name']) ?></td>
+          <td style="font-size:.78rem;color:#6b7280;"><?= Helper::sanitize($pb['customer_phone']??'—') ?></td>
+          <td style="color:#6b7280;"><?= Helper::sanitize($pb['hall_name']??'—') ?></td>
+          <td><?= Helper::formatDate($pb['event_date']) ?></td>
+          <td><?= Helper::statusBadge($pb['status']) ?></td>
+          <td class="text-end fw-700"><?= Helper::formatCurrency($pb['final_amount']) ?></td>
+          <td class="text-end text-success"><?= Helper::formatCurrency($pb['advance_amount']) ?></td>
+          <td class="text-end fw-800" style="color:#d97706;"><?= Helper::formatCurrency($pb['balance_amount']) ?></td>
+          <td>
+            <a href="<?= BASE_URL ?>/modules/payments/create.php?booking_id=<?= $pb['id'] ?>" class="btn btn-sm" style="background:#d97706;color:#fff;border-radius:8px;font-size:.72rem;font-weight:700;padding:.25rem .75rem;">
+              Record Payment
+            </a>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+      <tfoot style="background:#fffbeb;">
+        <tr>
+          <td colspan="8" class="text-end fw-700" style="font-size:.75rem;color:#6b7280;">TOTAL OUTSTANDING</td>
+          <td class="text-end fw-800" style="color:#d97706;"><?= Helper::formatCurrency(array_sum(array_column($pending_balances,'balance_amount'))) ?></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+<?php endif; ?>
 
 <!-- KPI Summary -->
 <div class="row g-3 mb-3">

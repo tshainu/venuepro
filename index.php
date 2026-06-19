@@ -492,7 +492,8 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
         </div>
         <div class="d-flex align-items-center gap-2">
           <div class="btn-group btn-group-sm" id="bk-chart-toggle" role="group">
-            <button type="button" class="btn bk-toggle-btn active" data-range="1m">1 Mo</button>
+            <button type="button" class="btn bk-toggle-btn active" data-range="thismonth">This Month</button>
+            <button type="button" class="btn bk-toggle-btn" data-range="1m">30 Days</button>
             <button type="button" class="btn bk-toggle-btn" data-range="3m">3 Mo</button>
             <button type="button" class="btn bk-toggle-btn" data-range="6m">6 Mo</button>
             <button type="button" class="btn bk-toggle-btn" data-range="year">Year</button>
@@ -703,23 +704,42 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   var chartInst = null;
 
   function buildChart(range) {
-    var useDaily = (range === '1m' || range === '3m');
+    var useDaily = (range === '1m' || range === '3m' || range === 'thismonth');
     var labels, series, colWidth, rotateAngle;
 
     if (useDaily) {
       // Day-level: filter by date range
       var cutDate;
-      if (range === '1m') {
+      if (range === 'thismonth') {
+        // First day of current month
+        var nm = new Date(); nm.setDate(1);
+        cutDate = nm.getFullYear() + '-' + String(nm.getMonth()+1).padStart(2,'0') + '-01';
+      } else if (range === '1m') {
         var n = new Date(); n.setDate(n.getDate() - 30);
         cutDate = n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0');
       } else { // 3m
         var n3 = new Date(); n3.setDate(n3.getDate() - 90);
         cutDate = n3.getFullYear() + '-' + String(n3.getMonth()+1).padStart(2,'0') + '-' + String(n3.getDate()).padStart(2,'0');
       }
-      var days = allDays.filter(function(d){ return d >= cutDate; });
-      labels = days.map(function(d){ return dayMap[d].day_label; });
+      // For thismonth: generate ALL days of current month even if no data
+      var days;
+      if (range === 'thismonth') {
+        var today = new Date();
+        var year = today.getFullYear(), month = today.getMonth()+1;
+        var daysInMonth = new Date(year, month, 0).getDate();
+        days = [];
+        for (var d=1; d<=daysInMonth; d++) {
+          days.push(year+'-'+String(month).padStart(2,'0')+'-'+String(d).padStart(2,'0'));
+        }
+      } else {
+        days = allDays.filter(function(d){ return d >= cutDate; });
+      }
+      labels = days.map(function(d){
+        if (range === 'thismonth') return parseInt(d.split('-')[2],10)+''; // just day number: 1,2,3...
+        return dayMap[d] ? dayMap[d].day_label : d.slice(8); // fallback to day num
+      });
       series = statusDef.map(function(s){
-        return { name: s.label, data: days.map(function(d){ return dayMap[d][s.key]||0; }) };
+        return { name: s.label, data: days.map(function(d){ return (dayMap[d]&&dayMap[d][s.key]) ? dayMap[d][s.key] : 0; }) };
       });
       colWidth = days.length > 20 ? '70%' : '50%';
       rotateAngle = days.length > 15 ? -45 : 0;
@@ -799,7 +819,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
     chartInst.render();
   }
 
-  buildChart('1m');
+  buildChart('thismonth');
 
   document.getElementById('bk-chart-toggle').addEventListener('click', function(e) {
     var btn = e.target.closest('.bk-toggle-btn');

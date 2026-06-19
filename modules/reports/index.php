@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::hasRole(['super_admin','hall_manager','accountant'])) { Helper::flash('error','Access denied.'); Helper::redirect(BASE_URL.'/index.php'); }
+if (!Auth::hasRole(['super_admin','admin','hall_manager','accountant'])) { Helper::flash('error','Access denied.'); Helper::redirect(BASE_URL.'/index.php'); }
 $db = Database::getInstance();
 $cu = Auth::currentUser();
 
@@ -115,9 +115,17 @@ require_once ROOT_PATH . '/includes/header.php';
 .vp-export-btn.print-btn:hover{border-color:#0c1a35;color:#0c1a35;background:#eef1f8;}
 /* print */
 @media print{
-  .vp-page-header,.vp-tab-nav,.vp-export-bar,.vp-filter-bar,nav,.navbar,#sidebar,.sidebar,.vp-modal-overlay{display:none!important;}
-  .vp-tab-pane{display:block!important;}
-  .card{break-inside:avoid;box-shadow:none!important;border:1px solid #ddd!important;}
+  .vp-page-header,.vp-tab-nav,.vp-export-bar,.vp-filter-bar,
+  nav,.navbar,#sidebar,.sidebar,.vp-modal-overlay,
+  .d-print-none,.btn,footer { display:none!important; }
+  .vp-tab-pane { display:block!important; page-break-before:always; }
+  .vp-tab-pane:first-of-type { page-break-before:auto; }
+  .card { break-inside:avoid; box-shadow:none!important; border:1px solid #ddd!important; margin-bottom:1rem!important; }
+  #revenue-chart,#method-chart,#bookings-chart,#status-chart,#daily-chart { display:none!important; }
+  body { background:#fff!important; }
+  .vp-kpi { box-shadow:none!important; border:1px solid #ddd!important; break-inside:avoid; }
+  a { color:#000!important; text-decoration:none!important; }
+  @page { margin:1.5cm; }
 }
 </style>
 
@@ -297,6 +305,49 @@ require_once ROOT_PATH . '/includes/header.php';
         <div class="card-header"><h3 class="card-title">By Status</h3></div>
         <div class="card-body"><div id="status-chart" style="height:260px"></div></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Monthly Bookings Table (printable) -->
+  <div class="card vp-card mt-3">
+    <div class="card-header"><h3 class="card-title">Monthly Bookings — Last 12 Months</h3></div>
+    <div class="table-responsive">
+      <table class="table table-vcenter vp-table mb-0">
+        <thead><tr><th>Month</th><th class="text-end">Bookings</th></tr></thead>
+        <tbody>
+          <?php foreach ($monthly_bookings as $mb): ?>
+          <tr>
+            <td><?= date('M Y', strtotime($mb['month'].'-01')) ?></td>
+            <td class="text-end fw-bold"><?= number_format($mb['cnt']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          <?php if (!$monthly_bookings): ?>
+          <tr><td colspan="2"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No data.</div></div></td></tr>
+          <?php endif; ?>
+        </tbody>
+        <?php if ($monthly_bookings): ?>
+        <tfoot><tr style="background:#f8f9fc;"><td class="fw-700">TOTAL</td><td class="text-end fw-800"><?= number_format(array_sum(array_column($monthly_bookings,'cnt'))) ?></td></tr></tfoot>
+        <?php endif; ?>
+      </table>
+    </div>
+  </div>
+
+  <!-- Status Summary Table -->
+  <div class="card vp-card mt-3">
+    <div class="card-header"><h3 class="card-title">Bookings by Status</h3></div>
+    <div class="table-responsive">
+      <table class="table table-vcenter vp-table mb-0">
+        <thead><tr><th>Status</th><th class="text-end">Count</th><th class="text-end">Share</th></tr></thead>
+        <tbody>
+          <?php foreach ($status_counts as $sc): $pct=$total_bookings>0?round($sc['cnt']/$total_bookings*100):0; ?>
+          <tr>
+            <td><?= Helper::statusBadge($sc['status']) ?></td>
+            <td class="text-end fw-bold"><?= $sc['cnt'] ?></td>
+            <td class="text-end"><?= $pct ?>%</td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
     </div>
   </div>
 
