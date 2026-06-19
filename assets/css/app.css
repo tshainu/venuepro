@@ -639,3 +639,18 @@ body {
   --tblr-btn-active-bg: #0c1a35;
   --tblr-btn-active-border-color: #0c1a35;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TEXT SELECTION COLOURS
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Default selection — navy bg, white text */
+::selection { background: #0c1a35; color: #ffffff; }
+::-moz-selection { background: #0c1a35; color: #ffffff; }
+
+/* Dark-bg areas (summary header, navbar, etc.) — gold bg, navy text so it's visible */
+.summary-hd ::selection,
+.navbar-vertical ::selection,
+.dash-hero ::selection { background: #c9a84c; color: #0c1a35; }
+.summary-hd ::-moz-selection,
+.navbar-vertical ::-moz-selection,
+.dash-hero ::-moz-selection { background: #c9a84c; color: #0c1a35; }
