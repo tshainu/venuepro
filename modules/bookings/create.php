@@ -84,6 +84,10 @@ $breadcrumbs = [['label'=>'Bookings','url'=>BASE_URL.'/modules/bookings/index.ph
 require_once ROOT_PATH . '/includes/header.php';
 ?>
 
+<!-- Tom Select -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
 <style>
 /* ── Event Registration Page ───────────────────────── */
 .evt-hero {
@@ -483,7 +487,7 @@ $evtType = $_POST['event_type'] ?? '';
         <div class="row g-3 align-items-end">
           <div class="col">
             <label class="form-label form-required">Select Customer</label>
-            <select name="customer_id" class="form-select" id="customer_select" required onchange="showCustomerPreview(this)">
+            <select name="customer_id" id="customer_select" required>
               <option value="">— Search or select customer —</option>
               <?php foreach ($customers as $c): ?>
               <option value="<?= $c['id'] ?>"
@@ -787,16 +791,21 @@ if (cs && cs.value) showCustomerPreview(cs);
 
 // ── Hall Availability ─────────────────────────────────────────
 function checkHallConflict() {
-  var hallId = document.getElementById('hall_select').value;
-  var date   = document.getElementById('event_date').value;
-  var statusEl = document.getElementById('hall-avail-status');
+  var hallId    = document.getElementById('hall_select').value;
+  var date      = document.getElementById('event_date').value;
+  var startTime = document.querySelector('[name=event_time]')?.value || '';
+  var endTime   = document.querySelector('[name=event_end_time]')?.value || '';
+  var statusEl  = document.getElementById('hall-avail-status');
   if (!hallId || !date) { statusEl.innerHTML = ''; return; }
-  fetch('<?= BASE_URL ?>/modules/bookings/check_hall.php?hall_id='+hallId+'&date='+date)
+  var url = '<?= BASE_URL ?>/modules/bookings/check_hall.php?hall_id='+hallId+'&date='+date;
+  if (startTime) url += '&start_time='+encodeURIComponent(startTime);
+  if (endTime)   url += '&end_time='+encodeURIComponent(endTime);
+  fetch(url)
     .then(r=>r.json()).then(data=>{
       if (data.conflict) {
         statusEl.innerHTML = '<div class="hall-avail-chip chip-conflict">⚠ Conflict: '+data.ref+'</div>';
       } else {
-        statusEl.innerHTML = '<div class="hall-avail-chip chip-avail">✓ Available on '+date+'</div>';
+        statusEl.innerHTML = '<div class="hall-avail-chip chip-avail">✓ Available on '+date+(startTime?' at '+startTime:'')+'</div>';
       }
     }).catch(()=>{ statusEl.innerHTML = ''; });
 }
@@ -874,7 +883,43 @@ function recalc() {
 document.getElementById('pkg_select').addEventListener('change', recalc);
 document.getElementById('event_date').addEventListener('change', recalc);
 document.getElementById('hall_select').addEventListener('change', recalc);
+
+// Also check conflict when times change
+document.querySelector('[name=event_time]')?.addEventListener('change', checkHallConflict);
+document.querySelector('[name=event_end_time]')?.addEventListener('change', checkHallConflict);
+
 recalc();
+
+// ── Tom Select: Customer search ───────────────────────────────
+(function() {
+  var ts = new TomSelect('#customer_select', {
+    placeholder: 'Search by name or phone...',
+    searchField: ['text'],
+    maxOptions: 200,
+    plugins: ['dropdown_input'],
+    onChange: function(val) {
+      var sel = document.getElementById('customer_select');
+      showCustomerPreview(sel);
+    },
+    render: {
+      option: function(data, escape) {
+        // data.text is "Name · Phone"
+        var parts = data.text.split('·');
+        var name  = parts[0] ? parts[0].trim() : data.text;
+        var phone = parts[1] ? parts[1].trim() : '';
+        return '<div style="display:flex;align-items:center;gap:.6rem;padding:.35rem .5rem;">' +
+          '<div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#0c1a35,#1a3060);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:800;flex-shrink:0;">' + escape(name.charAt(0).toUpperCase()) + '</div>' +
+          '<div><div style="font-size:.82rem;font-weight:700;color:#0c1a35;">' + escape(name) + '</div>' +
+          (phone ? '<div style="font-size:.7rem;color:#6b7280;">' + escape(phone) + '</div>' : '') +
+          '</div></div>';
+      }
+    }
+  });
+
+  // When new customer is added via modal, add to Tom Select too
+  var _origSaveNew = window.saveNewCustomer;
+  window._tsInstance = ts;
+})();
 
 // ── New Customer Modal ────────────────────────────────────────
 function openNewCustomerModal() {
@@ -927,13 +972,22 @@ async function saveNewCustomer() {
     resetBtn();
     if (data.success) {
       var sel = document.getElementById('customer_select');
-      var opt = new Option(data.name + ' · ' + data.mobile, data.id, true, true);
+      // Add to native select for fallback
+      var opt = document.createElement('option');
+      opt.value = data.id;
+      opt.text = data.name + ' · ' + data.mobile;
       opt.dataset.phone = data.mobile;
       opt.dataset.email = data.email || '';
       opt.dataset.bride = data.bride_name || '';
       opt.dataset.groom = data.groom_name || '';
       sel.add(opt);
-      sel.value = data.id;
+      // Add to Tom Select if available
+      if (window._tsInstance) {
+        window._tsInstance.addOption({value: String(data.id), text: data.name + ' · ' + data.mobile});
+        window._tsInstance.setValue(String(data.id));
+      } else {
+        sel.value = data.id;
+      }
       showCustomerPreview(sel);
       bootstrap.Modal.getInstance(document.getElementById('newCustomerModal')).hide();
     } else {

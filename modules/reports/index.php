@@ -65,6 +65,35 @@ $pageTitle = 'Reports';
 $breadcrumbs = [['label'=>'Reports']];
 require_once ROOT_PATH . '/includes/header.php';
 ?>
+<style>
+/* Reports — vp-kpi cards (mirror dashboard) */
+.vp-kpi {
+  background:#fff; border-radius:16px; padding:1.4rem 1.5rem;
+  position:relative; overflow:hidden;
+  box-shadow:0 2px 16px rgba(12,26,53,.09); border:1px solid #edf0f8;
+  transition:transform .2s, box-shadow .2s; display:block; color:inherit; text-decoration:none;
+}
+.vp-kpi:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(12,26,53,.15); }
+.vp-kpi-icon {
+  width:50px; height:50px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.35rem; margin-bottom:1rem; flex-shrink:0;
+}
+.vp-kpi-val  { font-size:1.7rem; font-weight:800; color:#0c1a35; letter-spacing:-.04em; line-height:1; }
+.vp-kpi-lbl  { font-size:.7rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.07em; margin-top:.3rem; }
+.vp-kpi-footer { margin-top:.9rem; padding-top:.75rem; border-top:1px solid #f1f4fa; display:flex; align-items:center; justify-content:space-between; }
+.vp-kpi-trend  { font-size:.74rem; font-weight:600; }
+.vp-kpi-link   { font-size:.72rem; font-weight:700; color:#9ca3af; }
+.vp-kpi::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:16px 0 0 16px; }
+.vp-kpi-navy::before  { background:linear-gradient(180deg,#0c1a35,#1a3060); }
+.vp-kpi-gold::before  { background:linear-gradient(180deg,#c9a84c,#e8c96a); }
+.vp-kpi-green::before { background:linear-gradient(180deg,#059669,#34d399); }
+.vp-kpi-red::before   { background:linear-gradient(180deg,#dc2626,#f87171); }
+.vp-kpi-navy  .vp-kpi-icon { background:#eef1f8; color:#0c1a35; }
+.vp-kpi-gold  .vp-kpi-icon { background:#fdf5e0; color:#92640c; }
+.vp-kpi-green .vp-kpi-icon { background:#ecfdf5; color:#059669; }
+.vp-kpi-red   .vp-kpi-icon { background:#fef2f2; color:#dc2626; }
+</style>
 <div class="vp-page-header d-print-none">
   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
     <h1 class="vp-page-title">📊 <?= Lang::t('reports') ?></h1>
@@ -84,37 +113,57 @@ require_once ROOT_PATH . '/includes/header.php';
 </div>
 
 <!-- Summary KPIs -->
-<div class="row row-cards mb-4">
-  <div class="col-sm-6 col-lg-3">
-    <div class="kpi-card kpi-navy">
-      <div class="kpi-icon">📋</div>
-      <div class="kpi-val"><?= $total_bookings ?></div>
-      <div class="kpi-lbl">Total Bookings</div>
-      <div class="kpi-chip"><?= $date_from ?> – <?= $date_to ?></div>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="vp-kpi vp-kpi-navy" style="cursor:default;">
+      <div class="vp-kpi-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg>
+      </div>
+      <div class="vp-kpi-val"><?= number_format($total_bookings) ?></div>
+      <div class="vp-kpi-lbl">Total Bookings</div>
+      <div class="vp-kpi-footer">
+        <span class="vp-kpi-trend" style="color:#9ca3af;font-size:.7rem;"><?= date('d M', strtotime($date_from)) ?> – <?= date('d M', strtotime($date_to)) ?></span>
+        <span class="vp-kpi-link" style="color:#9ca3af;">Selected range</span>
+      </div>
     </div>
   </div>
-  <div class="col-sm-6 col-lg-3">
-    <div class="kpi-card kpi-green">
-      <div class="kpi-icon">✅</div>
-      <div class="kpi-val"><?= $confirmed_bk ?></div>
-      <div class="kpi-lbl">Confirmed</div>
-      <div class="kpi-chip"><?= $total_bookings > 0 ? round($confirmed_bk/$total_bookings*100) : 0 ?>% of total</div>
+  <div class="col-6 col-lg-3">
+    <div class="vp-kpi vp-kpi-green" style="cursor:default;">
+      <div class="vp-kpi-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg>
+      </div>
+      <div class="vp-kpi-val"><?= number_format($confirmed_bk) ?></div>
+      <div class="vp-kpi-lbl">Confirmed</div>
+      <div class="vp-kpi-footer">
+        <span class="vp-kpi-trend" style="color:#059669;"><?= $total_bookings > 0 ? round($confirmed_bk/$total_bookings*100) : 0 ?>% of total</span>
+        <span class="vp-kpi-link" style="color:#9ca3af;">Bookings</span>
+      </div>
     </div>
   </div>
-  <div class="col-sm-6 col-lg-3">
-    <div class="kpi-card kpi-gold">
-      <div class="kpi-icon">💰</div>
-      <div class="kpi-val"><?= Helper::formatCurrency($total_revenue) ?></div>
-      <div class="kpi-lbl">Revenue Collected</div>
-      <div class="kpi-chip">Invoiced: <?= Helper::formatCurrency($total_invoiced) ?></div>
+  <div class="col-6 col-lg-3">
+    <div class="vp-kpi vp-kpi-gold" style="cursor:default;">
+      <div class="vp-kpi-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      </div>
+      <div class="vp-kpi-val" style="font-size:1.25rem;"><?= Helper::formatCurrency($total_revenue) ?></div>
+      <div class="vp-kpi-lbl">Revenue Collected</div>
+      <div class="vp-kpi-footer">
+        <span class="vp-kpi-trend" style="color:#9ca3af;font-size:.68rem;">Invoiced: <?= Helper::formatCurrency($total_invoiced) ?></span>
+        <span class="vp-kpi-link" style="color:#9ca3af;">Payments</span>
+      </div>
     </div>
   </div>
-  <div class="col-sm-6 col-lg-3">
-    <div class="kpi-card kpi-red">
-      <div class="kpi-icon">⚠️</div>
-      <div class="kpi-val"><?= Helper::formatCurrency($outstanding) ?></div>
-      <div class="kpi-lbl">Outstanding Balance</div>
-      <div class="kpi-chip">All active bookings</div>
+  <div class="col-6 col-lg-3">
+    <div class="vp-kpi vp-kpi-red" style="cursor:default;">
+      <div class="vp-kpi-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      </div>
+      <div class="vp-kpi-val" style="font-size:1.25rem;"><?= Helper::formatCurrency($outstanding) ?></div>
+      <div class="vp-kpi-lbl">Outstanding Balance</div>
+      <div class="vp-kpi-footer">
+        <span class="vp-kpi-trend" style="color:#dc2626;">Pending collection</span>
+        <span class="vp-kpi-link" style="color:#9ca3af;">All active</span>
+      </div>
     </div>
   </div>
 </div>

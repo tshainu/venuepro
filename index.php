@@ -41,11 +41,17 @@ $todayEvents = $db->fetchOne(
 )['c'] ?? 0;
 
 // ── Charts ───────────────────────────────────────────────────────────────
-$revenueChart = $db->fetchAll(
-    "SELECT DATE_FORMAT(payment_date,'%b') as month, COALESCE(SUM(amount),0) as total
-     FROM payments p
-     WHERE payment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) " . ($bid ? "AND p.branch_id=?" : "") . "
-     GROUP BY YEAR(payment_date), MONTH(payment_date) ORDER BY payment_date ASC",
+// Bookings chart data — grouped by month with status breakdown
+// Fetch raw bookings for the last 12 months (we'll filter client-side via JS)
+$bookingsChartData = $db->fetchAll(
+    "SELECT DATE_FORMAT(event_date,'%Y-%m') as ym,
+            DATE_FORMAT(event_date,'%b %Y') as label,
+            status,
+            COUNT(*) as cnt
+     FROM bookings b
+     WHERE event_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH) " . ($bid ? "AND b.branch_id=?" : "") . "
+     GROUP BY ym, label, status
+     ORDER BY ym ASC",
     $bid ? [$bid] : []
 );
 $statusData = $db->fetchAll("SELECT status, COUNT(*) as cnt FROM bookings b WHERE 1 $bFilter GROUP BY status");
@@ -391,7 +397,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 </div>
 
 <!-- ═══════ KPI CARDS ═══════ -->
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-4" style="margin-top:1.75rem;">
   <div class="col-6 col-lg-3">
     <a href="<?= BASE_URL ?>/modules/bookings/index.php" class="vp-kpi vp-kpi-navy">
       <div class="vp-kpi-icon">
@@ -473,18 +479,26 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 
 <!-- ═══════ CHARTS ROW ═══════ -->
 <div class="row g-3 mb-4">
-  <!-- Revenue Chart -->
+  <!-- Bookings Status Bar Chart -->
   <div class="col-lg-8">
     <div class="vp-chart-card h-100">
       <div class="vp-chart-header">
         <div>
-          <div class="vp-chart-title">Revenue Trend</div>
-          <div class="vp-chart-sub">Last 6 months — payments collected</div>
+          <div class="vp-chart-title">Bookings Overview</div>
+          <div class="vp-chart-sub" id="chart-bk-sub">By status over time</div>
         </div>
-        <a href="<?= BASE_URL ?>/modules/reports/index.php" class="vp-sh-link">Full Report →</a>
+        <div class="d-flex align-items-center gap-2">
+          <div class="btn-group btn-group-sm" id="bk-chart-toggle" role="group">
+            <button type="button" class="btn bk-toggle-btn active" data-range="1m">1 Mo</button>
+            <button type="button" class="btn bk-toggle-btn" data-range="3m">3 Mo</button>
+            <button type="button" class="btn bk-toggle-btn" data-range="6m">6 Mo</button>
+            <button type="button" class="btn bk-toggle-btn" data-range="year">Year</button>
+          </div>
+          <a href="<?= BASE_URL ?>/modules/reports/index.php" class="vp-sh-link">Report →</a>
+        </div>
       </div>
       <div class="vp-chart-body">
-        <div id="chart-revenue"></div>
+        <div id="chart-bookings"></div>
       </div>
     </div>
   </div>
@@ -632,24 +646,104 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 
 <!-- Charts JS -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<style>
+.bk-toggle-btn {
+  border: 1.5px solid #e5e7eb; background: #fff; color: #6b7280;
+  font-size: .72rem; font-weight: 700; padding: .3rem .65rem; border-radius: 7px;
+  transition: all .15s; cursor: pointer;
+}
+.bk-toggle-btn.active { background: #0c1a35; color: #e8c96a; border-color: #0c1a35; }
+.bk-toggle-btn:hover:not(.active) { background: #f1f4fa; color: #0c1a35; }
+</style>
 <script>
 (function(){
-  var labels = <?= json_encode(array_column($revenueChart,'month')) ?>;
-  var data   = <?= json_encode(array_map('floatval', array_column($revenueChart,'total'))) ?>;
+  // ── Bookings chart data from PHP ───────────────────────────
+  var rawData = <?= json_encode($bookingsChartData) ?>;
 
-  new ApexCharts(document.getElementById('chart-revenue'), {
-    chart: { type:'area', height:230, toolbar:{show:false}, fontFamily:'Inter,system-ui,sans-serif', animations:{enabled:true,speed:600} },
-    series: [{ name:'Revenue (Rs.)', data: data.length ? data : [0] }],
-    xaxis:  { categories: labels.length ? labels : ['—'], labels:{style:{fontSize:'11px',fontWeight:600,colors:'#9ca3af'}} },
-    yaxis:  { labels:{ formatter:function(v){ return 'Rs.'+Number(v/1000).toFixed(0)+'k'; }, style:{fontSize:'10px',colors:'#9ca3af'} } },
-    colors: ['#c9a84c'],
-    fill:   { type:'gradient', gradient:{shadeIntensity:1,opacityFrom:.4,opacityTo:.02,stops:[0,90]} },
-    stroke: { curve:'smooth', width:3 },
-    grid:   { borderColor:'#f1f4fa', strokeDashArray:5, padding:{left:0,right:0} },
-    tooltip:{ theme:'light', y:{ formatter:function(v){ return 'Rs. '+Number(v).toLocaleString(); } } },
-    markers:{ size:5, colors:['#fff'], strokeColors:['#c9a84c'], strokeWidth:2.5, hover:{size:7} },
-  }).render();
+  // Build a map: { 'YYYY-MM': { label, inquiry:0, tentative:0, confirmed:0, completed:0, cancelled:0 } }
+  var monthMap = {};
+  rawData.forEach(function(row) {
+    if (!monthMap[row.ym]) monthMap[row.ym] = { label: row.label, inquiry:0, tentative:0, confirmed:0, completed:0, cancelled:0 };
+    if (monthMap[row.ym][row.status] !== undefined) monthMap[row.ym][row.status] = parseInt(row.cnt);
+  });
 
+  var allMonths = Object.keys(monthMap).sort();
+
+  function getRangeMonths(range) {
+    var now = new Date();
+    var cutoff;
+    if (range === '1m') {
+      cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (range === '3m') {
+      cutoff = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    } else if (range === '6m') {
+      cutoff = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    } else { // year
+      cutoff = new Date(now.getFullYear(), 0, 1);
+    }
+    var cutStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth()+1).padStart(2,'0');
+    return allMonths.filter(function(m){ return m >= cutStr; });
+  }
+
+  var statusDef = [
+    { key:'confirmed',  label:'Confirmed',  color:'#059669' },
+    { key:'tentative',  label:'Tentative',  color:'#d97706' },
+    { key:'inquiry',    label:'Inquiry',    color:'#7c3aed' },
+    { key:'completed',  label:'Completed',  color:'#2563eb' },
+    { key:'cancelled',  label:'Cancelled',  color:'#dc2626' },
+  ];
+
+  var chartEl = document.getElementById('chart-bookings');
+  var chartInst = null;
+
+  function buildChart(range) {
+    var months = getRangeMonths(range);
+    var labels = months.map(function(m){ return monthMap[m] ? monthMap[m].label : m; });
+    var series = statusDef.map(function(s) {
+      return {
+        name: s.label,
+        data: months.map(function(m){ return monthMap[m] ? (monthMap[m][s.key]||0) : 0; })
+      };
+    });
+    var colors = statusDef.map(function(s){ return s.color; });
+
+    var opts = {
+      chart: { type:'bar', height:230, stacked:false, toolbar:{show:false},
+               fontFamily:'Inter,system-ui,sans-serif', animations:{enabled:true,speed:500} },
+      series: series,
+      xaxis:  { categories: labels.length ? labels : ['No data'],
+                labels:{style:{fontSize:'11px',fontWeight:600,colors:'#9ca3af'}, rotate:-30} },
+      yaxis:  { labels:{ formatter:function(v){ return Math.round(v); }, style:{fontSize:'10px',colors:'#9ca3af'} }, min:0, forceNiceScale:true },
+      colors: colors,
+      plotOptions:{ bar:{ borderRadius:4, columnWidth:'55%', dataLabels:{position:'top'} } },
+      dataLabels:{ enabled:false },
+      legend:{ position:'top', fontSize:'11px', fontWeight:600,
+               markers:{width:10,height:10,radius:3},
+               itemMargin:{horizontal:8} },
+      grid:   { borderColor:'#f1f4fa', strokeDashArray:4, padding:{left:0,right:0} },
+      tooltip:{ theme:'light', shared:true, intersect:false },
+      stroke: { show:true, width:2, colors:['transparent'] },
+    };
+
+    if (chartInst) {
+      chartInst.updateOptions(opts, true, true);
+    } else {
+      chartInst = new ApexCharts(chartEl, opts);
+      chartInst.render();
+    }
+  }
+
+  buildChart('1m');
+
+  document.getElementById('bk-chart-toggle').addEventListener('click', function(e) {
+    var btn = e.target.closest('.bk-toggle-btn');
+    if (!btn) return;
+    document.querySelectorAll('.bk-toggle-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    buildChart(btn.dataset.range);
+  });
+
+  // ── Donut status chart ─────────────────────────────────────
   var sLabels = <?= json_encode(array_column($statusData,'status')) ?>;
   var sCounts = <?= json_encode(array_map('intval', array_column($statusData,'cnt'))) ?>;
   var sColors = {inquiry:'#7c3aed',tentative:'#d97706',confirmed:'#059669',completed:'#2563eb',cancelled:'#dc2626'};
