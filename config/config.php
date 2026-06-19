@@ -2,9 +2,16 @@
 define('APP_NAME', 'VenuePro Lanka');
 define('APP_VERSION', '1.0.0');
 
-// Dynamic BASE_URL
-$_scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$_host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+// Dynamic BASE_URL — respects Railway/nginx X-Forwarded-Proto
+$_scheme = 'http';
+if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+    $_scheme = 'https';
+} elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+    $_scheme = $_SERVER['HTTP_X_FORWARDED_PROTO']; // Railway proxy sets this
+} elseif (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') {
+    $_scheme = 'https';
+}
+$_host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 define('BASE_URL', $_scheme . '://' . $_host);
 
 define('ROOT_PATH', dirname(__DIR__));
