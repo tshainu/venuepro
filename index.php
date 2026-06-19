@@ -237,18 +237,18 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 .vp-qa::after {
   content:''; position:absolute; inset:0;
   background:linear-gradient(135deg,#0c1a35,#1a3060);
-  opacity:0; transition:opacity .2s;
+  opacity:0; transition:opacity .2s; z-index:0;
 }
 .vp-qa:hover::after { opacity:1; }
 .vp-qa:hover { transform:translateY(-3px); box-shadow:0 10px 28px rgba(12,26,53,.2); color:#fff; }
 .vp-qa-icon {
   width:46px; height:46px; border-radius:13px;
   display:flex; align-items:center; justify-content:center;
-  font-size:1.3rem; transition:background .2s;
-  position:relative; z-index:1;
+  font-size:1.3rem; transition:all .2s;
+  position:relative; z-index:2;
 }
-.vp-qa span { position:relative; z-index:1; }
-.vp-qa:hover .vp-qa-icon { background:rgba(255,255,255,.15) !important; }
+.vp-qa span { position:relative; z-index:2; }
+.vp-qa:hover .vp-qa-icon { background:rgba(255,255,255,.18) !important; border-color:rgba(255,255,255,.3) !important; color:#fff !important; }
 
 /* ── CHART CARD ───────────────────────────────────── */
 .vp-chart-card {

@@ -1008,9 +1008,14 @@ recalc();
   // ── Inquiry prefill: auto-select matched customer ──
   <?php if ($fromInquiry && $inqCustomer): ?>
   ts.setValue(<?= (int)$inqCustomer['id'] ?>, true);
-  // Trigger preview
   var sel = document.getElementById('customer_select');
   showCustomerPreview(sel);
+  <?php elseif ($fromInquiry && !$inqCustomer): ?>
+  // No customer match — prefill new customer modal with inquiry data and auto-open
+  document.getElementById('nc_name').value   = <?= json_encode($fromInquiry['name'] ?? '') ?>;
+  document.getElementById('nc_mobile').value = <?= json_encode($fromInquiry['mobile'] ?? '') ?>;
+  document.getElementById('nc_email').value  = <?= json_encode($fromInquiry['email'] ?? '') ?>;
+  setTimeout(function(){ openNewCustomerModal(); }, 600);
   <?php endif; ?>
 
   // ── Inquiry prefill: trigger hall conflict check if hall preselected ──

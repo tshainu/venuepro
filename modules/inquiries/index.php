@@ -159,9 +159,14 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['_action']??'')==='' ) {
     <table class="table table-vcenter vp-table mb-0">
       <thead>
         <tr>
-          <th>Ref</th><th>Name</th><th>Mobile</th><th>Event</th>
-          <th>Date</th><th>Hall</th><th>Source</th><th>Status</th>
-          <th>Follow-up</th><th>Actions</th>
+          <th style="width:110px;">Ref</th>
+          <th>Customer</th>
+          <th style="width:100px;">Event</th>
+          <th style="width:105px;">Date</th>
+          <th style="width:90px;">Source</th>
+          <th style="width:90px;">Status</th>
+          <th style="width:90px;">Follow-up</th>
+          <th style="width:110px;">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -173,12 +178,16 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['_action']??'')==='' ) {
           }
         ?>
         <tr>
-          <td><a href="<?= BASE_URL ?>/modules/inquiries/view.php?id=<?= $inq['id'] ?>" class="vp-ref-chip"><?= Helper::sanitize($inq['inquiry_ref']) ?></a></td>
-          <td class="fw-600"><?= Helper::sanitize($inq['name']) ?></td>
-          <td><?= Helper::sanitize($inq['mobile']) ?></td>
-          <td><?= Helper::sanitize($inq['event_type']??'—') ?></td>
-          <td><?= $inq['event_date'] ? Helper::formatDate($inq['event_date']) : '—' ?></td>
-          <td><?= Helper::sanitize($inq['hall_name']??'—') ?></td>
+          <td><a href="<?= BASE_URL ?>/modules/inquiries/view.php?id=<?= $inq['id'] ?>" class="vp-ref-chip" style="font-size:.72rem;"><?= Helper::sanitize($inq['inquiry_ref']) ?></a></td>
+          <td>
+            <div style="font-weight:700;font-size:.83rem;color:#0c1a35;line-height:1.2;"><?= Helper::sanitize($inq['name']) ?></div>
+            <div style="font-size:.72rem;color:#6b7280;"><?= Helper::sanitize($inq['mobile']) ?><?= $inq['hall_name'] ? ' · '.$inq['hall_name'] : '' ?></div>
+          </td>
+          <td>
+            <div style="font-size:.78rem;font-weight:600;"><?= Helper::sanitize($inq['event_type']??'—') ?></div>
+            <?php if($inq['guest_count']): ?><div style="font-size:.7rem;color:#9ca3af;"><?= $inq['guest_count'] ?> guests</div><?php endif; ?>
+          </td>
+          <td style="font-size:.78rem;white-space:nowrap;"><?= $inq['event_date'] ? Helper::formatDate($inq['event_date']) : '—' ?></td>
           <td>
             <?php if ($inq['source']): $sc = str_replace('-','',$inq['source']); ?>
             <span class="src-pill src-<?= $sc ?>"><?= ucfirst($inq['source']) ?></span>
@@ -187,19 +196,19 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['_action']??'')==='' ) {
           <td>
             <?php
             $sCls = ['new'=>'s-new','contacted'=>'s-contacted','quoted'=>'s-quoted','converted'=>'s-converted','lost'=>'s-lost'];
-            $sLbl = ['new'=>'New','contacted'=>'Contacted','quoted'=>'Quoted','converted'=>'Booking!','lost'=>'Lost'];
+            $sLbl = ['new'=>'New','contacted'=>'Contacted','quoted'=>'Quoted','converted'=>'Converted','lost'=>'Lost'];
             ?>
             <span class="inq-status <?= $sCls[$inq['status']]??'s-new' ?>"><?= $sLbl[$inq['status']]??ucfirst($inq['status']) ?></span>
           </td>
           <td>
             <?php if ($inq['follow_up_date']): ?>
-            <span class="fu-badge" style="<?= $fuClass ?>"><?= Helper::formatDate($inq['follow_up_date']) ?></span>
-            <?php else: ?>—<?php endif; ?>
+            <span class="fu-badge" style="<?= $fuClass ?>;font-size:.7rem;white-space:nowrap;"><?= Helper::formatDate($inq['follow_up_date']) ?></span>
+            <?php else: ?><span style="color:#d1d5db;">—</span><?php endif; ?>
           </td>
-          <td>
-            <a href="<?= BASE_URL ?>/modules/inquiries/view.php?id=<?= $inq['id'] ?>" class="btn btn-vp-outline btn-sm">View</a>
+          <td style="white-space:nowrap;">
+            <a href="<?= BASE_URL ?>/modules/inquiries/view.php?id=<?= $inq['id'] ?>" class="btn btn-vp-outline btn-sm" style="padding:.25rem .55rem;font-size:.72rem;">View</a>
             <?php if ($inq['status'] !== 'converted'): ?>
-            <a href="<?= BASE_URL ?>/modules/bookings/create.php?inquiry_id=<?= $inq['id'] ?>" class="btn btn-vp-gold btn-sm">→ Book</a>
+            <a href="<?= BASE_URL ?>/modules/bookings/create.php?inquiry_id=<?= $inq['id'] ?>" class="btn btn-vp-gold btn-sm" style="padding:.25rem .55rem;font-size:.72rem;">→ Book</a>
             <?php endif; ?>
           </td>
         </tr>
