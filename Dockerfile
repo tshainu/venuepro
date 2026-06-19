@@ -14,7 +14,8 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/services.conf
 # Nginx base config (port set at runtime via entrypoint)
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 
-# Copy app
+# Copy app — cache-bust to ensure fresh copy on every deploy
+ARG CACHEBUST=1
 COPY . /var/www/html/
 RUN rm -f /var/www/html/index.html
 

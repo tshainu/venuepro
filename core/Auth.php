@@ -16,20 +16,40 @@ class Auth {
             [$email]
         );
         if ($user && password_verify($password, $user['password'])) {
-            // Update last login
             $this->db->execute("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
-            // Set session
-            $_SESSION['user_id']     = $user['id'];
-            $_SESSION['user_name']   = $user['name'];
-            $_SESSION['user_email']  = $user['email'];
-            $_SESSION['user_role']   = $user['role_slug'];
-            $_SESSION['user_role_id']= $user['role_id'];
-            $_SESSION['branch_id']   = $user['branch_id'];
-            $_SESSION['branch_name'] = $user['branch_name'];
-            $_SESSION['language']    = $user['language'] ?? 'en';
+            $this->setSession($user);
             return true;
         }
         return false;
+    }
+
+    public function loginWithUserId($user_id, $email, $password) {
+        $user = $this->db->fetchOne(
+            "SELECT u.*, r.slug as role_slug, r.name as role_name, b.name as branch_name 
+             FROM users u 
+             LEFT JOIN roles r ON u.role_id = r.id 
+             LEFT JOIN branches b ON u.branch_id = b.id 
+             WHERE u.user_id = ? AND u.email = ? AND u.is_active = 1",
+            [$user_id, $email]
+        );
+        if ($user && password_verify($password, $user['password'])) {
+            $this->db->execute("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
+            $this->setSession($user);
+            return true;
+        }
+        return false;
+    }
+
+    private function setSession($user) {
+        $_SESSION['user_id']     = $user['id'];
+        $_SESSION['user_name']   = $user['name'];
+        $_SESSION['user_email']  = $user['email'];
+        $_SESSION['user_role']   = $user['role_slug'];
+        $_SESSION['user_role_id']= $user['role_id'];
+        $_SESSION['branch_id']   = $user['branch_id'];
+        $_SESSION['branch_name'] = $user['branch_name'];
+        $_SESSION['language']    = $user['language'] ?? 'en';
+        $_SESSION['user_uid']    = $user['user_id'] ?? '';
     }
 
     public function logout() {
