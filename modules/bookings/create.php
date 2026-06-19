@@ -784,21 +784,7 @@ $evtType = $_POST['event_type'] ?? ($fromInquiry['event_type'] ?? '');
             <label class="form-label">Address</label>
             <textarea id="nc_address" class="form-control" rows="2" placeholder="Full address..."></textarea>
           </div>
-          <div class="col-12">
-            <div style="background:linear-gradient(135deg,#fdf9ee,#fffbf5);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:1rem 1.2rem;margin-top:.5rem;">
-              <div style="font-size:.72rem;font-weight:800;color:#92640c;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.9rem;">💍 Wedding Details <span style="font-weight:500;color:#b08030;">(optional)</span></div>
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <label class="form-label">👰 Bride's Name</label>
-                  <input type="text" id="nc_bride" class="form-control" placeholder="Enter bride's full name">
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">🤵 Groom's Name</label>
-                  <input type="text" id="nc_groom" class="form-control" placeholder="Enter groom's full name">
-                </div>
-              </div>
-            </div>
-          </div>
+
           <div class="col-12">
             <label class="form-label">Notes</label>
             <textarea id="nc_notes" class="form-control" rows="2" placeholder="Any important notes about this customer..."></textarea>
@@ -1058,8 +1044,8 @@ async function saveNewCustomer() {
         nic:        document.getElementById('nc_nic').value.trim(),
         city:       document.getElementById('nc_city').value.trim(),
         address:    document.getElementById('nc_address').value.trim(),
-        bride_name: document.getElementById('nc_bride').value.trim(),
-        groom_name: document.getElementById('nc_groom').value.trim(),
+        bride_name: '',
+        groom_name: '',
         notes:      document.getElementById('nc_notes').value.trim(),
       })
     });

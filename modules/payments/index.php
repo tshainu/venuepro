@@ -93,7 +93,7 @@ require_once ROOT_PATH . '/includes/header.php';
   </div>
   <button type="button" class="btn btn-vp-gold" onclick="openPayModal()">
     <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
-    Record Payment
+    Make Payment
   </button>
 </div>
 
@@ -132,7 +132,7 @@ require_once ROOT_PATH . '/includes/header.php';
           <td class="text-end fw-800" style="color:#d97706;"><?= Helper::formatCurrency($pb['balance_amount']) ?></td>
           <td>
             <a href="<?= BASE_URL ?>/modules/payments/create.php?booking_id=<?= $pb['id'] ?>" class="btn btn-sm" style="background:#d97706;color:#fff;border-radius:8px;font-size:.72rem;font-weight:700;padding:.25rem .75rem;">
-              Record Payment
+              Make Payment
             </a>
           </td>
         </tr>
@@ -285,11 +285,11 @@ require_once ROOT_PATH . '/includes/header.php';
   <?php endif; ?>
 </div>
 
-<!-- Record Payment Modal -->
+<!-- Make Payment Modal -->
 <div class="vp-modal-overlay" id="payModal" onclick="if(event.target===this)closePayModal()">
   <div class="vp-modal">
     <div class="vp-modal-head">
-      <div class="vp-modal-title">💳 Record Payment</div>
+      <div class="vp-modal-title">💳 Make Payment</div>
       <button class="vp-modal-close" onclick="closePayModal()">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>

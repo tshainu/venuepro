@@ -72,29 +72,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$pageTitle = 'Record Payment';
+$pageTitle = 'Make Payment';
 $breadcrumbs = [['label'=>'Payments','url'=>BASE_URL.'/modules/payments/index.php'],['label'=>'New']];
 require_once ROOT_PATH . '/includes/header.php';
+
+// Determine outstanding balance for live counter
+$outstanding = 0;
+if ($invoice) $outstanding = (float)($invoice['balance'] ?? 0);
+elseif ($booking) $outstanding = (float)($booking['balance_amount'] ?? 0);
 ?>
 <div class="vp-page-header d-print-none">
-  <div class="d-flex align-items-center"><h1 class="vp-page-title">Record Payment</h1></div>
+  <div class="d-flex align-items-center"><h1 class="vp-page-title">Make Payment</h1></div>
 </div>
 <div class="row justify-content-center">
   <div class="col-lg-7">
     <form method="post" class="card vp-card">
-      <div class="card-header"><h3 class="card-title">Payment Details</h3></div>
+      <div class="card-header" style="background:linear-gradient(135deg,#1a3c5e,#2d6a9f);border-radius:12px 12px 0 0;">
+        <h3 class="card-title text-white mb-0">Payment Details</h3>
+      </div>
       <div class="card-body">
         <?php if ($errors): ?><div class="alert alert-danger"><ul class="mb-0"><?php foreach($errors as $e): ?><li><?= Helper::sanitize($e) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
 
         <?php if ($booking): ?>
-        <div class="alert alert-info mb-3">
-          Booking: <strong><?= Helper::sanitize($booking['booking_ref']??'') ?></strong> · <?= Helper::sanitize($booking['customer_name']) ?>
-          <?php if ($booking['balance_amount']>0): ?> · <span class="text-danger">Balance: <?= Helper::formatCurrency($booking['balance_amount']) ?></span><?php endif; ?>
+        <div class="alert alert-info mb-3 d-flex align-items-center gap-2">
+          <span>📋</span>
+          <span>Booking: <strong><?= Helper::sanitize($booking['booking_ref']??'') ?></strong> · <?= Helper::sanitize($booking['customer_name']) ?>
+          <?php if (($booking['balance_amount']??0)>0): ?> · <span class="text-danger fw-bold">Balance: <?= Helper::formatCurrency($booking['balance_amount']) ?></span><?php endif; ?></span>
         </div>
         <?php endif; ?>
         <?php if ($invoice): ?>
-        <div class="alert alert-warning mb-3">
-          Invoice: <strong><?= Helper::sanitize($invoice['invoice_number']) ?></strong> · Balance: <strong><?= Helper::formatCurrency($invoice['balance']) ?></strong>
+        <div class="alert alert-warning mb-3 d-flex align-items-center gap-2">
+          <span>🧾</span>
+          <span>Invoice: <strong><?= Helper::sanitize($invoice['invoice_number']) ?></strong> · Balance: <strong><?= Helper::formatCurrency($invoice['balance']) ?></strong></span>
         </div>
         <?php endif; ?>
 
@@ -120,7 +129,7 @@ require_once ROOT_PATH . '/includes/header.php';
         <div class="row mb-3">
           <div class="col-md-6">
             <label class="form-label required">Amount (Rs.)</label>
-            <input type="number" name="amount" class="form-control" step="0.01" min="0.01"
+            <input type="number" name="amount" id="pay_amount" class="form-control" step="0.01" min="0.01"
               value="<?= $_POST['amount']??($invoice['balance']??($booking['balance_amount']??($prefill_amount?:''))) ?>" required>
           </div>
           <div class="col-md-6">
@@ -132,6 +141,20 @@ require_once ROOT_PATH . '/includes/header.php';
             </select>
           </div>
         </div>
+
+        <?php if ($outstanding > 0): ?>
+        <div class="mb-3 p-3 rounded-2" style="background:#f8fafc;border:1px solid #e2e8f0;">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-secondary small fw-bold">BALANCE AFTER PAYMENT</span>
+            <span id="remaining-balance" class="fw-bold fs-5 text-<?= $outstanding>0?'danger':'success' ?>">
+              Rs. <?= number_format($outstanding, 2) ?>
+            </span>
+          </div>
+          <div class="progress mt-2" style="height:6px">
+            <div class="progress-bar bg-success" id="pay-progress" style="width:0%"></div>
+          </div>
+        </div>
+        <?php endif; ?>
 
         <div id="bank-fields" style="display:none">
           <div class="row mb-3">
@@ -173,5 +196,28 @@ function toggleFields(){
 }
 pm.addEventListener('change', toggleFields);
 toggleFields();
+
+// Live balance counter
+const outstanding = <?= $outstanding ?>;
+const amtInput = document.getElementById('pay_amount');
+const remEl = document.getElementById('remaining-balance');
+const progEl = document.getElementById('pay-progress');
+if (amtInput && outstanding > 0) {
+  function updateBalance() {
+    const entered = parseFloat(amtInput.value) || 0;
+    const rem = outstanding - entered;
+    if (remEl) {
+      remEl.textContent = 'Rs. ' + Math.abs(rem).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',') + (rem < 0 ? ' (Overpaid)' : '');
+      remEl.className = 'fw-bold fs-5 ' + (rem <= 0 ? 'text-success' : 'text-danger');
+    }
+    if (progEl) {
+      const pct = Math.min(100, (entered / outstanding) * 100);
+      progEl.style.width = pct + '%';
+      progEl.className = 'progress-bar ' + (pct >= 100 ? 'bg-success' : 'bg-warning');
+    }
+  }
+  amtInput.addEventListener('input', updateBalance);
+  updateBalance();
+}
 </script>
 <?php require_once ROOT_PATH . '/includes/footer.php'; ?>
