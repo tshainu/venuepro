@@ -121,7 +121,7 @@ $quickPick = [
 .summary-empty { text-align: center; color: #d1d5db; font-size: .82rem; padding: 1.5rem 0; }
 
 /* sticky footer */
-.pkg-sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e8e8e8; padding: .85rem 1.5rem; z-index: 200; display: flex; align-items: center; gap: .75rem; }
+.pkg-sticky-footer { position: fixed; bottom: 0; left: 240px; right: 0; background: #fff; border-top: 1px solid #e8e8e8; padding: .85rem 1.5rem; z-index: 200; display: flex; align-items: center; gap: .75rem; }
 </style>
 
 <div class="vp-page-header d-print-none">
