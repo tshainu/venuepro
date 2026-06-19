@@ -5,7 +5,7 @@ $db = Database::getInstance();
 $cu = Auth::currentUser();
 
 $customers   = $db->fetchAll("SELECT id,name,mobile,email,bride_name,groom_name FROM customers" . ($cu['branch_id'] ? " WHERE branch_id={$cu['branch_id']}" : "") . " ORDER BY name");
-$halls       = $db->fetchAll("SELECT id,name,capacity FROM halls WHERE is_active=1" . ($cu['branch_id'] ? " AND branch_id={$cu['branch_id']}" : "") . " ORDER BY name");
+$halls       = $db->fetchAll("SELECT id,name,capacity,price_per_day FROM halls WHERE is_active=1" . ($cu['branch_id'] ? " AND branch_id={$cu['branch_id']}" : "") . " ORDER BY name");
 $packages    = $db->fetchAll("SELECT id,name,price FROM packages WHERE is_active=1" . ($cu['branch_id'] ? " AND (branch_id={$cu['branch_id']} OR branch_id IS NULL)" : "") . " ORDER BY name");
 $addons      = $db->fetchAll("SELECT id,name,price,unit,tax_percent FROM addons WHERE is_available=1" . ($cu['branch_id'] ? " AND (branch_id={$cu['branch_id']} OR branch_id IS NULL)" : "") . " ORDER BY name");
 $branches    = $db->fetchAll("SELECT id,name FROM branches WHERE is_active=1");
@@ -446,7 +446,7 @@ $evtType = $_POST['event_type'] ?? '';
             <select name="hall_id" class="form-select" id="hall_select" onchange="checkHallConflict()">
               <option value="">— Select Hall —</option>
               <?php foreach ($halls as $h): ?>
-              <option value="<?= $h['id'] ?>" data-capacity="<?= $h['capacity'] ?>" <?= ($_POST['hall_id']??'')==$h['id']?'selected':'' ?>>
+              <option value="<?= $h['id'] ?>" data-capacity="<?= $h['capacity'] ?>" data-price="<?= $h['price_per_day'] ?>" <?= ($_POST['hall_id']??'')==$h['id']?'selected':'' ?>>
                 <?= Helper::sanitize($h['name']) ?> (cap. <?= number_format($h['capacity']) ?>)
               </option>
               <?php endforeach; ?>
@@ -599,6 +599,10 @@ $evtType = $_POST['event_type'] ?? '';
         <div class="evt-sum-row">
           <span class="evt-sum-label">Hall</span>
           <span class="evt-sum-value" id="sum-hall">—</span>
+        </div>
+        <div class="evt-sum-row">
+          <span class="evt-sum-label">Hall Rate</span>
+          <span class="evt-sum-value" id="sum-hall-price">—</span>
         </div>
         <div class="evt-sum-row">
           <span class="evt-sum-label">Package</span>
@@ -818,6 +822,12 @@ function addAddonRow() {
 
 // ── Recalc Summary ────────────────────────────────────────────
 function recalc() {
+  // Hall
+  var hallSel = document.getElementById('hall_select');
+  var hallOpt = hallSel.options[hallSel.selectedIndex];
+  var hallPrice = parseFloat(hallOpt?.dataset.price) || 0;
+  document.getElementById('sum-hall-price').textContent = hallPrice > 0 ? 'Rs. '+hallPrice.toFixed(2) : '—';
+
   // Package
   var pkgSel = document.getElementById('pkg_select');
   var pkgOpt = pkgSel.options[pkgSel.selectedIndex];
@@ -840,7 +850,7 @@ function recalc() {
     if (tp) tp.textContent = total > 0 ? 'Rs. '+total.toFixed(2) : '—';
   });
 
-  var subtotal = pkgPrice + addonSub;
+  var subtotal = hallPrice + pkgPrice + addonSub;
   var discount = parseFloat(document.getElementById('discount_input')?.value) || 0;
   var final    = Math.max(0, subtotal + addonTax - discount);
 
@@ -857,9 +867,7 @@ function recalc() {
     document.getElementById('sum-date').textContent = d.toLocaleDateString('en-LK',{day:'numeric',month:'short',year:'numeric'});
   }
 
-  // Hall summary
-  var hallSel = document.getElementById('hall_select');
-  var hallOpt = hallSel.options[hallSel.selectedIndex];
+  // Hall name summary
   document.getElementById('sum-hall').textContent = hallOpt?.value ? hallOpt.text.split('(')[0].trim() : '—';
 }
 
