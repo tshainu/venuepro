@@ -309,7 +309,7 @@ body{background:#f0f2f7;min-height:100vh;}
       </div>
 
       <div class="biz-actions">
-        <a href="sa-edit.php?id=<?= $b['id'] ?>" class="btn-icon" title="Edit">
+        <a href="#" class="btn-icon" title="Edit" onclick="openEditModal(<?= htmlspecialchars(json_encode($b), ENT_QUOTES) ?>); return false;">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </a>
         <?php if ($b['status']==='active'): ?>
@@ -330,6 +330,93 @@ body{background:#f0f2f7;min-height:100vh;}
     <?php endif; ?>
   </div>
 
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Edit Business</h3>
+      <button class="modal-close" onclick="closeEditModal()">×</button>
+    </div>
+    <form method="POST" action="sa-edit.php">
+    <input type="hidden" name="id" id="edit_id">
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Business Name *</label>
+          <input type="text" name="business_name" id="edit_business_name" required>
+        </div>
+        <div class="form-group">
+          <label>Owner Name</label>
+          <input type="text" name="owner_name" id="edit_owner_name">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" name="email" id="edit_email" required>
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" name="phone" id="edit_phone">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" name="city" id="edit_city">
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <input type="text" name="country" id="edit_country">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <textarea name="address" id="edit_address" rows="2"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Plan</label>
+          <select name="plan" id="edit_plan">
+            <option value="trial">Trial</option>
+            <option value="starter">Starter</option>
+            <option value="professional">Professional</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select name="status" id="edit_status">
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Max Users</label>
+          <input type="number" name="max_users" id="edit_max_users" min="1">
+        </div>
+        <div class="form-group">
+          <label>Max Branches</label>
+          <input type="number" name="max_branches" id="edit_max_branches" min="1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea name="notes" id="edit_notes" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary-sa" onclick="closeEditModal()">Cancel</button>
+      <button type="submit" class="btn-primary-sa">Save Changes</button>
+    </div>
+    </form>
+  </div>
 </div>
 
 <!-- ADD MODAL -->
@@ -418,9 +505,30 @@ body{background:#f0f2f7;min-height:100vh;}
 </div>
 
 <script>
+// Add modal
 function openModal(){ document.getElementById('addModal').classList.add('open'); }
 function closeModal(){ document.getElementById('addModal').classList.remove('open'); }
 document.getElementById('addModal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+// Edit modal
+function openEditModal(b){
+  document.getElementById('edit_id').value            = b.id;
+  document.getElementById('edit_business_name').value = b.business_name || '';
+  document.getElementById('edit_owner_name').value    = b.owner_name    || '';
+  document.getElementById('edit_email').value         = b.email         || '';
+  document.getElementById('edit_phone').value         = b.phone         || '';
+  document.getElementById('edit_city').value          = b.city          || '';
+  document.getElementById('edit_country').value       = b.country       || '';
+  document.getElementById('edit_address').value       = b.address       || '';
+  document.getElementById('edit_max_users').value     = b.max_users     || 5;
+  document.getElementById('edit_max_branches').value  = b.max_branches  || 1;
+  document.getElementById('edit_notes').value         = b.notes         || '';
+  document.getElementById('edit_plan').value          = b.plan          || 'starter';
+  document.getElementById('edit_status').value        = b.status        || 'active';
+  document.getElementById('editModal').classList.add('open');
+}
+function closeEditModal(){ document.getElementById('editModal').classList.remove('open'); }
+document.getElementById('editModal').addEventListener('click', function(e){ if(e.target===this) closeEditModal(); });
 
 // Auto-submit search on enter
 document.querySelector('.sa-search input').addEventListener('keydown', function(e){
