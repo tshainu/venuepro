@@ -28,9 +28,7 @@ $businesses = $db->fetchAll("
     SELECT sa.*,
            u.user_id  AS cred_user_id,
            u.name     AS cred_username,
-           u.email    AS cred_email,
-           br.id      AS branch_id,
-           br.is_active AS branch_enabled
+           u.email    AS cred_email
     FROM sa_businesses sa
     LEFT JOIN branches br ON br.email = sa.email
     LEFT JOIN users u ON u.branch_id = br.id AND u.role_id = 5
@@ -339,11 +337,6 @@ body{background:#f0f2f7;min-height:100vh;}
       <div class="biz-badges">
         <span class="badge-plan <?= $b['plan'] ?>"><?= ucfirst($b['plan']) ?></span>
         <span class="badge-status <?= $b['status'] ?>"><?= ucfirst($b['status']) ?></span>
-        <?php if (!empty($b['branch_id'])): ?>
-        <span style="font-size:.65rem;font-weight:700;padding:.2rem .55rem;border-radius:20px;<?= $b['branch_enabled'] ? 'background:#dcfce7;color:#166534;' : 'background:#fee2e2;color:#991b1b;' ?>">
-          <?= $b['branch_enabled'] ? '● Branch ON' : '● Branch OFF' ?>
-        </span>
-        <?php endif; ?>
       </div>
 
       <div class="biz-actions">
@@ -354,17 +347,6 @@ body{background:#f0f2f7;min-height:100vh;}
         <a href="#" class="btn-icon" title="Reset Password" onclick="openResetModal('<?= htmlspecialchars($b['cred_user_id']) ?>','<?= htmlspecialchars($b['business_name']) ?>'); return false;">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
         </a>
-        <?php endif; ?>
-        <?php if (!empty($b['branch_id'])): ?>
-        <?php if ($b['branch_enabled']): ?>
-        <a href="sa-branch-toggle.php?branch_id=<?= $b['branch_id'] ?>&state=0" class="btn-icon" title="Branch Enabled — click to disable" onclick="return confirm('Disable this branch? It will be hidden from the client panel.')" style="color:#059669;border-color:#bbf7d0;background:#f0fdf4;">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
-        </a>
-        <?php else: ?>
-        <a href="sa-branch-toggle.php?branch_id=<?= $b['branch_id'] ?>&state=1" class="btn-icon danger" title="Branch Disabled — click to enable" onclick="return confirm('Enable this branch? It will appear in the client panel.')" style="color:#dc2626;border-color:#fecaca;background:#fef2f2;">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-        </a>
-        <?php endif; ?>
         <?php endif; ?>
         <?php if ($b['status']==='active'): ?>
         <a href="sa-action.php?id=<?= $b['id'] ?>&act=suspend" class="btn-icon danger" title="Suspend" onclick="return confirm('Suspend this business?')">

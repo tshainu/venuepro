@@ -25,7 +25,7 @@ class Auth {
 
     public function loginWithUserId($user_id, $username, $password) {
         $user = $this->db->fetchOne(
-            "SELECT u.*, r.slug as role_slug, r.name as role_name, b.name as branch_name, b.is_active as branch_active
+            "SELECT u.*, r.slug as role_slug, r.name as role_name, b.name as branch_name 
              FROM users u 
              LEFT JOIN roles r ON u.role_id = r.id 
              LEFT JOIN branches b ON u.branch_id = b.id 
@@ -33,10 +33,6 @@ class Auth {
             [$user_id, $username]
         );
         if ($user && password_verify($password, $user['password'])) {
-            // Block login if branch is disabled (null = no branch = allow, e.g. super_admin)
-            if ($user['branch_id'] && !$user['branch_active']) {
-                return 'branch_disabled';
-            }
             $this->db->execute("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
             $this->setSession($user);
             return true;
@@ -70,17 +66,6 @@ class Auth {
         if (!isset($_SESSION['user_id'])) {
             header('Location: ' . BASE_URL . '/login.php');
             exit;
-        }
-        // If user has a branch, verify it's still active on every page load
-        $bid = $_SESSION['branch_id'] ?? null;
-        if ($bid) {
-            $db = Database::getInstance();
-            $br = $db->fetchOne("SELECT is_active FROM branches WHERE id = ?", [$bid]);
-            if (!$br || !$br['is_active']) {
-                session_destroy();
-                header('Location: ' . BASE_URL . '/login.php?err=branch_disabled');
-                exit;
-            }
         }
     }
 

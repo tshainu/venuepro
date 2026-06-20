@@ -19,23 +19,17 @@ if (Auth::isLoggedIn() && !empty($_SESSION['user_id'])) {
 }
 
 $error = '';
-if (isset($_GET['err']) && $_GET['err'] === 'branch_disabled') {
-    $error = 'Your branch has been disabled. Please contact your administrator.';
-}
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id  = trim($_POST['user_id'] ?? '');
     $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
     $auth = new Auth();
-    $result = $auth->loginWithUserId($user_id, $username, $password);
-    if ($result === true) {
+    if ($auth->loginWithUserId($user_id, $username, $password)) {
         if (Auth::hasRole(['super_admin'])) {
             Helper::redirect(BASE_URL . '/superadmin/');
         } else {
             Helper::redirect(BASE_URL . '/index.php');
         }
-    } elseif ($result === 'branch_disabled') {
-        $error = 'Your branch has been disabled. Please contact your administrator.';
     } else {
         $error = 'Invalid User ID, Username or Password.';
     }
