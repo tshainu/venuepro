@@ -15,7 +15,7 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/services.conf
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 
 # Copy app — cache-bust to ensure fresh copy on every deploy
-ARG CACHEBUST=1
+ARG CACHEBUST=20260620
 COPY . /var/www/html/
 RUN rm -f /var/www/html/index.html
 
