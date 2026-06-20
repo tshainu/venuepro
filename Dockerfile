@@ -1,3 +1,4 @@
+# Build 2026-06-20
 FROM php:8.2-fpm
 
 # Install nginx, supervisor, PHP extensions
