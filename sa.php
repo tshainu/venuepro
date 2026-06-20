@@ -188,6 +188,18 @@ body{background:#f0f2f7;min-height:100vh;}
 
 <div class="sa-body">
 
+  <?php if (!empty($_SESSION['sa_success'])): ?>
+  <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;color:#166534;font-size:.875rem;line-height:1.6;">
+    <?= $_SESSION['sa_success'] ?>
+  </div>
+  <?php unset($_SESSION['sa_success']); endif; ?>
+
+  <?php if (!empty($_SESSION['sa_error'])): ?>
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;color:#991b1b;font-size:.875rem;">
+    <?= htmlspecialchars($_SESSION['sa_error']) ?>
+  </div>
+  <?php unset($_SESSION['sa_error']); endif; ?>
+
   <!-- STATS -->
   <div class="stats-grid">
     <div class="stat-card stat-total">
