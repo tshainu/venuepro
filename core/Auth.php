@@ -70,7 +70,7 @@ class Auth {
     }
 
     public static function isSuperAdmin() {
-        return isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], ['super_admin', 'admin']);
+        return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'super_admin';
     }
 
     public static function hasRole($roles) {
