@@ -24,7 +24,17 @@ if ($search) { $where .= " AND (business_name LIKE ? OR owner_name LIKE ? OR ema
 if ($fStatus) { $where .= " AND status=?"; $params[] = $fStatus; }
 if ($fPlan)   { $where .= " AND plan=?";   $params[] = $fPlan; }
 
-$businesses = $db->fetchAll("SELECT * FROM sa_businesses $where ORDER BY created_at DESC", $params);
+$businesses = $db->fetchAll("
+    SELECT sa.*,
+           u.user_id  AS cred_user_id,
+           u.name     AS cred_username,
+           u.email    AS cred_email
+    FROM sa_businesses sa
+    LEFT JOIN branches br ON br.email = sa.email
+    LEFT JOIN users u ON u.branch_id = br.id AND u.role_id = 5
+    $where
+    ORDER BY sa.created_at DESC
+", $params);
 
 $cu = Auth::currentUser();
 ?>
@@ -133,6 +143,8 @@ body{background:#f0f2f7;min-height:100vh;}
 .btn-icon.danger:hover{background:#fee2e2;border-color:#ef4444;color:#ef4444;}
 
 .biz-dates{font-size:.72rem;color:#94a3b8;margin-top:.35rem;}
+.biz-creds{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.4rem;}
+.cred-item{font-size:.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:.2rem .55rem;color:#374151;font-family:monospace;}
 
 /* ── EMPTY ── */
 .empty-state{text-align:center;padding:4rem 2rem;color:#94a3b8;}
@@ -304,6 +316,13 @@ body{background:#f0f2f7;min-height:100vh;}
             Max <?= $b['max_users'] ?> users · <?= $b['max_branches'] ?> branch<?= $b['max_branches']>1?'es':'' ?>
           </span>
         </div>
+        <?php if (!empty($b['cred_user_id'])): ?>
+        <div class="biz-creds">
+          <span class="cred-item">🪪 <strong><?= htmlspecialchars($b['cred_user_id']) ?></strong></span>
+          <span class="cred-item">👤 <strong><?= htmlspecialchars($b['cred_username']) ?></strong></span>
+          <span class="cred-item">✉️ <?= htmlspecialchars($b['cred_email']) ?></span>
+        </div>
+        <?php endif; ?>
         <div class="biz-dates">
           Joined: <?= date('d M Y', strtotime($b['created_at'])) ?>
           <?php if ($b['subscription_ends_at']): ?>
