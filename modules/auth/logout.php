@@ -1,10 +1,10 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 
-// Clear all session variables
+// Wipe all session data
 $_SESSION = [];
 
-// Expire the session cookie in the browser
+// Expire the session cookie
 if (ini_get('session.use_cookies')) {
     $params = session_get_cookie_params();
     setcookie(
@@ -15,5 +15,11 @@ if (ini_get('session.use_cookies')) {
 }
 
 session_destroy();
+
+// Start a clean session so login.php doesn't see stale data
+session_start();
+session_regenerate_id(true);
+$_SESSION = [];
+
 header('Location: ' . BASE_URL . '/login.php');
 exit;

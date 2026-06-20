@@ -1,12 +1,20 @@
 <?php
 require_once __DIR__ . '/core/bootstrap.php';
 
-if (Auth::isLoggedIn()) {
-    // Redirect super admin to their panel, others to main dashboard
-    if (Auth::hasRole(['super_admin'])) {
-        Helper::redirect(BASE_URL . '/superadmin/');
+if (Auth::isLoggedIn() && !empty($_SESSION['user_id'])) {
+    // Verify session is genuine (not a ghost after logout)
+    $db = Database::getInstance();
+    $stillExists = $db->fetchOne("SELECT id FROM users WHERE id = ? AND is_active = 1", [$_SESSION['user_id']]);
+    if ($stillExists) {
+        if (Auth::hasRole(['super_admin'])) {
+            Helper::redirect(BASE_URL . '/superadmin/');
+        } else {
+            Helper::redirect(BASE_URL . '/index.php');
+        }
     } else {
-        Helper::redirect(BASE_URL . '/index.php');
+        // Ghost session — wipe and show login
+        $_SESSION = [];
+        session_destroy();
     }
 }
 
