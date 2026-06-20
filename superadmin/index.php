@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/../core/bootstrap.php';
-Auth::check();
-if (!Auth::isSuperAdmin()) {
-    Helper::redirect(BASE_URL . '/index.php');
+if (empty($_SESSION['sa_logged_in'])) {
+    header('Location: ' . BASE_URL . '/superadmin/login.php');
+    exit;
 }
 $db = Database::getInstance();
 
@@ -182,7 +182,7 @@ body{background:#f0f2f7;min-height:100vh;}
       <span><?= htmlspecialchars($cu['name']) ?></span>
     </div>
     <a href="<?= BASE_URL ?>/index.php" class="btn-sa-logout">← Dashboard</a>
-    <a href="<?= BASE_URL ?>/modules/auth/logout.php" class="btn-sa-logout">Logout</a>
+    <a href="<?= BASE_URL ?>/superadmin/logout.php" class="btn-sa-logout">Logout</a>
   </div>
 </nav>
 
