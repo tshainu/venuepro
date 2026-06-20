@@ -1,5 +1,5 @@
 <?php
-require_once 'core/db.php';
+require_once __DIR__ . '/core/db.php';
 session_start();
 
 if (!isset($_SESSION['sa_logged_in']) || $_SESSION['sa_logged_in'] !== true) {
