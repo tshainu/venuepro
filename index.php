@@ -464,17 +464,29 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 <div class="vp-qa-grid mb-4">
   <?php
   $actions = [
-    ['href' => BASE_URL.'/modules/bookings/create.php',   'bg' => '#eff6ff', 'border' => '#3b82f6', 'color' => '#1d4ed8', 'label' => 'New Booking',   'gif' => BASE_URL.'/assets/img/qa-booking.gif'],
-    ['href' => BASE_URL.'/modules/customers/create.php',  'bg' => '#f0fdf4', 'border' => '#10b981', 'color' => '#047857', 'label' => 'Add Customer',  'gif' => BASE_URL.'/assets/img/qa-customer.gif'],
-    ['href' => BASE_URL.'/modules/quotations/create.php', 'bg' => '#fefce8', 'border' => '#f59e0b', 'color' => '#b45309', 'label' => 'Quotation',     'gif' => BASE_URL.'/assets/img/qa-quotation.gif'],
-    ['href' => BASE_URL.'/modules/invoices/create.php',   'bg' => '#fff7ed', 'border' => '#f97316', 'color' => '#c2410c', 'label' => 'Invoice',        'gif' => BASE_URL.'/assets/img/qa-invoice.gif'],
-    ['href' => BASE_URL.'/modules/payments/create.php',   'bg' => '#fdf4ff', 'border' => '#a855f7', 'color' => '#7e22ce', 'label' => 'Payment',        'gif' => BASE_URL.'/assets/img/qa-payment.gif'],
-    ['href' => BASE_URL.'/modules/reports/index.php',     'bg' => '#f0fdfa', 'border' => '#06b6d4', 'color' => '#0e7490', 'label' => 'Reports',        'gif' => BASE_URL.'/assets/img/qa-report.gif'],
+    ['href' => BASE_URL.'/modules/bookings/create.php',   'bg' => '#eff6ff', 'border' => '#3b82f6', 'color' => '#1d4ed8', 'label' => 'New Booking'],
+    ['href' => BASE_URL.'/modules/customers/create.php',  'bg' => '#f0fdf4', 'border' => '#10b981', 'color' => '#047857', 'label' => 'Add Customer'],
+    ['href' => BASE_URL.'/modules/quotations/create.php', 'bg' => '#fefce8', 'border' => '#f59e0b', 'color' => '#b45309', 'label' => 'Quotation'],
+    ['href' => BASE_URL.'/modules/invoices/create.php',   'bg' => '#fff7ed', 'border' => '#f97316', 'color' => '#c2410c', 'label' => 'Invoice'],
+    ['href' => BASE_URL.'/modules/payments/create.php',   'bg' => '#fdf4ff', 'border' => '#a855f7', 'color' => '#7e22ce', 'label' => 'Payment'],
+    ['href' => BASE_URL.'/modules/reports/index.php',     'bg' => '#f0fdfa', 'border' => '#06b6d4', 'color' => '#0e7490', 'label' => 'Reports'],
+  ];
+  $qa_icons = [
+    'New Booking'  => '<path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/>',
+    'Add Customer' => '<circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><line x1="19" y1="8" x2="21" y2="8"/><line x1="20" y1="7" x2="20" y2="9"/>',
+    'Quotation'    => '<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6M9 16h4"/>',
+    'Invoice'      => '<path d="M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16l-3-2-2 2-2-2-2 2-2-2-3 2"/><path d="M14 8h-2.5a1.5 1.5 0 000 3h1a1.5 1.5 0 010 3H10M12 8v1m0 6v1"/>',
+    'Payment'      => '<rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20M7 15h2"/>',
+    'Reports'      => '<path d="M18 20V10M12 20V4M6 20v-6"/>',
   ];
   foreach ($actions as $a):
   ?>
   <a href="<?= $a['href'] ?>" class="vp-qa" style="border-color:<?= $a['border'] ?>cc;">
-    <div class="vp-qa-icon" style="background:<?= $a['bg'] ?>;border:2px solid <?= $a['border'] ?>88;"><img src="<?= $a['gif'] ?>" alt="<?= $a['label'] ?>" style="width:40px;height:40px;object-fit:contain;"></div>
+    <div class="vp-qa-icon" style="background:<?= $a['bg'] ?>;border:2px solid <?= $a['border'] ?>88;">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="<?= $a['color'] ?>" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <?= $qa_icons[$a['label']] ?>
+      </svg>
+    </div>
     <span><?= $a['label'] ?></span>
   </a>
   <?php endforeach; ?>
@@ -796,9 +808,9 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
         tickAmount: 4
       },
       colors: colors,
-      stroke: { curve: 'smooth', width: 2.5 },
+      stroke: { curve: 'smooth', width: 2.5, lineCap: 'round' },
       markers: { size: 3, strokeWidth: 2, hover: { size: 5 } },
-      fill: { type: 'gradient', gradient: { shade: 'light', type: 'vertical', opacityFrom: 0.18, opacityTo: 0.01 } },
+      fill: { opacity: 0 },
       dataLabels: { enabled: false },
       legend: {
         position: 'top', fontSize: '11px', fontWeight: 600,
