@@ -23,14 +23,14 @@ class Auth {
         return false;
     }
 
-    public function loginWithUserId($user_id, $email, $password) {
+    public function loginWithUserId($user_id, $username, $password) {
         $user = $this->db->fetchOne(
             "SELECT u.*, r.slug as role_slug, r.name as role_name, b.name as branch_name 
              FROM users u 
              LEFT JOIN roles r ON u.role_id = r.id 
              LEFT JOIN branches b ON u.branch_id = b.id 
-             WHERE u.user_id = ? AND u.email = ? AND u.is_active = 1",
-            [$user_id, $email]
+             WHERE u.user_id = ? AND u.name = ? AND u.is_active = 1",
+            [$user_id, $username]
         );
         if ($user && password_verify($password, $user['password'])) {
             $this->db->execute("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);

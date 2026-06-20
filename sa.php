@@ -343,6 +343,11 @@ body{background:#f0f2f7;min-height:100vh;}
         <a href="#" class="btn-icon" title="Edit" onclick="openEditModal(<?= htmlspecialchars(json_encode($b), ENT_QUOTES) ?>); return false;">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </a>
+        <?php if (!empty($b['cred_user_id'])): ?>
+        <a href="#" class="btn-icon" title="Reset Password" onclick="openResetModal('<?= htmlspecialchars($b['cred_user_id']) ?>','<?= htmlspecialchars($b['business_name']) ?>'); return false;">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        </a>
+        <?php endif; ?>
         <?php if ($b['status']==='active'): ?>
         <a href="sa-action.php?id=<?= $b['id'] ?>&act=suspend" class="btn-icon danger" title="Suspend" onclick="return confirm('Suspend this business?')">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
@@ -361,6 +366,33 @@ body{background:#f0f2f7;min-height:100vh;}
     <?php endif; ?>
   </div>
 
+</div>
+
+<!-- RESET PASSWORD MODAL -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-header">
+      <h3>Reset Password</h3>
+      <button class="modal-close" onclick="closeResetModal()">×</button>
+    </div>
+    <form method="POST" action="sa-reset-pw.php">
+    <input type="hidden" name="user_id" id="reset_user_id">
+    <div class="modal-body">
+      <p style="font-size:.85rem;color:#64748b;margin-bottom:1.2rem;">Resetting password for: <strong id="reset_biz_name"></strong></p>
+      <div class="form-group">
+        <label>New Password <span style="color:#94a3b8;font-weight:400;">(min 6 chars, at least 2 numbers)</span></label>
+        <input type="text" name="new_password" id="reset_new_password" required minlength="6" placeholder="e.g. abc12x">
+      </div>
+      <div style="margin-top:.5rem;">
+        <button type="button" onclick="generateResetPassword()" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:.35rem .8rem;font-size:.8rem;cursor:pointer;color:#374151;">⚡ Auto-generate</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary-sa" onclick="closeResetModal()">Cancel</button>
+      <button type="submit" class="btn-primary-sa">Reset Password</button>
+    </div>
+    </form>
+  </div>
 </div>
 
 <!-- EDIT MODAL -->
@@ -560,6 +592,23 @@ function openEditModal(b){
 }
 function closeEditModal(){ document.getElementById('editModal').classList.remove('open'); }
 document.getElementById('editModal').addEventListener('click', function(e){ if(e.target===this) closeEditModal(); });
+
+// Reset password modal
+function openResetModal(uid, bizName){
+  document.getElementById('reset_user_id').value = uid;
+  document.getElementById('reset_biz_name').textContent = bizName;
+  document.getElementById('reset_new_password').value = '';
+  document.getElementById('resetModal').classList.add('open');
+}
+function closeResetModal(){ document.getElementById('resetModal').classList.remove('open'); }
+document.getElementById('resetModal').addEventListener('click', function(e){ if(e.target===this) closeResetModal(); });
+function generateResetPassword(){
+  const letters='abcdefghjkmnpqrstuvwxyz';
+  let p=''; for(let i=0;i<4;i++) p+=letters[Math.floor(Math.random()*letters.length)];
+  let n=String(Math.floor(Math.random()*90)+10);
+  let arr=(p+n).split(''); arr.sort(()=>Math.random()-.5);
+  document.getElementById('reset_new_password').value=arr.join('');
+}
 
 // Auto-submit search on enter
 document.querySelector('.sa-search input').addEventListener('keydown', function(e){

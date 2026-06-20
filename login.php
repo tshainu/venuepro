@@ -21,18 +21,17 @@ if (Auth::isLoggedIn() && !empty($_SESSION['user_id'])) {
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id  = trim($_POST['user_id'] ?? '');
-    $email    = trim($_POST['email'] ?? '');
+    $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
     $auth = new Auth();
-    if ($auth->loginWithUserId($user_id, $email, $password)) {
-        // Route super admin to SA panel
+    if ($auth->loginWithUserId($user_id, $username, $password)) {
         if (Auth::hasRole(['super_admin'])) {
             Helper::redirect(BASE_URL . '/superadmin/');
         } else {
             Helper::redirect(BASE_URL . '/index.php');
         }
     } else {
-        $error = 'Invalid User ID, email or password.';
+        $error = 'Invalid User ID, Username or Password.';
     }
 }
 ?>
@@ -159,13 +158,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Email Address</label>
+        <label class="form-label">Username</label>
         <div class="input-icon-wrap">
           <span class="input-icon">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </span>
-          <input type="email" name="email" class="form-control" placeholder="your@email.com" required
-                 value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+          <input type="text" name="username" class="form-control" placeholder="e.g. admin" required
+                 value="<?= htmlspecialchars($_POST['username'] ?? '') ?>">
         </div>
       </div>
 
@@ -183,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <div class="hint-badge">
-      Default: <code>SA001</code> · <code>admin@venuepro.lk</code> · <code>password</code>
+      Default: <code>SA001</code> · <code>admin</code> · <code>password</code>
     </div>
 
     <div class="divider"></div>
