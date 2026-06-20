@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../core/bootstrap.php';
-Auth::requireSuperAdmin();
+Auth::check();
+if (!Auth::isSuperAdmin()) { Helper::flash('error','Access denied.'); Helper::redirect(BASE_URL.'/index.php'); }
 
 $db = Database::getInstance()->getConnection();
 $id = (int)($_GET['id'] ?? 0);
