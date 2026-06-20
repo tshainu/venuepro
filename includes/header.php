@@ -223,15 +223,12 @@
     display: flex; align-items: center; gap: .5rem;
     background: linear-gradient(135deg,#0c1a35,#1a3060);
     border: none;
-    border-radius: 24px; padding: .42rem 1.1rem .42rem .75rem;
-    font-size: .8rem; font-weight: 700; color: #fff;
+    border-radius: 24px; padding: .45rem 1.1rem .45rem .75rem;
+    font-size: .82rem; font-weight: 700; color: #fff;
     letter-spacing: .01em;
     box-shadow: 0 2px 10px rgba(12,26,53,.25);
+    white-space: nowrap;
   }
-  .vp-topbar-branch .branch-company {
-    color: #c9a84c; font-size: .68rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
-  }
-  .vp-topbar-branch .branch-sep { color: rgba(255,255,255,.3); }
   .vp-topbar-branch svg { width:15px; height:15px; stroke:#c9a84c; flex-shrink:0; }
 
   .vp-topbar-user {
