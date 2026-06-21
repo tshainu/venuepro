@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../core/bootstrap.php';
-Auth::requireSuperAdmin();
+if (empty($_SESSION['sa_logged_in'])) { header('Location: ' . BASE_URL . '/superadmin/login.php'); exit; }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: /superadmin/');
