@@ -25,7 +25,7 @@ $total_amount = $db->fetchOne("SELECT SUM(p.amount) as total FROM payments p LEF
 $pb_cond = $cu['branch_id'] ? "AND b.branch_id=".(int)$cu['branch_id'] : "";
 $pending_balances = $db->fetchAll(
     "SELECT b.id, b.booking_ref, b.event_date, b.event_type, b.final_amount,
-            b.advance_amount, b.balance_amount, b.status,
+            b.paid_amount, b.balance_amount, b.status,
             c.name as customer_name, c.mobile as customer_phone, h.name as hall_name
      FROM bookings b
      LEFT JOIN customers c ON b.customer_id=c.id
@@ -128,7 +128,7 @@ require_once ROOT_PATH . '/includes/header.php';
           <td><?= Helper::formatDate($pb['event_date']) ?></td>
           <td><?= Helper::statusBadge($pb['status']) ?></td>
           <td class="text-end fw-700"><?= Helper::formatCurrency($pb['final_amount']) ?></td>
-          <td class="text-end text-success"><?= Helper::formatCurrency($pb['advance_amount']) ?></td>
+          <td class="text-end text-success"><?= Helper::formatCurrency($pb['paid_amount']) ?></td>
           <td class="text-end fw-800" style="color:#d97706;"><?= Helper::formatCurrency($pb['balance_amount']) ?></td>
           <td>
             <a href="<?= BASE_URL ?>/modules/payments/create.php?booking_id=<?= $pb['id'] ?>" class="btn btn-sm" style="background:#d97706;color:#fff;border-radius:8px;font-size:.72rem;font-weight:700;padding:.25rem .75rem;">

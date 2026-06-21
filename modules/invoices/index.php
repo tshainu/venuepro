@@ -34,7 +34,7 @@ $stMap = []; foreach ($statusStats as $s) $stMap[$s['status']] = $s;
 // Unpaid bookings (balance > 0, not cancelled, no active unpaid invoice)
 $bk_cond = $cu['branch_id'] ? "AND b.branch_id=".(int)$cu['branch_id'] : "";
 $unpaid_bookings = $db->fetchAll(
-    "SELECT b.id, b.booking_ref, b.event_date, b.event_type, b.final_amount, b.advance_amount, b.balance_amount,
+    "SELECT b.id, b.booking_ref, b.event_date, b.event_type, b.final_amount, b.paid_amount, b.balance_amount,
             c.name as customer_name, h.name as hall_name
      FROM bookings b
      LEFT JOIN customers c ON b.customer_id=c.id
@@ -164,7 +164,7 @@ require_once ROOT_PATH . '/includes/header.php';
           <td><?= Helper::formatDate($ub['event_date']) ?></td>
           <td><?= Helper::sanitize($ub['event_type']??'—') ?></td>
           <td class="text-end fw-700"><?= Helper::formatCurrency($ub['final_amount']) ?></td>
-          <td class="text-end text-success"><?= Helper::formatCurrency($ub['advance_amount']) ?></td>
+          <td class="text-end text-success"><?= Helper::formatCurrency($ub['paid_amount']) ?></td>
           <td class="text-end fw-800 text-danger"><?= Helper::formatCurrency($ub['balance_amount']) ?></td>
           <td>
             <a href="<?= BASE_URL ?>/modules/invoices/create.php?booking_id=<?= $ub['id'] ?>" class="btn btn-sm" style="background:#dc2626;color:#fff;border-radius:8px;font-size:.72rem;font-weight:700;padding:.25rem .75rem;">
