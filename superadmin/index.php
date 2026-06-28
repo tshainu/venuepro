@@ -104,7 +104,7 @@ body{background:#f0f2f7;min-height:100vh;}
 
 .biz-avatar{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;flex-shrink:0;color:#fff;}
 .plan-trial      .biz-avatar{background:linear-gradient(135deg,#8b5cf6,#7c3aed);}
-.plan-starter    .biz-avatar{background:linear-gradient(135deg,#3b82f6,#2563eb);}
+.plan-basic    .biz-avatar{background:linear-gradient(135deg,#3b82f6,#2563eb);}
 .plan-professional .biz-avatar{background:linear-gradient(135deg,#10b981,#059669);}
 .plan-enterprise .biz-avatar{background:linear-gradient(135deg,#c9a84c,#b8860b);}
 
@@ -118,7 +118,7 @@ body{background:#f0f2f7;min-height:100vh;}
 .biz-badges{display:flex;gap:.5rem;flex-shrink:0;flex-wrap:wrap;align-items:center;}
 .badge-plan{padding:.25rem .7rem;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
 .badge-plan.trial      {background:#f3f0ff;color:#7c3aed;}
-.badge-plan.starter    {background:#eff6ff;color:#2563eb;}
+.badge-plan.basic    {background:#eff6ff;color:#2563eb;}
 .badge-plan.professional{background:#f0fdf4;color:#059669;}
 .badge-plan.enterprise {background:#fefce8;color:#b8860b;border:1px solid #fde68a;}
 .badge-status{padding:.25rem .7rem;border-radius:20px;font-size:.72rem;font-weight:700;}
@@ -241,7 +241,7 @@ body{background:#f0f2f7;min-height:100vh;}
     <select name="plan" class="sa-select" onchange="this.form.submit()">
       <option value="">All Plans</option>
       <option value="trial"        <?= $fPlan==='trial'        ?'selected':'' ?>>Trial</option>
-      <option value="starter"      <?= $fPlan==='starter'      ?'selected':'' ?>>Starter</option>
+      <option value="basic"      <?= $fPlan==='basic'      ?'selected':'' ?>>Starter</option>
       <option value="professional" <?= $fPlan==='professional' ?'selected':'' ?>>Professional</option>
       <option value="enterprise"   <?= $fPlan==='enterprise'   ?'selected':'' ?>>Enterprise</option>
     </select>
@@ -261,7 +261,7 @@ body{background:#f0f2f7;min-height:100vh;}
     <?php else: ?>
     <?php foreach ($businesses as $b):
       $initials = strtoupper(implode('', array_map(fn($w)=>$w[0], array_slice(explode(' ', $b['business_name']), 0, 2))));
-      $planColors = ['trial'=>'#8b5cf6','starter'=>'#3b82f6','professional'=>'#10b981','enterprise'=>'#c9a84c'];
+      $planColors = ['trial'=>'#8b5cf6','basic'=>'#3b82f6','professional'=>'#10b981','enterprise'=>'#c9a84c'];
       $planColor = $planColors[$b['plan']] ?? '#64748b';
     ?>
     <div class="biz-card status-<?= $b['status'] ?> plan-<?= $b['plan'] ?>">
@@ -380,7 +380,7 @@ body{background:#f0f2f7;min-height:100vh;}
           <label>Plan</label>
           <select name="plan">
             <option value="trial">Trial</option>
-            <option value="starter">Starter</option>
+            <option value="basic">Starter</option>
             <option value="professional">Professional</option>
             <option value="enterprise">Enterprise</option>
           </select>

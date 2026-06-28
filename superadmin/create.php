@@ -1,40 +1,52 @@
 <?php
 require_once __DIR__ . '/../core/bootstrap.php';
-if (empty($_SESSION['sa_logged_in'])) { header('Location: ' . BASE_URL . '/superadmin/login.php'); exit; }
+if (empty($_SESSION['sa_logged_in'])) { header('Location: ' . BASE_URL . '/vpsa'); exit; }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: /superadmin/');
+    header('Location: ' . BASE_URL . '/vpsa/');
     exit;
 }
 
-$name     = trim($_POST['name'] ?? '');
-$email    = trim($_POST['email'] ?? '');
-$phone    = trim($_POST['phone'] ?? '');
-$address  = trim($_POST['address'] ?? '');
-$city     = trim($_POST['city'] ?? '');
-$plan     = trim($_POST['plan'] ?? 'starter');
-$status   = trim($_POST['status'] ?? 'active');
+$business_name = trim($_POST['business_name'] ?? '');
+$owner_name    = trim($_POST['owner_name'] ?? '');
+$email         = trim($_POST['email'] ?? '');
+$phone         = trim($_POST['phone'] ?? '');
+$address       = trim($_POST['address'] ?? '');
+$city          = trim($_POST['city'] ?? '');
+$country       = trim($_POST['country'] ?? 'Sri Lanka');
+$plan          = trim($_POST['plan'] ?? 'trial');
+$status        = trim($_POST['status'] ?? 'pending');
+$max_users     = (int)($_POST['max_users'] ?? 5);
+$max_branches  = (int)($_POST['max_branches'] ?? 1);
+$notes         = trim($_POST['notes'] ?? '');
 
-if (!$name || !$email) {
-    $_SESSION['sa_error'] = 'Name and Email are required.';
-    header('Location: /superadmin/');
+if (!$business_name || !$email) {
+    $_SESSION['sa_error'] = 'Business Name and Email are required.';
+    header('Location: ' . BASE_URL . '/vpsa/');
     exit;
 }
+
+// map 'starter' to 'basic' since enum uses 'basic'
+if ($plan === 'starter') $plan = 'basic';
 
 try {
     $db = Database::getInstance()->getConnection();
-    $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $name)) . '-' . substr(uniqid(), -4);
 
     $stmt = $db->prepare("
-        INSERT INTO sa_businesses (name, slug, email, phone, address, city, plan, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        INSERT INTO sa_businesses
+            (business_name, owner_name, email, phone, address, city, country, plan, status, max_users, max_branches, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
-    $stmt->execute([$name, $slug, $email, $phone, $address, $city, $plan, $status]);
+    $stmt->execute([
+        $business_name, $owner_name, $email, $phone,
+        $address, $city, $country, $plan, $status,
+        $max_users, $max_branches, $notes
+    ]);
 
-    $_SESSION['sa_success'] = "Business \"$name\" created successfully.";
+    $_SESSION['sa_success'] = "Business \"$business_name\" created successfully.";
 } catch (Exception $e) {
     $_SESSION['sa_error'] = 'DB error: ' . $e->getMessage();
 }
 
-header('Location: /superadmin/');
+header('Location: ' . BASE_URL . '/vpsa/');
 exit;
