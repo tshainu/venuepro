@@ -51,6 +51,17 @@ class Auth {
         $_SESSION['language']    = $user['language'] ?? 'en';
         $_SESSION['user_uid']      = $user['user_id'] ?? '';
         $_SESSION['user_username'] = $user['username'] ?? '';
+
+        // Load business name for business admin users (no branch assigned)
+        $business_name = '';
+        if (empty($user['branch_id']) && !empty($user['user_id'])) {
+            $biz = $this->db->fetchOne(
+                "SELECT business_name FROM sa_businesses WHERE admin_user_id = ? LIMIT 1",
+                [$user['user_id']]
+            );
+            if ($biz) $business_name = $biz['business_name'];
+        }
+        $_SESSION['business_name'] = $business_name;
     }
 
     public function logout() {
@@ -81,14 +92,15 @@ class Auth {
 
     public static function currentUser() {
         return [
-            'id'          => $_SESSION['user_id'] ?? null,
-            'name'        => $_SESSION['user_name'] ?? '',
-            'email'       => $_SESSION['user_email'] ?? '',
-            'role'        => $_SESSION['user_role'] ?? '',
-            'role_id'     => $_SESSION['user_role_id'] ?? null,
-            'branch_id'   => $_SESSION['branch_id'] ?? null,
-            'branch_name' => $_SESSION['branch_name'] ?? '',
-            'language'    => $_SESSION['language'] ?? 'en',
+            'id'            => $_SESSION['user_id'] ?? null,
+            'name'          => $_SESSION['user_name'] ?? '',
+            'email'         => $_SESSION['user_email'] ?? '',
+            'role'          => $_SESSION['user_role'] ?? '',
+            'role_id'       => $_SESSION['user_role_id'] ?? null,
+            'branch_id'     => $_SESSION['branch_id'] ?? null,
+            'branch_name'   => $_SESSION['branch_name'] ?? '',
+            'business_name' => $_SESSION['business_name'] ?? '',
+            'language'      => $_SESSION['language'] ?? 'en',
         ];
     }
 

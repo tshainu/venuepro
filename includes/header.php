@@ -528,7 +528,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 21h18M3 7l9-4 9 4M4 21V7.5L12 4l8 3.5V21"/>
           </svg>
-          <div><?= Helper::sanitize($cu['branch_name'] ?? 'All Branches') ?></div>
+          <div><?= Helper::sanitize(!empty($cu['branch_name']) ? $cu['branch_name'] : (!empty($cu['business_name']) ? $cu['business_name'] : 'All Branches')) ?></div>
         </div>
 
         <!-- User dropdown -->
