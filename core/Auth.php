@@ -29,7 +29,7 @@ class Auth {
              FROM users u 
              LEFT JOIN roles r ON u.role_id = r.id 
              LEFT JOIN branches b ON u.branch_id = b.id 
-             WHERE u.user_id = ? AND u.name = ? AND u.is_active = 1",
+             WHERE u.user_id = ? AND u.username = ? AND u.is_active = 1",
             [$user_id, $username]
         );
         if ($user && password_verify($password, $user['password'])) {
@@ -49,7 +49,8 @@ class Auth {
         $_SESSION['branch_id']   = $user['branch_id'];
         $_SESSION['branch_name'] = $user['branch_name'];
         $_SESSION['language']    = $user['language'] ?? 'en';
-        $_SESSION['user_uid']    = $user['user_id'] ?? '';
+        $_SESSION['user_uid']      = $user['user_id'] ?? '';
+        $_SESSION['user_username'] = $user['username'] ?? '';
     }
 
     public function logout() {

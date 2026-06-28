@@ -133,6 +133,13 @@ body{background:#f0f2f7;min-height:100vh;}
 .btn-icon.danger:hover{background:#fee2e2;border-color:#ef4444;color:#ef4444;}
 
 .biz-dates{font-size:.72rem;color:#94a3b8;margin-top:.35rem;}
+.biz-creds{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.45rem;align-items:center;}
+.cred-item{display:inline-flex;align-items:center;gap:.3rem;font-size:.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:.2rem .55rem;color:#475569;font-family:monospace;}
+.cred-item strong{color:#1e293b;font-weight:700;}
+.cred-pass{position:relative;}
+.btn-reveal{background:none;border:none;cursor:pointer;padding:0 0 0 .25rem;font-size:.8rem;line-height:1;opacity:.6;}
+.btn-reveal:hover{opacity:1;}
+.cred-divider{margin:.75rem 0 .5rem;font-size:.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;border-top:1px dashed #e2e8f0;padding-top:.75rem;}
 
 /* ── EMPTY ── */
 .empty-state{text-align:center;padding:4rem 2rem;color:#94a3b8;}
@@ -294,13 +301,20 @@ body{background:#f0f2f7;min-height:100vh;}
         </div>
         <div class="biz-dates">
           Joined: <?= date('d M Y', strtotime($b['created_at'])) ?>
-          <?php if ($b['subscription_ends_at']): ?>
+          <?php if (!empty($b['subscription_ends_at'])): ?>
            · Subscription: <?= date('d M Y', strtotime($b['subscription_ends_at'])) ?>
           <?php endif; ?>
-          <?php if ($b['plan']==='trial' && $b['trial_ends_at']): ?>
+          <?php if ($b['plan']==='trial' && !empty($b['trial_ends_at'])): ?>
            · Trial ends: <?= date('d M Y', strtotime($b['trial_ends_at'])) ?>
           <?php endif; ?>
         </div>
+        <?php if (!empty($b['admin_user_id'])): ?>
+        <div class="biz-creds">
+          <span class="cred-item" title="User ID"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg> <strong><?= htmlspecialchars($b['admin_user_id']) ?></strong></span>
+          <span class="cred-item" title="Username"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <?= htmlspecialchars($b['admin_username']) ?></span>
+          <span class="cred-item cred-pass" title="Password"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> <span class="pass-hidden">••••••••</span><span class="pass-visible" style="display:none"><?= htmlspecialchars($b['admin_password_plain']) ?></span><button type="button" class="btn-reveal" onclick="togglePass(this)" title="Show/hide">👁</button></span>
+        </div>
+        <?php endif; ?>
       </div>
 
       <div class="biz-badges">
@@ -408,6 +422,29 @@ body{background:#f0f2f7;min-height:100vh;}
         <label>Notes</label>
         <textarea name="notes" rows="2" placeholder="Internal notes…"></textarea>
       </div>
+
+      <div class="cred-divider">Admin Login Credentials</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>User ID <span style="font-weight:400;color:#94a3b8">(auto-generated)</span></label>
+          <div style="display:flex;gap:.5rem;align-items:center;">
+            <input type="text" name="admin_user_id" id="field_user_id" placeholder="e.g. D842" style="text-transform:uppercase;font-family:monospace;" maxlength="10">
+            <button type="button" onclick="genUserId()" style="white-space:nowrap;padding:.6rem .75rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;font-size:.8rem;color:#374151;">↺ Gen</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" name="admin_username" id="field_username" value="admin" placeholder="admin">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Password <span style="font-weight:400;color:#94a3b8">(auto-generated)</span></label>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <input type="text" name="admin_password" id="field_password" placeholder="e.g. blu4021" style="font-family:monospace;flex:1;">
+          <button type="button" onclick="genPassword()" style="white-space:nowrap;padding:.6rem .75rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;font-size:.8rem;color:#374151;">↺ Gen</button>
+        </div>
+        <div style="font-size:.75rem;color:#94a3b8;margin-top:.3rem;">Format: 3 colour letters + 4 digits (e.g. <em>blu4021</em>)</div>
+      </div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn-secondary-sa" onclick="closeModal()">Cancel</button>
@@ -418,14 +455,51 @@ body{background:#f0f2f7;min-height:100vh;}
 </div>
 
 <script>
-function openModal(){ document.getElementById('addModal').classList.add('open'); }
+// ── Modal ──
+function openModal(){
+  genUserId();
+  genPassword();
+  document.getElementById('addModal').classList.add('open');
+}
 function closeModal(){ document.getElementById('addModal').classList.remove('open'); }
 document.getElementById('addModal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 
-// Auto-submit search on enter
+// ── Auto-search ──
 document.querySelector('.sa-search input').addEventListener('keydown', function(e){
   if(e.key==='Enter') this.closest('form').submit();
 });
+
+// ── Credential generators ──
+const COLORS = ['red','blu','grn','ylw','org','pnk','cyn','vlt','brn','gry','sky','ros','crl','lav','tan'];
+
+function genUserId(){
+  const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const uid = letters[Math.floor(Math.random()*letters.length)]
+            + String(Math.floor(100 + Math.random()*900));
+  document.getElementById('field_user_id').value = uid;
+}
+
+function genPassword(){
+  const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+  const digits = String(Math.floor(1000 + Math.random()*9000));
+  document.getElementById('field_password').value = color + digits;
+}
+
+// ── Toggle password visibility on cards ──
+function togglePass(btn){
+  const cred = btn.closest('.cred-pass');
+  const hidden = cred.querySelector('.pass-hidden');
+  const visible = cred.querySelector('.pass-visible');
+  if(hidden.style.display === 'none'){
+    hidden.style.display = '';
+    visible.style.display = 'none';
+    btn.textContent = '👁';
+  } else {
+    hidden.style.display = 'none';
+    visible.style.display = '';
+    btn.textContent = '🙈';
+  }
+}
 </script>
 </body>
 </html>
