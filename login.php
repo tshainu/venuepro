@@ -7,7 +7,7 @@ if (Auth::isLoggedIn() && !empty($_SESSION['user_id'])) {
     $stillExists = $db->fetchOne("SELECT id FROM users WHERE id = ? AND is_active = 1", [$_SESSION['user_id']]);
     if ($stillExists) {
         if (Auth::hasRole(['super_admin'])) {
-            Helper::redirect(BASE_URL . '/superadmin/');
+            Helper::redirect(BASE_URL . '/vpsa/');
         } else {
             Helper::redirect(BASE_URL . '/index.php');
         }
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $auth = new Auth();
     if ($auth->loginWithUserId($user_id, $username, $password)) {
         if (Auth::hasRole(['super_admin'])) {
-            Helper::redirect(BASE_URL . '/superadmin/');
+            Helper::redirect(BASE_URL . '/vpsa/');
         } else {
             Helper::redirect(BASE_URL . '/index.php');
         }
@@ -181,13 +181,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button type="submit" class="btn-login">Sign In →</button>
     </form>
 
-    <div class="hint-badge">
-      Default: <code>SA001</code> · <code>admin</code> · <code>password</code>
-    </div>
-
     <div class="divider"></div>
     <div class="sa-link">
-      <a href="<?= BASE_URL ?>/superadmin/">🛡️ Super Admin Panel</a>
+      <a href="<?= BASE_URL ?>/vpsa/">🛡️ Super Admin Panel</a>
     </div>
   </div>
 
