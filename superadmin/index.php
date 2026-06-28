@@ -323,7 +323,7 @@ body{background:#f0f2f7;min-height:100vh;}
       </div>
 
       <div class="biz-actions">
-        <a href="edit.php?id=<?= $b['id'] ?>" class="btn-icon" title="Edit">
+        <button type="button" class="btn-icon" title="Edit" onclick="openEditModal(<?= $b['id'] ?>)">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </a>
         <?php if ($b['status']==='active'): ?>
@@ -454,6 +454,111 @@ body{background:#f0f2f7;min-height:100vh;}
   </div>
 </div>
 
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Edit Business</h3>
+      <button class="modal-close" onclick="closeEditModal()">×</button>
+    </div>
+    <form method="POST" action="edit.php" id="editForm">
+    <input type="hidden" name="id" id="edit_id">
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Business Name *</label>
+          <input type="text" name="business_name" id="edit_business_name" required>
+        </div>
+        <div class="form-group">
+          <label>Owner Name *</label>
+          <input type="text" name="owner_name" id="edit_owner_name" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" name="email" id="edit_email" required>
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" name="phone" id="edit_phone">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" name="city" id="edit_city">
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <input type="text" name="country" id="edit_country">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <textarea name="address" id="edit_address" rows="2"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Plan</label>
+          <select name="plan" id="edit_plan">
+            <option value="trial">Trial</option>
+            <option value="basic">Starter</option>
+            <option value="professional">Professional</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select name="status" id="edit_status">
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Max Users</label>
+          <input type="number" name="max_users" id="edit_max_users" min="1">
+        </div>
+        <div class="form-group">
+          <label>Max Branches</label>
+          <input type="number" name="max_branches" id="edit_max_branches" min="1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea name="notes" id="edit_notes" rows="2"></textarea>
+      </div>
+
+      <div class="cred-divider">Admin Credentials</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>User ID <span style="font-weight:400;color:#94a3b8">(read-only)</span></label>
+          <input type="text" id="edit_admin_user_id" readonly style="background:#f8fafc;font-family:monospace;color:#64748b;">
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" name="admin_username" id="edit_admin_username">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>New Password <span style="font-weight:400;color:#94a3b8">(leave blank to keep current)</span></label>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <input type="text" name="admin_password_new" id="edit_admin_password_new" placeholder="Leave blank to keep" style="font-family:monospace;flex:1;">
+          <button type="button" onclick="genEditPassword()" style="white-space:nowrap;padding:.6rem .75rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;font-size:.8rem;color:#374151;">↺ Gen</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary-sa" onclick="closeEditModal()">Cancel</button>
+      <button type="submit" class="btn-primary-sa">Save Changes</button>
+    </div>
+    </form>
+  </div>
+</div>
+
 <script>
 // ── Modal ──
 function openModal(){
@@ -483,6 +588,40 @@ function genPassword(){
   const color = COLORS[Math.floor(Math.random()*COLORS.length)];
   const digits = String(Math.floor(1000 + Math.random()*9000));
   document.getElementById('field_password').value = color + digits;
+}
+
+// ── Edit modal ──
+function openEditModal(id){
+  fetch('edit.php?id=' + id)
+    .then(r => r.json())
+    .then(b => {
+      document.getElementById('edit_id').value             = b.id;
+      document.getElementById('edit_business_name').value  = b.business_name || '';
+      document.getElementById('edit_owner_name').value     = b.owner_name    || '';
+      document.getElementById('edit_email').value          = b.email         || '';
+      document.getElementById('edit_phone').value          = b.phone         || '';
+      document.getElementById('edit_city').value           = b.city          || '';
+      document.getElementById('edit_country').value        = b.country       || 'Sri Lanka';
+      document.getElementById('edit_address').value        = b.address       || '';
+      document.getElementById('edit_plan').value           = b.plan          || 'trial';
+      document.getElementById('edit_status').value         = b.status        || 'pending';
+      document.getElementById('edit_max_users').value      = b.max_users     || 5;
+      document.getElementById('edit_max_branches').value   = b.max_branches  || 1;
+      document.getElementById('edit_notes').value          = b.notes         || '';
+      document.getElementById('edit_admin_user_id').value  = b.admin_user_id || '';
+      document.getElementById('edit_admin_username').value = b.admin_username || '';
+      document.getElementById('edit_admin_password_new').value = '';
+      document.getElementById('editModal').classList.add('open');
+    })
+    .catch(() => alert('Failed to load business data.'));
+}
+function closeEditModal(){ document.getElementById('editModal').classList.remove('open'); }
+document.getElementById('editModal').addEventListener('click', function(e){ if(e.target===this) closeEditModal(); });
+
+function genEditPassword(){
+  const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+  const digits = String(Math.floor(1000 + Math.random()*9000));
+  document.getElementById('edit_admin_password_new').value = color + digits;
 }
 
 // ── Toggle password visibility on cards ──
