@@ -75,11 +75,11 @@ try {
     ]);
     $business_db_id = $db->lastInsertId();
 
-    // Get admin role id
-    $roleStmt = $db->prepare("SELECT id FROM roles WHERE slug = 'super_admin' LIMIT 1");
+    // Business admins get hall_manager role (not super_admin)
+    $roleStmt = $db->prepare("SELECT id FROM roles WHERE slug = 'hall_manager' LIMIT 1");
     $roleStmt->execute();
     $role = $roleStmt->fetch(PDO::FETCH_ASSOC);
-    $role_id = $role ? $role['id'] : 1;
+    $role_id = $role ? $role['id'] : 2;
 
     // Get or create a branch for this business
     // For now use branch_id = 1 (main branch) or null
