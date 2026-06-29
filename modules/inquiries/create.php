@@ -28,11 +28,18 @@ if (!preg_match('/^\d{10}$/', $mobile)) {
 }
 
 $ref = Helper::generateRef('INQ','inquiries','inquiry_ref');
-$db->insert(
+$inq_id = $db->insert(
     "INSERT INTO inquiries (inquiry_ref,branch_id,name,mobile,email,event_type,event_date,guest_count,hall_id,source,follow_up_date,notes,status,created_by)
      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'new',?)",
     [$ref,$branch_id,$name,$mobile,$email,$event_type,$event_date,$guest_count,$hall_id,$source,$follow_up,$notes,$cu['id']]
 );
+
+// Log the create
+Logger::log('create', 'inquiries', $inq_id, $ref, null, [
+    'name' => $name, 'mobile' => $mobile, 'email' => $email,
+    'event_type' => $event_type, 'event_date' => $event_date,
+    'guest_count' => $guest_count, 'source' => $source, 'status' => 'new'
+], "Created inquiry $ref for $name");
 
 // Auto-save customer if not already in DB (matched by mobile)
 $existing = $db->fetchOne("SELECT id FROM customers WHERE mobile=? LIMIT 1", [$mobile]);

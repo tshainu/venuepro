@@ -21,7 +21,14 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['_action']??'')==='update_sta
     $newStatus = $_POST['status'] ?? $inq['status'];
     $fu = trim($_POST['follow_up_date'] ?? '') ?: null;
     $notes = trim($_POST['notes'] ?? $inq['notes']);
+
+    $oldData = ['status' => $inq['status'], 'follow_up_date' => $inq['follow_up_date'], 'notes' => $inq['notes']];
     $db->execute("UPDATE inquiries SET status=?,follow_up_date=?,notes=?,updated_at=NOW() WHERE id=?", [$newStatus,$fu,$notes,$id]);
+    $newData = ['status' => $newStatus, 'follow_up_date' => $fu, 'notes' => $notes];
+
+    Logger::log('edit', 'inquiries', $id, $inq['inquiry_ref'], $oldData, $newData,
+        "Updated inquiry {$inq['inquiry_ref']} status to $newStatus");
+
     Helper::flash('success','Inquiry updated.');
     Helper::redirect(BASE_URL.'/modules/inquiries/view.php?id='.$id);
 }
