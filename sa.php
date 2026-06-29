@@ -102,7 +102,7 @@ body{background:#f0f2f7;min-height:100vh;}
 .biz-card{
   background:#fff;border-radius:16px;padding:1.25rem 1.5rem;
   box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.05);
-  display:flex;align-items:center;gap:1.25rem;
+  display:flex;align-items:center;gap:1rem;flex-wrap:nowrap;
   transition:all .2s;position:relative;overflow:hidden;
 }
 .biz-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.1);transform:translateY(-1px);}
@@ -125,7 +125,7 @@ body{background:#f0f2f7;min-height:100vh;}
 .biz-meta-item{display:flex;align-items:center;gap:.3rem;font-size:.78rem;color:#64748b;}
 .biz-meta-item svg{color:#94a3b8;}
 
-.biz-badges{display:flex;gap:.5rem;flex-shrink:0;flex-wrap:wrap;align-items:center;}
+.biz-badges{display:flex;gap:.4rem;flex-shrink:0;flex-wrap:wrap;align-items:center;min-width:fit-content;}
 .badge-plan{padding:.25rem .7rem;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
 .badge-plan.trial      {background:#f3f0ff;color:#7c3aed;}
 .badge-plan.starter    {background:#eff6ff;color:#2563eb;}
@@ -137,8 +137,8 @@ body{background:#f0f2f7;min-height:100vh;}
 .badge-status.suspended{background:#fee2e2;color:#991b1b;}
 .badge-status.cancelled{background:#f1f5f9;color:#475569;}
 
-.biz-actions{display:flex;gap:.5rem;flex-shrink:0;}
-.btn-icon{width:34px;height:34px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;text-decoration:none;color:#64748b;}
+.biz-actions{display:flex;gap:.4rem;flex-shrink:0;flex-wrap:nowrap;align-items:center;}
+.btn-icon{width:32px;height:32px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;text-decoration:none;color:#64748b;flex-shrink:0;}
 .btn-icon:hover{background:#f8fafc;border-color:#c9a84c;color:#c9a84c;}
 .btn-icon.danger:hover{background:#fee2e2;border-color:#ef4444;color:#ef4444;}
 
