@@ -43,15 +43,14 @@ $todayEvents = $db->fetchOne(
 // ── Charts ───────────────────────────────────────────────────────────────
 // Bookings chart data — fetch daily data for last 12 months (JS handles range filtering)
 $bookingsChartData = $db->fetchAll(
-    "SELECT DATE_FORMAT(event_date,'%Y-%m-%d') as ymd,
-            DATE_FORMAT(event_date,'%d %b') as day_label,
-            DATE_FORMAT(event_date,'%b %Y') as month_label,
-            DATE_FORMAT(event_date,'%Y-%m') as ym,
+    "SELECT DATE_FORMAT(created_at,'%Y-%m-%d') as ymd,
+            DATE_FORMAT(created_at,'%d %b') as day_label,
+            DATE_FORMAT(created_at,'%b %Y') as month_label,
+            DATE_FORMAT(created_at,'%Y-%m') as ym,
             status,
             COUNT(*) as cnt
      FROM bookings b
-     WHERE event_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-       AND event_date <= DATE_ADD(CURDATE(), INTERVAL 6 MONTH) " . ($bid ? "AND b.branch_id=?" : "") . "
+     WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH) " . ($bid ? "AND b.branch_id=?" : "") . "
      GROUP BY ymd, day_label, month_label, ym, status
      ORDER BY ymd ASC",
     $bid ? [$bid] : []
@@ -500,7 +499,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
       <div class="vp-chart-header">
         <div>
           <div class="vp-chart-title">Bookings Overview</div>
-          <div class="vp-chart-sub" id="chart-bk-sub">By status over time</div>
+          <div class="vp-chart-sub" id="chart-bk-sub">Bookings created over time</div>
         </div>
         <div class="d-flex align-items-center gap-2">
           <div class="btn-group btn-group-sm" id="bk-chart-toggle" role="group">
