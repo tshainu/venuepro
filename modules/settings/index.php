@@ -259,11 +259,11 @@ require_once ROOT_PATH . '/includes/header.php';
         </div><!-- /col -->
       </div><!-- /row -->
 
-      <div class="sticky-footer d-print-none" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e8e8;padding:12px 24px;z-index:100">
+      <div class="sticky-footer d-print-none" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid #e8eaf0;padding:16px 24px;z-index:9999;box-shadow:0 -4px 12px rgba(0,0,0,.08);">
         <button type="submit" class="btn btn-vp-gold">Save Settings</button>
         <a href="<?= BASE_URL ?>/index.php" class="btn btn-ghost-secondary ms-2">Cancel</a>
       </div>
-      <div style="height:70px"></div>
+      <div style="height:80px"></div>
     </form>
   </div>
 
