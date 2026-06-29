@@ -11,7 +11,7 @@ $bFilter = $bid ? "AND b.branch_id = $bid" : "";
 $totalBookings = $db->fetchOne("SELECT COUNT(*) as c FROM bookings b WHERE 1 $bFilter")['c'] ?? 0;
 
 $upcomingEvents = $db->fetchOne(
-    "SELECT COUNT(*) as c FROM bookings b WHERE b.event_date >= CURDATE() AND b.status IN ('confirmed','tentative') " . ($bid ? "AND b.branch_id=?" : ""),
+    "SELECT COUNT(*) as c FROM bookings b WHERE b.event_date >= CURDATE() AND b.status IN ('confirmed','tentative','booked') " . ($bid ? "AND b.branch_id=?" : ""),
     $bid ? [$bid] : []
 )['c'] ?? 0;
 
@@ -36,7 +36,7 @@ $bkGrowth = $lastMonthBk > 0 ? round((($thisMonthBk - $lastMonthBk) / $lastMonth
 $totalCustomers = $db->fetchOne("SELECT COUNT(*) as c FROM customers" . ($bid ? " WHERE branch_id=$bid" : ""))['c'] ?? 0;
 
 $todayEvents = $db->fetchOne(
-    "SELECT COUNT(*) as c FROM bookings b WHERE b.event_date = CURDATE() AND b.status IN ('confirmed','tentative') " . ($bid ? "AND b.branch_id=?" : ""),
+    "SELECT COUNT(*) as c FROM bookings b WHERE b.event_date = CURDATE() AND b.status IN ('confirmed','tentative','booked') " . ($bid ? "AND b.branch_id=?" : ""),
     $bid ? [$bid] : []
 )['c'] ?? 0;
 
@@ -72,7 +72,7 @@ $upcomingList = $db->fetchAll(
      LEFT JOIN customers c ON b.customer_id = c.id
      LEFT JOIN halls h ON b.hall_id = h.id
      WHERE b.event_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
-     AND b.status IN ('confirmed','tentative') $bFilter
+     AND b.status IN ('confirmed','tentative','booked') $bFilter
      ORDER BY b.event_date ASC LIMIT 8"
 );
 
@@ -536,6 +536,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
           $sList = [
             ['inquiry',  '#7c3aed', 'Inquiry'],
             ['tentative','#d97706', 'Tentative'],
+            ['booked',   '#0284c7', 'Booked'],
             ['confirmed','#059669', 'Confirmed'],
             ['completed','#2563eb', 'Completed'],
             ['cancelled','#dc2626', 'Cancelled'],
@@ -678,6 +679,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 
   var statusDef = [
     { key:'confirmed',  label:'Confirmed',  color:'#059669' },
+    { key:'booked',     label:'Booked',     color:'#0284c7' },
     { key:'tentative',  label:'Tentative',  color:'#d97706' },
     { key:'inquiry',    label:'Inquiry',    color:'#7c3aed' },
     { key:'completed',  label:'Completed',  color:'#2563eb' },
@@ -687,7 +689,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   // Build daily map: { 'YYYY-MM-DD': { day_label, month_label, ym, inquiry:0, ... } }
   var dayMap = {};
   rawData.forEach(function(row) {
-    if (!dayMap[row.ymd]) dayMap[row.ymd] = { day_label: row.day_label, month_label: row.month_label, ym: row.ym, inquiry:0, tentative:0, confirmed:0, completed:0, cancelled:0 };
+    if (!dayMap[row.ymd]) dayMap[row.ymd] = { day_label: row.day_label, month_label: row.month_label, ym: row.ym, inquiry:0, tentative:0, booked:0, confirmed:0, completed:0, cancelled:0 };
     if (dayMap[row.ymd][row.status] !== undefined) dayMap[row.ymd][row.status] = parseInt(row.cnt);
   });
   var allDays = Object.keys(dayMap).sort();
@@ -696,7 +698,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   var monthMap = {};
   allDays.forEach(function(d) {
     var ym = dayMap[d].ym;
-    if (!monthMap[ym]) monthMap[ym] = { label: dayMap[d].month_label, inquiry:0, tentative:0, confirmed:0, completed:0, cancelled:0 };
+    if (!monthMap[ym]) monthMap[ym] = { label: dayMap[d].month_label, inquiry:0, tentative:0, booked:0, confirmed:0, completed:0, cancelled:0 };
     statusDef.forEach(function(s){ monthMap[ym][s.key] += dayMap[d][s.key]; });
   });
   var allMonths = Object.keys(monthMap).sort();
@@ -844,7 +846,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   // ── Donut status chart ─────────────────────────────────────
   var sLabels = <?= json_encode(array_column($statusData,'status')) ?>;
   var sCounts = <?= json_encode(array_map('intval', array_column($statusData,'cnt'))) ?>;
-  var sColors = {inquiry:'#7c3aed',tentative:'#d97706',confirmed:'#059669',completed:'#2563eb',cancelled:'#dc2626'};
+  var sColors = {inquiry:'#7c3aed',tentative:'#d97706',booked:'#0284c7',confirmed:'#059669',completed:'#2563eb',cancelled:'#dc2626'};
   var colors  = sLabels.map(function(l){ return sColors[l]||'#94a3b8'; });
 
   new ApexCharts(document.getElementById('chart-status'), {
