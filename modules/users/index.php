@@ -54,7 +54,7 @@ require_once __DIR__ . '/../../includes/header.php';
 .btn-edit:hover { background: #bfdbfe; }
 .btn-delete { background: #fee2e2; color: #991b1b; }
 .btn-delete:hover { background: #fecaca; }
-.action-cell { display: flex; gap: .5rem; }
+.action-cell { display: flex; gap: .5rem; flex-wrap: wrap; min-width: 180px; }
 </style>
 
 <div class="container-xl py-4">
