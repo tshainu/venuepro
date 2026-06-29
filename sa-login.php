@@ -59,14 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     .wrap { width: 100%; max-width: 400px; padding: 1.5rem; }
     .brand { text-align: center; margin-bottom: 2rem; }
-    .brand .icon {
-      width: 68px; height: 68px;
-      background: linear-gradient(135deg, #c9a84c, #e8c96a);
-      border-radius: 20px;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 30px; margin-bottom: 1rem;
-      box-shadow: 0 8px 32px rgba(201,168,76,.4);
-    }
+    .brand .icon { display: block; margin-bottom: 1rem; }
+    .brand .icon img { max-height: 80px; max-width: 200px; width: 100%; object-fit: contain; }
     .brand h1 { color: #fff; font-size: 1.5rem; font-weight: 800; }
     .brand p { color: rgba(255,255,255,.45); font-size: .82rem; margin-top: .3rem; }
     .card {
@@ -132,8 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <div class="wrap">
   <div class="brand">
-    <div class="icon">🛡️</div>
-    <h1>VenuePro</h1>
+    <div class="icon"><img src="<?= BASE_URL ?>/assets/images/sidebar-logo.png" alt="VenuePro"></div>
     <p>Super Admin Access</p>
   </div>
 
