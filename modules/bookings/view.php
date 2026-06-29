@@ -183,6 +183,7 @@ require_once ROOT_PATH . '/includes/header.php';
               <td class="d-flex gap-1">
                 <a href="<?= BASE_URL ?>/modules/payments/view.php?id=<?= $p['id'] ?>" class="btn btn-vp-outline btn-sm">View</a>
                 <a href="<?= BASE_URL ?>/modules/payments/edit.php?id=<?= $p['id'] ?>" class="btn btn-vp-outline btn-sm">Edit</a>
+                <a href="<?= BASE_URL ?>/modules/payments/view.php?id=<?= $p['id'] ?>&autoprint=1" target="_blank" class="btn btn-vp-outline btn-sm" title="Print Receipt">🖨</a>
               </td>
             </tr>
             <?php endforeach; else: ?>

@@ -274,4 +274,7 @@ require_once ROOT_PATH . '/includes/header.php';
   </div><!-- /col-lg-8 -->
 </div><!-- /row -->
 
+<?php if (!empty($_GET['autoprint'])): ?>
+<script>window.addEventListener('load', function(){ setTimeout(function(){ window.print(); }, 600); });</script>
+<?php endif; ?>
 <?php require_once ROOT_PATH . '/includes/footer.php'; ?>
