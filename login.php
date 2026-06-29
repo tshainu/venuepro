@@ -121,13 +121,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     .hint-badge code { color: #c9a84c; background: none; font-size: .78rem; }
     .footer-text { text-align: center; color: rgba(255,255,255,.25); font-size: .78rem; margin-top: 1.5rem; }
-    .divider { height: 1px; background: rgba(255,255,255,.08); margin: 1.2rem 0; }
-    .sa-link { text-align: center; margin-top: 1rem; }
-    .sa-link a {
-      color: #c9a84c; font-size: .82rem; text-decoration: none; font-weight: 600;
-      letter-spacing: .02em;
-    }
-    .sa-link a:hover { color: #e8c96a; }
   </style>
 </head>
 <body>
@@ -181,10 +174,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button type="submit" class="btn-login">Sign In →</button>
     </form>
 
-    <div class="divider"></div>
-    <div class="sa-link">
-      <a href="<?= BASE_URL ?>/vpsa/">🛡️ Super Admin Panel</a>
-    </div>
   </div>
 
   <div class="footer-text">&copy; <?= date('Y') ?> <?= APP_NAME ?> · AxisXNOR (PVT) Ltd</div>
