@@ -218,13 +218,18 @@ require_once ROOT_PATH . '/includes/header.php';
       <div class="card sticky-top" style="top:80px">
         <div class="card-header"><h3 class="card-title">Summary</h3></div>
         <div class="card-body">
+          <div class="mb-2" id="base-amount-row">
+            <label class="form-label">Base Amount</label>
+            <input type="number" id="base_amount_input" class="form-control" step="0.01" min="0" value="<?= number_format((float)($bk['total_amount'] ?? 0), 2, '.', '') ?>" placeholder="0.00">
+            <small class="text-muted">Used when no package is selected</small>
+          </div>
           <div class="d-flex justify-content-between mb-2"><span>Package</span><span id="sum-package">Rs. 0.00</span></div>
           <div class="d-flex justify-content-between mb-2"><span>Add-ons</span><span id="sum-addons">Rs. 0.00</span></div>
           <hr>
           <div class="d-flex justify-content-between mb-2"><span>Subtotal</span><span id="sum-subtotal">Rs. 0.00</span></div>
           <div class="d-flex justify-content-between mb-2"><span>Tax</span><span id="sum-tax">Rs. 0.00</span></div>
           <div class="mb-2">
-            <label class="form-label">Discount (Rs.)</label>
+            <label class="form-label">Discount</label>
             <input type="number" name="discount_amount" id="discount_input" class="form-control" step="0.01" min="0" value="<?= $_POST['discount_amount']??$bk['discount_amount'] ?>">
           </div>
           <hr>
@@ -271,10 +276,16 @@ function bindRow(row) {
 }
 document.getElementById('pkg_select').addEventListener('change', recalc);
 document.getElementById('discount_input').addEventListener('input', recalc);
+document.getElementById('base_amount_input').addEventListener('input', recalc);
 function recalc() {
-  const pkgOpt = document.getElementById('pkg_select').options[document.getElementById('pkg_select').selectedIndex];
+  const pkgSelect = document.getElementById('pkg_select');
+  const pkgOpt = pkgSelect.options[pkgSelect.selectedIndex];
   const pkgPrice = parseFloat(pkgOpt.dataset.price)||0;
-  document.getElementById('sum-package').textContent = 'Rs. '+pkgPrice.toFixed(2);
+  const baseAmount = parseFloat(document.getElementById('base_amount_input').value)||0;
+  const effectivePkgPrice = pkgPrice > 0 ? pkgPrice : baseAmount;
+  // Show/hide base amount row
+  document.getElementById('base-amount-row').style.display = pkgPrice > 0 ? 'none' : '';
+  document.getElementById('sum-package').textContent = 'Rs. '+(pkgPrice > 0 ? pkgPrice : 0).toFixed(2);
   let addonSub=0,addonTax=0;
   document.querySelectorAll('.addon-row').forEach(row=>{
     const sel=row.querySelector('.addon-select'); const opt=sel.options[sel.selectedIndex];
@@ -283,7 +294,7 @@ function recalc() {
     const total=price*qty; addonSub+=total; addonTax+=total*tax/100;
     row.querySelector('.addon-total').textContent=total>0?'Rs. '+total.toFixed(2):'—';
   });
-  const subtotal=pkgPrice+addonSub, tax=addonTax, discount=parseFloat(document.getElementById('discount_input').value)||0;
+  const subtotal=effectivePkgPrice+addonSub, tax=addonTax, discount=parseFloat(document.getElementById('discount_input').value)||0;
   document.getElementById('sum-addons').textContent='Rs. '+addonSub.toFixed(2);
   document.getElementById('sum-subtotal').textContent='Rs. '+subtotal.toFixed(2);
   document.getElementById('sum-tax').textContent='Rs. '+tax.toFixed(2);
