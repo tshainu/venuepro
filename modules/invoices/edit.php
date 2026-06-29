@@ -21,6 +21,22 @@ $branches  = $db->fetchAll("SELECT id,name FROM branches WHERE is_active=1");
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Capture old state before any changes
+    $old_items = $db->fetchAll("SELECT description,quantity,unit_price,tax_percent FROM invoice_items WHERE invoice_id=? ORDER BY id", [$id]);
+    $old_snapshot = [
+        'customer_id'     => $inv['customer_id'],
+        'invoice_type'    => $inv['invoice_type'],
+        'invoice_date'    => $inv['invoice_date'],
+        'due_date'        => $inv['due_date'],
+        'status'          => $inv['status'],
+        'subtotal'        => $inv['subtotal'],
+        'discount_amount' => $inv['discount_amount'],
+        'tax_amount'      => $inv['tax_amount'],
+        'total'           => $inv['total'],
+        'notes'           => $inv['notes'],
+        'items'           => $old_items,
+    ];
+
     $customer_id  = (int)($_POST['customer_id'] ?? 0);
     $branch_id    = $cu['branch_id'] ?? (int)($_POST['branch_id'] ?? $inv['branch_id']);
     $invoice_type = $_POST['invoice_type'] ?? $inv['invoice_type'];
@@ -71,6 +87,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $db->execute("UPDATE bookings SET balance_amount = final_amount - paid_amount WHERE id=?", [$inv['booking_id']]);
         }
+
+        Logger::log('edit', 'invoices', $id, $inv['invoice_number'], $old_snapshot, [
+            'customer_id'     => $customer_id,
+            'invoice_type'    => $invoice_type,
+            'invoice_date'    => $invoice_date,
+            'due_date'        => $due_date,
+            'status'          => $status,
+            'subtotal'        => $subtotal,
+            'discount_amount' => $discount,
+            'tax_amount'      => $tax_total,
+            'total'           => $total,
+            'notes'           => $notes,
+        ], "Edited invoice {$inv['invoice_number']}");
 
         Helper::flash('success','Invoice updated.');
         // Redirect back to booking if came from there

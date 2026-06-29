@@ -22,8 +22,13 @@ if ($cu['branch_id'] && $inv['branch_id'] != $cu['branch_id']) { Helper::flash('
 if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['change_status'])) {
     $ns = $_POST['new_status']??'';
     if (in_array($ns,['draft','sent','paid','partial','overdue','cancelled'])) {
+        $old_status = $inv['status'];
         if ($ns==='paid') { $db->execute("UPDATE invoices SET status=?,paid_amount=total,balance=0 WHERE id=?",[$ns,$id]); }
         else { $db->execute("UPDATE invoices SET status=? WHERE id=?",[$ns,$id]); }
+        Logger::log('edit', 'invoices', $id, $inv['invoice_number'],
+            ['status' => $old_status],
+            ['status' => $ns],
+            "Invoice {$inv['invoice_number']} status changed from $old_status to $ns");
         // Sync booking financials
         $inv_row = $db->fetchOne("SELECT booking_id FROM invoices WHERE id=?", [$id]);
         if ($inv_row && $inv_row['booking_id']) {
