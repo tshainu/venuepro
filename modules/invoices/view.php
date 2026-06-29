@@ -24,6 +24,21 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['change_status'])) {
     if (in_array($ns,['draft','sent','paid','partial','overdue','cancelled'])) {
         if ($ns==='paid') { $db->execute("UPDATE invoices SET status=?,paid_amount=total,balance=0 WHERE id=?",[$ns,$id]); }
         else { $db->execute("UPDATE invoices SET status=? WHERE id=?",[$ns,$id]); }
+        // Sync booking financials
+        $inv_row = $db->fetchOne("SELECT booking_id FROM invoices WHERE id=?", [$id]);
+        if ($inv_row && $inv_row['booking_id']) {
+            $bid = $inv_row['booking_id'];
+            $inv_totals = $db->fetchOne(
+                "SELECT COALESCE(SUM(total),0) as total_sum, COALESCE(SUM(tax_amount),0) as tax_sum, COALESCE(SUM(discount_amount),0) as disc_sum
+                 FROM invoices WHERE booking_id=? AND status NOT IN ('cancelled')",
+                [$bid]
+            );
+            $db->execute(
+                "UPDATE bookings SET total_amount=?, tax_amount=?, discount_amount=?, final_amount=?, balance_amount=final_amount - paid_amount WHERE id=?",
+                [$inv_totals['total_sum'], $inv_totals['tax_sum'], $inv_totals['disc_sum'], $inv_totals['total_sum'], $bid]
+            );
+            $db->execute("UPDATE bookings SET balance_amount = final_amount - paid_amount WHERE id=?", [$bid]);
+        }
         Helper::flash('success','Invoice status updated.');
         Helper::redirect(BASE_URL.'/modules/invoices/view.php?id='.$id);
     }

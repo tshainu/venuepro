@@ -63,6 +63,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $qty=(float)($it['quantity']??1); $up=(float)($it['unit_price']??0); $tp=(float)($it['tax_percent']??0);
             $db->insert("INSERT INTO invoice_items (invoice_id,description,quantity,unit_price,tax_percent,total) VALUES (?,?,?,?,?,?)", [$iid,$desc,$qty,$up,$tp,$qty*$up]);
         }
+        // Sync booking financials with sum of all active invoices
+        if ($booking_id) {
+            $inv_totals = $db->fetchOne(
+                "SELECT COALESCE(SUM(total),0) as total_sum, COALESCE(SUM(tax_amount),0) as tax_sum, COALESCE(SUM(discount_amount),0) as disc_sum
+                 FROM invoices WHERE booking_id=? AND status NOT IN ('cancelled')",
+                [$booking_id]
+            );
+            $new_final = (float)$inv_totals['total_sum'];
+            $db->execute(
+                "UPDATE bookings SET total_amount=?, tax_amount=?, discount_amount=?, final_amount=?, balance_amount=final_amount - paid_amount WHERE id=?",
+                [$inv_totals['total_sum'], $inv_totals['tax_sum'], $inv_totals['disc_sum'], $new_final, $booking_id]
+            );
+            $db->execute("UPDATE bookings SET balance_amount = final_amount - paid_amount WHERE id=?", [$booking_id]);
+        }
         Helper::flash('success',"Invoice $inv_num created.");
         Helper::redirect(BASE_URL.'/modules/invoices/view.php?id='.$iid);
     }
