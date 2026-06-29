@@ -270,7 +270,7 @@
 
 <?php $cu = Auth::currentUser(); ?>
 <?php
-$p = $_SERVER['PHP_SELF'];
+$_currentPath = $_SERVER['PHP_SELF'];
 function sbActive(string $path, string $match, bool $exact = false): string {
   if ($exact) return (basename($path) === basename($match) && strpos($path, '/modules') === false) ? 'active' : '';
   return strpos($path, $match) !== false ? 'active' : '';
@@ -297,7 +297,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
     <nav class="sb-nav">
 
       <!-- MAIN -->
-      <a href="<?= BASE_URL ?>/index.php" class="sb-item <?= sbActive($p, 'index.php', true) ?>">
+      <a href="<?= BASE_URL ?>/index.php" class="sb-item <?= sbActive($_currentPath, 'index.php', true) ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 12L5 10M12 3L21 12H19V20H15V16H9V20H5V12"/><path d="M9 21V12H15V21"/>
@@ -306,7 +306,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Dashboard</span>
       </a>
 
-      <a href="<?= BASE_URL ?>/modules/inquiries/index.php" class="sb-item <?= sbActive($p, '/inquiries') ?>">
+      <a href="<?= BASE_URL ?>/modules/inquiries/index.php" class="sb-item <?= sbActive($_currentPath, '/inquiries') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
@@ -316,7 +316,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Inquiries</span>
       </a>
 
-      <a href="<?= BASE_URL ?>/modules/calendar/index.php" class="sb-item <?= sbActive($p, '/calendar') ?>">
+      <a href="<?= BASE_URL ?>/modules/calendar/index.php" class="sb-item <?= sbActive($_currentPath, '/calendar') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
@@ -325,7 +325,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Calendar</span>
       </a>
 
-      <a href="<?= BASE_URL ?>/modules/bookings/index.php" class="sb-item <?= sbActive($p, '/bookings') ?>">
+      <a href="<?= BASE_URL ?>/modules/bookings/index.php" class="sb-item <?= sbActive($_currentPath, '/bookings') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/>
@@ -334,7 +334,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Bookings</span>
       </a>
 
-      <a href="<?= BASE_URL ?>/modules/customers/index.php" class="sb-item <?= sbActive($p, '/customers') ?>">
+      <a href="<?= BASE_URL ?>/modules/customers/index.php" class="sb-item <?= sbActive($_currentPath, '/customers') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
@@ -346,7 +346,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
       <!-- VENUE -->
       <div class="sb-section">Venue</div>
 
-      <a href="<?= BASE_URL ?>/modules/halls/index.php" class="sb-item <?= sbActive($p, '/halls') ?>">
+      <a href="<?= BASE_URL ?>/modules/halls/index.php" class="sb-item <?= sbActive($_currentPath, '/halls') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 21h18M3 7l9-4 9 4M4 21V7.5L12 4l8 3.5V21"/><path d="M9 21v-6h6v6"/>
@@ -355,7 +355,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Halls</span>
       </a>
 
-      <a href="<?= BASE_URL ?>/modules/rooms/index.php" class="sb-item <?= sbActive($p, '/rooms') ?>">
+      <a href="<?= BASE_URL ?>/modules/rooms/index.php" class="sb-item <?= sbActive($_currentPath, '/rooms') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M7 12h10"/>
@@ -367,7 +367,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
       <!-- FINANCE -->
       <div class="sb-section">Finance</div>
 
-      <a href="<?= BASE_URL ?>/modules/packages/index.php" class="sb-item <?= sbActive($p, '/packages') ?>">
+      <a href="<?= BASE_URL ?>/modules/packages/index.php" class="sb-item <?= sbActive($_currentPath, '/packages') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="12 3 20 7.5 20 16.5 12 21 4 16.5 4 7.5 12 3"/>
@@ -377,7 +377,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Packages</span>
       </a>
 
-      <a href="<?= BASE_URL ?>/modules/addons/index.php" class="sb-item <?= sbActive($p, '/addons') ?>">
+      <a href="<?= BASE_URL ?>/modules/addons/index.php" class="sb-item <?= sbActive($_currentPath, '/addons') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/>
@@ -386,7 +386,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Add-ons</span>
       </a>
 
-      <a href="<?= BASE_URL ?>/modules/quotations/index.php" class="sb-item <?= sbActive($p, '/quotations') ?>">
+      <a href="<?= BASE_URL ?>/modules/quotations/index.php" class="sb-item <?= sbActive($_currentPath, '/quotations') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
@@ -396,7 +396,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Quotations</span>
       </a>
 
-      <a href="<?= BASE_URL ?>/modules/invoices/index.php" class="sb-item <?= sbActive($p, '/invoices') ?>">
+      <a href="<?= BASE_URL ?>/modules/invoices/index.php" class="sb-item <?= sbActive($_currentPath, '/invoices') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16l-3-2-2 2-2-2-2 2-2-2-3 2"/>
@@ -406,7 +406,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Invoices</span>
       </a>
 
-      <a href="<?= BASE_URL ?>/modules/payments/index.php" class="sb-item <?= sbActive($p, '/payments') ?>">
+      <a href="<?= BASE_URL ?>/modules/payments/index.php" class="sb-item <?= sbActive($_currentPath, '/payments') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/>
@@ -415,7 +415,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Payments</span>
       </a>
 
-      <a href="<?= BASE_URL ?>/modules/reports/index.php" class="sb-item <?= sbActive($p, '/reports') ?>">
+      <a href="<?= BASE_URL ?>/modules/reports/index.php" class="sb-item <?= sbActive($_currentPath, '/reports') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 20V10M12 20V4M6 20v-6"/>
@@ -428,7 +428,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
       <!-- STAFF MANAGEMENT -->
       <div class="sb-section">Staff</div>
 
-      <a href="<?= BASE_URL ?>/modules/users/index.php" class="sb-item <?= sbActive($p, '/users') ?>">
+      <a href="<?= BASE_URL ?>/modules/users/index.php" class="sb-item <?= sbActive($_currentPath, '/users') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
@@ -443,7 +443,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
       <!-- ADMIN -->
       <div class="sb-section">Administration</div>
 
-      <a href="<?= BASE_URL ?>/vpsa/users/index.php" class="sb-item <?= sbActive($p, '/users') ?>">
+      <a href="<?= BASE_URL ?>/vpsa/users/index.php" class="sb-item <?= sbActive($_currentPath, '/users') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
@@ -453,7 +453,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Users</span>
       </a>
 
-      <a href="<?= BASE_URL ?>/modules/branches/index.php" class="sb-item <?= sbActive($p, '/branches') ?>">
+      <a href="<?= BASE_URL ?>/modules/branches/index.php" class="sb-item <?= sbActive($_currentPath, '/branches') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 3v12M18 9a3 3 0 100-6 3 3 0 000 6zM6 21a3 3 0 100-6 3 3 0 000 6zM15 6H6M6 15h9"/>
@@ -462,7 +462,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Branches</span>
       </a>
 
-      <a href="<?= BASE_URL ?>/modules/settings/index.php" class="sb-item <?= sbActive($p, '/settings') ?>">
+      <a href="<?= BASE_URL ?>/modules/settings/index.php" class="sb-item <?= sbActive($_currentPath, '/settings') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"/>
