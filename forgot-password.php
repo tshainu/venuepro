@@ -66,14 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     .login-wrap { width: 100%; max-width: 420px; padding: 1.5rem; }
     .login-brand { text-align: center; margin-bottom: 2rem; }
-    .logo-icon {
-      width: 64px; height: 64px;
-      background: linear-gradient(135deg, #c9a84c, #e8c96a);
-      border-radius: 16px; display: inline-flex;
-      align-items: center; justify-content: center;
-      font-size: 28px; margin-bottom: .75rem;
-      box-shadow: 0 8px 24px rgba(201,168,76,.35);
-    }
+    .logo-icon { display: block; margin-bottom: .75rem; }
+    .logo-icon img { max-height: 80px; max-width: 200px; width: 100%; object-fit: contain; }
     .brand-name { color: #fff; font-size: 1.6rem; font-weight: 800; letter-spacing: -.04em; display: block; }
     .brand-sub  { color: rgba(255,255,255,.35); font-size: .8rem; margin-top: .2rem; }
     .login-card {
@@ -131,9 +125,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
   <div class="login-wrap">
     <div class="login-brand">
-      <div class="logo-icon">🏛️</div>
-      <span class="brand-name"><?= APP_NAME ?></span>
-      <div class="brand-sub">Venue Management System</div>
+      <div class="logo-icon"><img src="<?= BASE_URL ?>/assets/images/sidebar-logo.png" alt="VenuePro"></div>
+      <div class="brand-sub">Wedding Hall & Event Venue Management</div>
     </div>
 
     <div class="login-card">
