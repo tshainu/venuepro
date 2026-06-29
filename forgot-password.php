@@ -170,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="mb-3">
             <label class="form-label">User ID</label>
             <input type="text" name="user_id" class="form-control"
-                   placeholder="e.g. Q651" required
+                   placeholder="e.g. A001" required
                    value="<?= htmlspecialchars(strtoupper($_POST['user_id'] ?? '')) ?>"
                    style="text-transform:uppercase;">
           </div>
