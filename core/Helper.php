@@ -54,9 +54,12 @@ class Helper {
             'maintenance'=> 'danger',
         ];
         $color = $map[$status] ?? 'secondary';
-        // Use custom pill style for booking statuses
+        // Use custom pill style for all statuses
         $customClass = 'badge-' . $status;
-        $customStatuses = ['inquiry','tentative','booked','confirmed','completed','cancelled'];
+        $customStatuses = ['inquiry','tentative','booked','confirmed','completed','cancelled',
+                           'draft','sent','partial','overdue','paid',
+                           'advance','interim','final',
+                           'available','reserved','occupied','maintenance'];
         if (in_array($status, $customStatuses)) {
             return '<span class="badge ' . $customClass . '" style="font-size:.7rem;padding:.3rem .65rem;border-radius:20px;font-weight:600;">' . ucfirst(str_replace('_', ' ', $status)) . '</span>';
         }
