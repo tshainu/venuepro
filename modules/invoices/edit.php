@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $qty=(float)($it['quantity']??1); $up=(float)($it['unit_price']??0); $tp=(float)($it['tax_percent']??0);
             $line=$qty*$up; $subtotal+=$line; $tax_total+=$line*$tp/100;
         }
-        $total = $subtotal + $tax_total - $discount;
+        $total   = $subtotal + $tax_total - $discount;
         $balance = max(0, $total - (float)$inv['paid_amount']);
 
         $db->execute(
@@ -74,20 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->insert("INSERT INTO invoice_items (invoice_id,description,quantity,unit_price,tax_percent,total) VALUES (?,?,?,?,?,?)", [$id,$desc,$qty,$up,$tp,$qty*$up]);
         }
 
-        // Sync booking financials
-        if ($inv['booking_id']) {
-            $inv_totals = $db->fetchOne(
-                "SELECT COALESCE(SUM(total),0) as total_sum, COALESCE(SUM(tax_amount),0) as tax_sum, COALESCE(SUM(discount_amount),0) as disc_sum
-                 FROM invoices WHERE booking_id=? AND status NOT IN ('cancelled')",
-                [$inv['booking_id']]
-            );
-            $db->execute(
-                "UPDATE bookings SET total_amount=?, tax_amount=?, discount_amount=?, final_amount=?, balance_amount=final_amount - paid_amount WHERE id=?",
-                [$inv_totals['total_sum'], $inv_totals['tax_sum'], $inv_totals['disc_sum'], $inv_totals['total_sum'], $inv['booking_id']]
-            );
-            $db->execute("UPDATE bookings SET balance_amount = final_amount - paid_amount WHERE id=?", [$inv['booking_id']]);
-        }
-
+        // Log BEFORE booking sync so crash there doesn't swallow the log entry
         Logger::log('edit', 'invoices', $id, $inv['invoice_number'], $old_snapshot, [
             'customer_id'     => $customer_id,
             'invoice_type'    => $invoice_type,
@@ -101,8 +88,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'notes'           => $notes,
         ], "Edited invoice {$inv['invoice_number']}");
 
+        // Sync booking financials
+        if ($inv['booking_id']) {
+            $inv_totals = $db->fetchOne(
+                "SELECT COALESCE(SUM(total),0) as total_sum, COALESCE(SUM(tax_amount),0) as tax_sum, COALESCE(SUM(discount_amount),0) as disc_sum
+                 FROM invoices WHERE booking_id=? AND status NOT IN ('cancelled')",
+                [$inv['booking_id']]
+            );
+            if ($inv_totals) {
+                $db->execute(
+                    "UPDATE bookings SET total_amount=?, tax_amount=?, discount_amount=?, final_amount=?, balance_amount=final_amount - paid_amount WHERE id=?",
+                    [$inv_totals['total_sum'], $inv_totals['tax_sum'], $inv_totals['disc_sum'], $inv_totals['total_sum'], $inv['booking_id']]
+                );
+                $db->execute("UPDATE bookings SET balance_amount = final_amount - paid_amount WHERE id=?", [$inv['booking_id']]);
+            }
+        }
+
         Helper::flash('success','Invoice updated.');
-        // Redirect back to booking if came from there
         $back = $_POST['back_url'] ?? '';
         Helper::redirect($back ?: BASE_URL.'/modules/invoices/view.php?id='.$id);
     }

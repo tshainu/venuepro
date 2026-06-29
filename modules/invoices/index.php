@@ -265,7 +265,7 @@ require_once ROOT_PATH . '/includes/header.php';
           <td><?= Helper::statusBadge($inv['status']) ?></td>
           <td>
             <a href="<?= BASE_URL ?>/modules/invoices/view.php?id=<?= $inv['id'] ?>" class="btn btn-vp-outline btn-sm">View</a>
-            <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $inv['id'] ?>" class="btn btn-vp-primary btn-sm" target="_blank">PDF</a>
+            <a href="<?= BASE_URL ?>/modules/invoices/edit.php?id=<?= $inv['id'] ?>" class="btn btn-vp-primary btn-sm">Edit</a>
           </td>
         </tr>
         <?php endforeach; else: ?>
