@@ -195,6 +195,20 @@ body{background:#f0f2f7;min-height:100vh;}
 
 <div class="sa-body">
 
+<?php if (!empty($_SESSION['sa_error'])): ?>
+<div style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:.9rem 1.2rem;border-radius:10px;margin-bottom:1.2rem;font-size:.875rem;display:flex;align-items:flex-start;gap:.6rem;">
+  <span style="font-size:1.1rem;margin-top:1px;">⚠️</span>
+  <span><?= $_SESSION['sa_error'] ?></span>
+</div>
+<?php unset($_SESSION['sa_error']); endif; ?>
+
+<?php if (!empty($_SESSION['sa_success'])): ?>
+<div style="background:#dcfce7;border:1px solid #86efac;color:#166534;padding:.9rem 1.2rem;border-radius:10px;margin-bottom:1.2rem;font-size:.875rem;display:flex;align-items:flex-start;gap:.6rem;">
+  <span style="font-size:1.1rem;margin-top:1px;">✅</span>
+  <span><?= $_SESSION['sa_success'] ?></span>
+</div>
+<?php unset($_SESSION['sa_success']); endif; ?>
+
   <!-- STATS -->
   <div class="stats-grid">
     <div class="stat-card stat-total">
