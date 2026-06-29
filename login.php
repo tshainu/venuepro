@@ -173,6 +173,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <button type="submit" class="btn-login">Sign In →</button>
     </form>
+    <div style="text-align:center;margin-top:1rem;">
+      <a href="<?= BASE_URL ?>/forgot-password.php" style="color:rgba(255,255,255,.4);font-size:.82rem;font-weight:600;text-decoration:none;transition:color .15s;" onmouseover="this.style.color='#c9a84c'" onmouseout="this.style.color='rgba(255,255,255,.4)'">Forgot password?</a>
+    </div>
 
   </div>
 
