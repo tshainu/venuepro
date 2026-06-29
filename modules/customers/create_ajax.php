@@ -30,6 +30,7 @@ $branch_id  = $cu['branch_id'] ?? 1;
 
 if (!$name)   { echo json_encode(['success'=>false,'error'=>'Name is required.']);   exit; }
 if (!$mobile) { echo json_encode(['success'=>false,'error'=>'Mobile is required.']); exit; }
+if (!preg_match('/^\d{10}$/', $mobile)) { echo json_encode(['success'=>false,'error'=>'Mobile number must be exactly 10 digits.']); exit; }
 
 try {
     $id = $db->insert(

@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $mobile=$_POST['mobile']??''; $mobile2=$_POST['mobile2']??''; $email=$_POST['email']??''; $notes=$_POST['notes']??'';
     if (!$name) $errors[] = 'Name required.';
     if (!$mobile) $errors[] = 'Mobile required.';
+    elseif (!preg_match('/^\d{10}$/', $mobile)) $errors[] = 'Mobile number must be exactly 10 digits.';
     if (!$errors) {
         $db->execute(
             "UPDATE customers SET name=?,bride_name=?,groom_name=?,nic=?,address=?,city=?,mobile=?,mobile2=?,email=?,notes=?,updated_at=NOW() WHERE id=?",

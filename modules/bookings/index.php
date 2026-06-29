@@ -53,7 +53,7 @@ require_once ROOT_PATH . '/includes/header.php';
     <input type="text" name="search" class="form-control" placeholder="Ref / Customer / Phone..." value="<?= Helper::sanitize($search) ?>" style="max-width:220px;">
     <select name="status" class="form-select" style="max-width:150px;">
       <option value="">All Status</option>
-      <?php foreach (['inquiry','tentative','confirmed','completed','cancelled'] as $s): ?>
+      <?php foreach (['inquiry','booked','confirmed','completed','cancelled'] as $s): ?>
       <option value="<?= $s ?>" <?= $status==$s?'selected':'' ?>><?= ucfirst($s) ?></option>
       <?php endforeach; ?>
     </select>

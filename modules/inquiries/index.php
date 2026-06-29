@@ -256,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['_action']??'')==='' ) {
         </div>
         <div class="col-md-6">
           <div class="fl req">Mobile</div>
-          <input type="tel" name="mobile" class="form-control" placeholder="07X XXX XXXX" required>
+          <input type="tel" name="mobile" class="form-control" placeholder="07X XXX XXXX" required pattern="\d{10}" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')" title="Mobile must be exactly 10 digits">
         </div>
         <div class="col-md-6">
           <div class="fl">Email</div>
@@ -273,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['_action']??'')==='' ) {
         </div>
         <div class="col-md-6">
           <div class="fl">Expected Event Date</div>
-          <input type="date" name="event_date" class="form-control">
+          <input type="text" name="event_date" id="inq_event_date" class="form-control fp-datepicker" placeholder="Select date" autocomplete="off">
         </div>
         <div class="col-md-6">
           <div class="fl">Expected Guests</div>
@@ -299,7 +299,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['_action']??'')==='' ) {
         </div>
         <div class="col-md-6">
           <div class="fl">Follow-up Date</div>
-          <input type="date" name="follow_up_date" class="form-control" value="<?= date('Y-m-d', strtotime('+2 days')) ?>">
+          <input type="text" name="follow_up_date" id="inq_followup_date" class="form-control fp-datepicker" placeholder="Select date" autocomplete="off" value="<?= date('Y-m-d', strtotime('+5 days')) ?>">
         </div>
         <div class="col-12">
           <div class="fl">Notes</div>
@@ -319,5 +319,43 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['_action']??'')==='' ) {
 function openInqModal()  { document.getElementById('inqModal').classList.add('show'); }
 function closeInqModal() { document.getElementById('inqModal').classList.remove('show'); }
 document.addEventListener('keydown', e => { if (e.key==='Escape') closeInqModal(); });
+</script>
+
+<!-- Flatpickr -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+.flatpickr-calendar { border-radius:16px !important; box-shadow:0 16px 48px rgba(12,26,53,.2) !important; border:1.5px solid #e5e7eb !important; font-family:inherit !important; }
+.flatpickr-day.selected, .flatpickr-day.selected:hover { background:linear-gradient(135deg,#c9a84c,#e8c96a) !important; border-color:#c9a84c !important; }
+.flatpickr-day:hover { background:#fdf5e0 !important; }
+.flatpickr-months .flatpickr-month { background:linear-gradient(135deg,#0c1a35,#1a3060) !important; color:#fff !important; border-radius:14px 14px 0 0 !important; }
+.flatpickr-current-month, .flatpickr-current-month .flatpickr-monthDropdown-months { color:#fff !important; }
+.flatpickr-weekday { color:#c9a84c !important; font-weight:700 !important; }
+.flatpickr-prev-month, .flatpickr-next-month { color:#fff !important; fill:#fff !important; }
+.flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg { fill:#c9a84c !important; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+// Init flatpickr on inquiry modal fields
+function initInqFlatpickr() {
+  if (window._fpEventDate) return; // already init
+  window._fpEventDate = flatpickr('#inq_event_date', {
+    dateFormat: 'Y-m-d',
+    minDate: 'today',
+    disableMobile: true,
+    allowInput: false,
+  });
+  var followupDefault = new Date();
+  followupDefault.setDate(followupDefault.getDate() + 5);
+  window._fpFollowup = flatpickr('#inq_followup_date', {
+    dateFormat: 'Y-m-d',
+    disableMobile: true,
+    allowInput: false,
+    defaultDate: followupDefault,
+  });
+}
+
+// Override openInqModal to init flatpickr
+var _origOpen = openInqModal;
+openInqModal = function() { _origOpen(); initInqFlatpickr(); };
 </script>
 <?php require_once ROOT_PATH . '/includes/footer.php'; ?>

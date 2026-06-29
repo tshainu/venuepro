@@ -113,7 +113,7 @@ require_once ROOT_PATH . '/includes/header.php';
             <div class="col-md-6">
               <label class="form-label">Status</label>
               <select name="status" class="form-select">
-                <?php foreach (['inquiry','tentative','confirmed','completed','cancelled'] as $s): ?>
+                <?php foreach (['inquiry','booked','confirmed','completed','cancelled'] as $s): ?>
                 <option value="<?= $s ?>" <?= ($_POST['status']??'')===$s?'selected':'' ?>><?= ucfirst($s) ?></option>
                 <?php endforeach; ?>
               </select>

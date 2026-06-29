@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$name)   $errors[] = 'Customer name is required.';
     if (!$mobile) $errors[] = 'Mobile number is required.';
+    elseif (!preg_match('/^\d{10}$/', $mobile)) $errors[] = 'Mobile number must be exactly 10 digits.';
 
     if (!$errors) {
         $db->insert(
@@ -274,7 +275,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <label class="form-label required">Primary Mobile</label>
             <div class="input-group">
               <span class="input-group-text" style="border-radius:10px 0 0 10px;border:1.5px solid #e5e7eb;border-right:none;background:#f8fafc;font-size:.82rem;color:#6b7280;white-space:nowrap;">🇱🇰 +94</span>
-              <input type="tel" name="mobile" id="f_mobile" class="form-control" required placeholder="07X XXX XXXX" value="<?= htmlspecialchars($_POST['mobile']??'') ?>" style="border-radius:0 10px 10px 0;" oninput="updatePreview()">
+              <input type="tel" name="mobile" id="f_mobile" class="form-control" required placeholder="07X XXX XXXX" value="<?= htmlspecialchars($_POST['mobile']??'') ?>" style="border-radius:0 10px 10px 0;" pattern="\d{10}" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'');updatePreview()" title="Mobile must be exactly 10 digits">
             </div>
             <div class="form-hint">WhatsApp-compatible number preferred</div>
           </div>

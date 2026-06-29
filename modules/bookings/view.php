@@ -23,7 +23,7 @@ if ($cu['branch_id'] && $bk['branch_id'] != $cu['branch_id']) { Helper::flash('e
 // Status change
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_status'])) {
     $new_status = $_POST['new_status'] ?? '';
-    if (in_array($new_status, ['inquiry','tentative','confirmed','completed','cancelled'])) {
+    if (in_array($new_status, ['inquiry','booked','confirmed','completed','cancelled'])) {
         $db->execute("UPDATE bookings SET status=? WHERE id=?", [$new_status, $id]);
         Helper::flash('success','Status updated to '.ucfirst($new_status).'.');
         Helper::redirect(BASE_URL.'/modules/bookings/view.php?id='.$id);
@@ -243,7 +243,7 @@ require_once ROOT_PATH . '/includes/header.php';
           <input type="hidden" name="change_status" value="1">
           <div class="mb-2">
             <select name="new_status" class="form-select">
-              <?php foreach (['inquiry','tentative','confirmed','completed','cancelled'] as $s): ?>
+              <?php foreach (['inquiry','booked','confirmed','completed','cancelled'] as $s): ?>
               <option value="<?= $s ?>" <?= $bk['status']===$s?'selected':'' ?>><?= ucfirst($s) ?></option>
               <?php endforeach; ?>
             </select>

@@ -496,16 +496,16 @@ $evtType = $_POST['event_type'] ?? ($fromInquiry['event_type'] ?? '');
         <div class="row g-3 mb-3">
           <div class="col-md-3">
             <label class="form-label">Start Time</label>
-            <input type="time" name="event_time" class="form-control" value="<?= htmlspecialchars($_POST['event_time']??'') ?>">
+            <input type="text" name="event_time" id="fp_start_time" class="form-control" placeholder="Select time" value="<?= htmlspecialchars($_POST['event_time']??'') ?>" autocomplete="off">
           </div>
           <div class="col-md-3">
             <label class="form-label">End Time</label>
-            <input type="time" name="event_end_time" class="form-control" value="<?= htmlspecialchars($_POST['event_end_time']??'') ?>">
+            <input type="text" name="event_end_time" id="fp_end_time" class="form-control" placeholder="Select time" value="<?= htmlspecialchars($_POST['event_end_time']??'') ?>" autocomplete="off">
           </div>
           <div class="col-md-3">
             <label class="form-label">Status</label>
             <select name="status" class="form-select">
-              <?php foreach (['inquiry'=>'Inquiry','tentative'=>'Tentative','confirmed'=>'Confirmed'] as $sv=>$sl): ?>
+              <?php foreach (['inquiry'=>'Inquiry','booked'=>'Booked','confirmed'=>'Confirmed'] as $sv=>$sl): ?>
               <option value="<?= $sv ?>" <?= ($_POST['status']??'inquiry')===$sv?'selected':'' ?>><?= $sl ?></option>
               <?php endforeach; ?>
             </select>
@@ -1092,4 +1092,45 @@ async function saveNewCustomer() {
 }
 </script>
 
+<!-- Flatpickr time pickers -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+.flatpickr-calendar { border-radius:16px !important; box-shadow:0 16px 48px rgba(12,26,53,.2) !important; border:1.5px solid #e5e7eb !important; font-family:inherit !important; }
+.flatpickr-calendar.hasTime .flatpickr-time { border-top:1px solid #f0f2f8 !important; }
+.flatpickr-time input, .flatpickr-time .flatpickr-am-pm { font-size:1.4rem !important; font-weight:800 !important; color:#0c1a35 !important; }
+.flatpickr-time .numInputWrapper span.arrowUp:after  { border-bottom-color:#c9a84c !important; }
+.flatpickr-time .numInputWrapper span.arrowDown:after { border-top-color:#c9a84c !important; }
+.flatpickr-time .flatpickr-am-pm { color:#c9a84c !important; font-weight:700 !important; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+// Time pickers
+flatpickr('#fp_start_time', {
+  enableTime: true, noCalendar: true,
+  dateFormat: 'H:i', time_24hr: true,
+  disableMobile: true,
+  minuteIncrement: 15,
+  onChange: function() { checkHallConflict(); }
+});
+flatpickr('#fp_end_time', {
+  enableTime: true, noCalendar: true,
+  dateFormat: 'H:i', time_24hr: true,
+  disableMobile: true,
+  minuteIncrement: 15,
+  onChange: function() { checkHallConflict(); }
+});
+
+// Phone validation on New Customer modal
+var _origSaveNewCustomer = saveNewCustomer;
+saveNewCustomer = async function() {
+  var mobile = document.getElementById('nc_mobile').value.replace(/\D/g,'');
+  document.getElementById('nc_mobile').value = mobile;
+  if (mobile.length !== 10) {
+    document.getElementById('modal-errors').innerHTML = '<div class="alert alert-danger py-2">Mobile number must be exactly 10 digits.</div>';
+    return;
+  }
+  return _origSaveNewCustomer.apply(this, arguments);
+};
+document.getElementById('nc_mobile').addEventListener('input', function(){ this.value = this.value.replace(/\D/g,''); });
+</script>
 <?php require_once ROOT_PATH . '/includes/footer.php'; ?>
