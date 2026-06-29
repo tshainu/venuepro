@@ -29,6 +29,20 @@ class Helper {
         return $prefix . '-' . $year . '-' . str_pad($num, 5, '0', STR_PAD_LEFT);
     }
 
+    public static function generateInvoiceNumber() {
+        $db = Database::getInstance();
+        $ym   = date('my'); // e.g. 0626
+        $like = $ym . '-%';
+        $row  = $db->fetchOne("SELECT MAX(invoice_number) as last FROM invoices WHERE invoice_number LIKE ?", [$like]);
+        $last = $row['last'] ?? null;
+        $num  = 1;
+        if ($last) {
+            $parts = explode('-', $last);
+            $num = (int)end($parts) + 1;
+        }
+        return $ym . '-' . str_pad($num, 3, '0', STR_PAD_LEFT);
+    }
+
     public static function statusBadge($status) {
         $map = [
             'inquiry'    => 'secondary',

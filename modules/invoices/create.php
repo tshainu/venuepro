@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $line=$qty*$up; $subtotal+=$line; $tax_total+=$line*$tp/100;
         }
         $total = $subtotal + $tax_total - $discount;
-        $inv_num = Helper::generateRef('INV','invoices','invoice_number');
+        $inv_num = Helper::generateInvoiceNumber();
         $iid = $db->insert(
             "INSERT INTO invoices (invoice_number,booking_id,customer_id,branch_id,invoice_type,invoice_date,due_date,status,subtotal,discount_amount,tax_amount,total,paid_amount,balance,notes,terms,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0,?,?,?,?)",
             [$inv_num,$booking_id,$customer_id,$branch_id,$invoice_type,$invoice_date,$due_date,$status,$subtotal,$discount,$tax_total,$total,$total,$notes,$terms,$cu['id']]
