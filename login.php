@@ -57,12 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       text-align: center; margin-bottom: 2rem;
     }
     .login-brand .logo-icon {
-      width: 64px; height: 64px;
-      background: linear-gradient(135deg, #c9a84c, #e8c96a);
-      border-radius: 18px;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 28px; margin-bottom: 1rem;
-      box-shadow: 0 8px 32px rgba(201,168,76,.35);
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .login-brand .logo-icon img {
+      max-height: 80px; max-width: 200px; width: 100%; object-fit: contain;
     }
     .login-brand h1 { color: #fff; font-size: 1.6rem; font-weight: 800; margin: 0; }
     .login-brand p { color: rgba(255,255,255,.5); font-size: .85rem; margin: .3rem 0 0; }
@@ -126,8 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <div class="login-wrap">
   <div class="login-brand">
-    <div class="logo-icon">🏛️</div>
-    <h1>VenuePro Lanka</h1>
+    <div class="logo-icon"><img src="<?= BASE_URL ?>/assets/images/sidebar-logo.png" alt="VenuePro"></div>
     <p>Wedding Hall & Event Venue Management</p>
   </div>
 
