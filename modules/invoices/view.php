@@ -139,7 +139,7 @@ require_once ROOT_PATH . '/includes/header.php';
       <?php if ($inv_paper_size === '80mm'): ?>
       <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" class="btn btn-vp-outline d-print-none" target="_blank">🖨 Print Receipt</a>
       <?php else: ?>
-      <button onclick="window.print()" class="btn btn-vp-outline d-print-none">🖨 Print</button>
+      <button onclick="window.print()" class="btn btn-vp-outline d-print-none"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>
       <?php endif; ?>
       <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" class="btn btn-vp-primary" target="_blank">⬇ Download PDF</a>
       <?php if ($inv['balance'] > 0): ?>
@@ -454,11 +454,14 @@ require_once ROOT_PATH . '/includes/header.php';
         <?php if ($inv_paper_size === '80mm'): ?>
         <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" target="_blank" class="btn btn-vp-outline w-100">🖨 Print Receipt</a>
         <?php else: ?>
-        <button onclick="window.print()" class="btn btn-vp-outline w-100">🖨 Print Invoice</button>
+        <button onclick="window.print()" class="btn btn-vp-outline w-100"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print Invoice</button>
         <?php endif; ?>
         <a href="<?= BASE_URL ?>/modules/invoices/index.php" class="btn btn-outline-secondary w-100">← Back to Invoices</a>
       </div>
     </div>
   </div>
 </div>
+<?php if (!empty($_GET['autoprint'])): ?>
+<script>window.addEventListener('load', function(){ setTimeout(function(){ window.print(); }, 600); });</script>
+<?php endif; ?>
 <?php require_once ROOT_PATH . '/includes/footer.php'; ?>
