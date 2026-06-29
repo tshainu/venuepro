@@ -457,7 +457,7 @@ body{background:#f0f2f7;min-height:100vh;}
       <div class="form-group">
         <label>Password <span style="font-weight:400;color:#94a3b8">(auto-generated)</span></label>
         <div style="display:flex;gap:.5rem;align-items:center;">
-          <input type="text" name="admin_password" id="field_password" placeholder="e.g. blu4021" style="font-family:monospace;flex:1;">
+          <input type="text" name="admin_password" id="field_password" placeholder="e.g. blu4021" style="font-family:monospace;flex:1;" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')">
           <button type="button" onclick="genPassword()" style="white-space:nowrap;padding:.6rem .75rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;font-size:.8rem;color:#374151;">↺ Gen</button>
         </div>
         <div style="font-size:.75rem;color:#94a3b8;margin-top:.3rem;">Format: 3 colour letters + 4 digits (e.g. <em>blu4021</em>)</div>

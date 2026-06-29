@@ -157,12 +157,22 @@ try {
 
     $db->commit();
 
-    $_SESSION['sa_success'] = "Business <strong>\"$business_name\"</strong> created successfully!<br>
-        <strong>Login credentials →</strong>
-        User ID: <code>$admin_user_id</code> &nbsp;|&nbsp;
-        Username: <code>$admin_username</code> &nbsp;|&nbsp;
-        Password: <code>$admin_password</code><br>
-        <small class='text-muted'>Branch \"$business_name - Main Branch\" auto-created.</small>";
+    $_SESSION['sa_success'] = "
+        Business <strong>\"$business_name\"</strong> created!
+        <div style='margin-top:.75rem;background:rgba(255,255,255,.6);border:1px solid #86efac;border-radius:8px;padding:.75rem 1rem;display:grid;grid-template-columns:auto 1fr auto;gap:.4rem .75rem;align-items:center;'>
+          <span style='font-size:.72rem;font-weight:700;color:#166534;text-transform:uppercase;'>User ID</span>
+          <code style='font-size:1rem;font-weight:800;color:#0f172a;letter-spacing:.05em;'>$admin_user_id</code>
+          <button onclick=\"navigator.clipboard.writeText('$admin_user_id')\" style='border:none;background:#d1fae5;color:#065f46;border-radius:5px;padding:.2rem .5rem;font-size:.72rem;cursor:pointer;'>Copy</button>
+
+          <span style='font-size:.72rem;font-weight:700;color:#166534;text-transform:uppercase;'>Username</span>
+          <code style='font-size:1rem;font-weight:800;color:#0f172a;letter-spacing:.05em;'>$admin_username</code>
+          <button onclick=\"navigator.clipboard.writeText('$admin_username')\" style='border:none;background:#d1fae5;color:#065f46;border-radius:5px;padding:.2rem .5rem;font-size:.72rem;cursor:pointer;'>Copy</button>
+
+          <span style='font-size:.72rem;font-weight:700;color:#166534;text-transform:uppercase;'>Password</span>
+          <code style='font-size:1rem;font-weight:800;color:#0f172a;letter-spacing:.05em;'>$admin_password</code>
+          <button onclick=\"navigator.clipboard.writeText('$admin_password')\" style='border:none;background:#d1fae5;color:#065f46;border-radius:5px;padding:.2rem .5rem;font-size:.72rem;cursor:pointer;'>Copy</button>
+        </div>
+        <div style='margin-top:.5rem;font-size:.75rem;color:#166534;'>Branch <strong>\"$business_name - Main Branch\"</strong> auto-created. Share these credentials with the business owner.</div>";
 
 } catch (Exception $e) {
     if (isset($db) && $db->inTransaction()) $db->rollBack();
