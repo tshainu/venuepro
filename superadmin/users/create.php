@@ -11,6 +11,8 @@ $error = '';
 $success = '';
 
 $db = Database::getInstance();
+$cu = Auth::currentUser();
+$business_user_id = $db->fetchOne("SELECT user_id FROM users WHERE id = ?", [$cu['id']])['user_id'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name      = trim($_POST['name'] ?? '');
@@ -57,8 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $roles = $db->fetchAll("SELECT id, name FROM roles WHERE slug != 'super_admin' ORDER BY id");
 $branches = $db->fetchAll("SELECT id, name FROM branches ORDER BY name");
-$cu = Auth::currentUser();
-$business_user_id = $db->fetchOne("SELECT user_id FROM users WHERE id = ?", [$cu['id']])['user_id'] ?? '';
 
 $pageTitle = 'Create User';
 require_once __DIR__ . '/../../includes/header.php';

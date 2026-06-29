@@ -18,10 +18,13 @@ if (!$branch_id) {
 $error = '';
 $success = '';
 
+// Get the current user's user_id (shared across business)
+$creator_user_id = $db->fetchOne("SELECT user_id FROM users WHERE id = ?", [$cu['id']])['user_id'] ?? '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name     = trim($_POST['name'] ?? '');
     $email    = trim($_POST['email'] ?? '');
-    $user_id  = strtoupper($cu['id'] ? $db->fetchOne("SELECT user_id FROM users WHERE id = ?", [$cu['id']])['user_id'] : '');
+    $user_id  = strtoupper($creator_user_id);
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
     $phone    = trim($_POST['phone'] ?? '');
