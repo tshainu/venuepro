@@ -74,6 +74,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $roles = $db->fetchAll("SELECT id, name FROM roles WHERE slug IN ('reception', 'accountant') ORDER BY id");
 $branch = $db->fetchOne("SELECT name FROM branches WHERE id = ?", [$branch_id]);
 
+// Get business name from sa_businesses
+$business = $db->fetchOne("SELECT business_name FROM sa_businesses WHERE admin_user_id = ?", [$creator_user_id]);
+$business_name = $business['business_name'] ?? $branch['name'] ?? 'Business';
+
 $pageTitle = 'Create Staff Member';
 require_once __DIR__ . '/../../includes/header.php';
 ?>
@@ -100,7 +104,7 @@ require_once __DIR__ . '/../../includes/header.php';
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
         <div>
           <h1 style="margin: 0; font-size: 1.75rem; font-weight: 800; color: #0c1a35;">Create Staff Member</h1>
-          <p style="margin: .5rem 0 0; color: #6b7280; font-size: .9rem;">For: <strong><?= htmlspecialchars($branch['name']) ?></strong></p>
+          <p style="margin: .5rem 0 0; color: #6b7280; font-size: .9rem;">Business: <strong><?= htmlspecialchars($business_name) ?></strong></p>
         </div>
         <a href="<?= BASE_URL ?>/modules/users/index.php" class="btn-secondary">Back</a>
       </div>
