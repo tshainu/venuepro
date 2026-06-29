@@ -74,35 +74,34 @@ require_once ROOT_PATH . '/includes/header.php';
 <style>
 /* ===== PRINT STYLES ===== */
 @media print {
-  /* Hide all chrome */
-  .d-print-none, .vp-page-header, .sidebar, .navbar, .topbar,
-  .footer-bar, .col-lg-4, #sidebar, .vp-sidebar,
-  .inv-header-gradient, .totals-section, .card-body.border-top { display:none !important; }
+  /* Hide ALL chrome — topbar, sidebar, nav, page header, gradient card header, screen-only totals */
+  .d-print-none,
+  .vp-page-header, .vp-topbar, .vp-sidebar, .vp-topbar-breadcrumb,
+  .vp-topbar-right, .vp-topbar-branch, .vp-topbar-user,
+  .sidebar, .navbar, .topbar, .footer-bar,
+  .col-lg-4, #sidebar,
+  .inv-header-gradient,
+  .totals-section,
+  .card-body.border-top { display:none !important; }
 
   /* Layout reset */
-  body { background:#fff !important; margin:0; padding:0; font-size:10pt; color:#1e293b; }
-  .invoice-print-card { box-shadow:none !important; border:none !important; border-radius:0 !important; margin:0 !important; }
-  .col-lg-8 { width:100% !important; flex:0 0 100% !important; max-width:100% !important; padding:0 !important; }
-  .row { display:block !important; }
+  * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+  html, body { background:#fff !important; margin:0 !important; padding:0 !important; font-size:10pt; color:#1e293b; }
+  .invoice-print-card { box-shadow:none !important; border:none !important; border-radius:0 !important; margin:0 !important; padding:0 !important; overflow:visible !important; }
+  .col-lg-8 { width:100% !important; flex:0 0 100% !important; max-width:100% !important; padding:0 !important; margin:0 !important; }
+  .row { display:block !important; margin:0 !important; }
+  .container, .container-fluid { padding:0 !important; margin:0 !important; }
   a { color:inherit !important; text-decoration:none !important; }
   .card { border:none !important; box-shadow:none !important; }
 
-  /* Show print-only elements */
+  /* Show print-only block */
   .print-only { display:block !important; }
-  .print-only-table { display:table !important; }
-  .print-only-row { display:table-row !important; }
-  .print-only-cell { display:table-cell !important; }
 
-  /* Items table print */
-  .items-table th { background:#f1f5f9 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-
-  /* Print totals */
-  .print-totals { display:block !important; }
-  .print-totals table { width:100%; border-collapse:collapse; }
-  .print-totals td { padding:5px 10px; font-size:10pt; }
+  /* Items table */
+  .items-table th { background:#f1f5f9 !important; }
+  .table-responsive { overflow:visible !important; }
 }
 .print-only { display:none; }
-.print-totals { display:none; }
 .inv-header-gradient {
   background: linear-gradient(135deg, #1a3c5e 0%, #2d6a9f 60%, #1e5a8e 100%);
   border-radius: 14px 14px 0 0;
@@ -155,7 +154,7 @@ require_once ROOT_PATH . '/includes/header.php';
     <div class="card vp-card invoice-print-card mb-3" style="border-radius:14px;overflow:hidden;">
 
       <!-- PRINT-ONLY HEADER (hidden on screen, visible when printing) -->
-      <div class="print-only" style="margin-bottom:16px;">
+      <div class="print-only" style="margin:0 0 16px 0;padding:0;">
         <table style="width:100%;border-collapse:collapse;">
           <tr>
             <td style="width:58%;vertical-align:top;padding:0;">
@@ -184,28 +183,16 @@ require_once ROOT_PATH . '/includes/header.php';
           </tr>
         </table>
         <div style="height:3px;background:<?= htmlspecialchars($inv_color) ?>;margin:10px 0 12px;"></div>
-        <!-- Parties -->
-        <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
-          <tr>
-            <td style="width:50%;vertical-align:top;padding-right:16px;">
-              <div style="font-size:7pt;font-weight:bold;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Bill To</div>
-              <div style="font-size:11pt;font-weight:bold;color:#0f172a;"><?= htmlspecialchars($inv['customer_name']) ?></div>
-              <div style="font-size:8pt;color:#475569;line-height:1.5;margin-top:2px;">
-                <?php if ($inv['customer_phone']): ?><?= htmlspecialchars($inv['customer_phone']) ?><br><?php endif; ?>
-                <?php if ($inv['customer_email']): ?><?= htmlspecialchars($inv['customer_email']) ?><br><?php endif; ?>
-                <?php if ($inv['customer_address']): ?><?= nl2br(htmlspecialchars($inv['customer_address'])) ?><?php endif; ?>
-              </div>
-            </td>
-            <td style="width:50%;vertical-align:top;">
-              <div style="font-size:7pt;font-weight:bold;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Branch / Venue</div>
-              <div style="font-size:11pt;font-weight:bold;color:#0f172a;"><?= htmlspecialchars($inv['branch_name']) ?></div>
-              <div style="font-size:8pt;color:#475569;line-height:1.5;margin-top:2px;">
-                <?php if ($inv['branch_address']): ?><?= nl2br(htmlspecialchars($inv['branch_address'])) ?><br><?php endif; ?>
-                <?php if ($inv['branch_phone']): ?>Tel: <?= htmlspecialchars($inv['branch_phone']) ?><?php endif; ?>
-              </div>
-            </td>
-          </tr>
-        </table>
+        <!-- Parties: Bill To only -->
+        <div style="margin-bottom:12px;">
+          <div style="font-size:7pt;font-weight:bold;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Bill To</div>
+          <div style="font-size:11pt;font-weight:bold;color:#0f172a;"><?= htmlspecialchars($inv['customer_name']) ?></div>
+          <div style="font-size:8pt;color:#475569;line-height:1.5;margin-top:2px;">
+            <?php if ($inv['customer_phone']): ?><?= htmlspecialchars($inv['customer_phone']) ?><br><?php endif; ?>
+            <?php if ($inv['customer_email']): ?><?= htmlspecialchars($inv['customer_email']) ?><br><?php endif; ?>
+            <?php if ($inv['customer_address']): ?><?= nl2br(htmlspecialchars($inv['customer_address'])) ?><?php endif; ?>
+          </div>
+        </div>
       </div>
 
       <!-- Gradient Header -->
