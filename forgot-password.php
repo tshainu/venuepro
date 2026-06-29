@@ -119,7 +119,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       background: rgba(220,38,38,.12); border: 1px solid rgba(220,38,38,.3);
       color: #fca5a5; border-radius: 10px; padding: .7rem 1rem;
       font-size: .8rem; font-weight: 600; margin-bottom: 1rem; text-align: center;
-      display: flex; align-items: center; justify-content: center; gap: .4rem;
     }
     .alert-error {
       background: rgba(220,38,38,.15); border: 1px solid rgba(220,38,38,.3);
@@ -146,8 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           Reset link sent to <strong><?= $sentEmail ?></strong>.<br>Check your inbox.
         </div>
         <div class="alert-spam">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Check your <strong>Spam</strong> folder if you don't see it in Inbox.
+          ⚠️ Check your <strong>Spam</strong> folder if you don't see it in Inbox.
         </div>
         <div class="back-link">
           <a href="<?= BASE_URL ?>/venuepro">
