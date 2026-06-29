@@ -193,7 +193,6 @@ body{background:#f0f2f7;min-height:100vh;}
       <div class="avatar"><?= strtoupper(substr($cu['name'],0,1)) ?></div>
       <span><?= htmlspecialchars($cu['name']) ?></span>
     </div>
-    <a href="<?= BASE_URL ?>/index.php" class="btn-sa-logout">← Dashboard</a>
     <a href="<?= BASE_URL ?>/vpsa/logout.php" class="btn-sa-logout">Logout</a>
   </div>
 </nav>
