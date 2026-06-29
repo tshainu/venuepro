@@ -716,55 +716,82 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   var chartEl = document.getElementById('chart-bookings');
   var chartInst = null;
 
+  // Generate all calendar days between two date strings (YYYY-MM-DD)
+  function genDays(startStr, endStr) {
+    var days = [], cur = new Date(startStr + 'T00:00:00');
+    var end = new Date(endStr + 'T00:00:00');
+    while (cur <= end) {
+      days.push(cur.getFullYear() + '-' + String(cur.getMonth()+1).padStart(2,'0') + '-' + String(cur.getDate()).padStart(2,'0'));
+      cur.setDate(cur.getDate() + 1);
+    }
+    return days;
+  }
+  // Generate all YYYY-MM months from startYM to endYM inclusive
+  function genMonths(startYM, endYM) {
+    var months = [], parts = startYM.split('-'), y = +parts[0], m = +parts[1];
+    var ep = endYM.split('-'), ey = +ep[0], em = +ep[1];
+    while (y < ey || (y === ey && m <= em)) {
+      months.push(y + '-' + String(m).padStart(2,'0'));
+      m++; if (m > 12) { m = 1; y++; }
+    }
+    return months;
+  }
+  function fmtDay(ymd) {
+    var p = ymd.split('-');
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return parseInt(p[2],10) + ' ' + months[+p[1]-1];
+  }
+  function fmtMonth(ym) {
+    var p = ym.split('-');
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[+p[1]-1] + ' ' + p[0];
+  }
+
   function buildChart(range) {
     var useDaily = (range === '1m' || range === '3m' || range === 'thismonth');
-    var labels, series, colWidth, rotateAngle;
+    var labels, series, rotateAngle;
+    var today = new Date();
+    var todayYMD = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+    var todayYM  = todayYMD.slice(0,7);
 
     if (useDaily) {
-      // Day-level: filter by date range
-      var cutDate;
+      var startStr;
       if (range === 'thismonth') {
-        // First day of current month
-        var nm = new Date(); nm.setDate(1);
-        cutDate = nm.getFullYear() + '-' + String(nm.getMonth()+1).padStart(2,'0') + '-01';
+        startStr = todayYMD.slice(0,7) + '-01';
+        // end = last day of this month
+        var lastDay = new Date(today.getFullYear(), today.getMonth()+1, 0);
+        var endStr = lastDay.getFullYear() + '-' + String(lastDay.getMonth()+1).padStart(2,'0') + '-' + String(lastDay.getDate()).padStart(2,'0');
+        var days = genDays(startStr, endStr);
+        labels = days.map(function(d){ return parseInt(d.split('-')[2],10)+''; });
       } else if (range === '1m') {
-        var n = new Date(); n.setDate(n.getDate() - 30);
-        cutDate = n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0');
+        var s = new Date(today); s.setDate(s.getDate() - 29);
+        startStr = s.getFullYear() + '-' + String(s.getMonth()+1).padStart(2,'0') + '-' + String(s.getDate()).padStart(2,'0');
+        var days = genDays(startStr, todayYMD);
+        labels = days.map(fmtDay);
       } else { // 3m
-        var n3 = new Date(); n3.setDate(n3.getDate() - 90);
-        cutDate = n3.getFullYear() + '-' + String(n3.getMonth()+1).padStart(2,'0') + '-' + String(n3.getDate()).padStart(2,'0');
+        var s3 = new Date(today); s3.setDate(s3.getDate() - 89);
+        startStr = s3.getFullYear() + '-' + String(s3.getMonth()+1).padStart(2,'0') + '-' + String(s3.getDate()).padStart(2,'0');
+        var days = genDays(startStr, todayYMD);
+        labels = days.map(fmtDay);
       }
-      // For thismonth: generate ALL days of current month even if no data
-      var days;
-      if (range === 'thismonth') {
-        var today = new Date();
-        var year = today.getFullYear(), month = today.getMonth()+1;
-        var daysInMonth = new Date(year, month, 0).getDate();
-        days = [];
-        for (var d=1; d<=daysInMonth; d++) {
-          days.push(year+'-'+String(month).padStart(2,'0')+'-'+String(d).padStart(2,'0'));
-        }
-      } else {
-        days = allDays.filter(function(d){ return d >= cutDate; });
-      }
-      labels = days.map(function(d){
-        if (range === 'thismonth') return parseInt(d.split('-')[2],10)+''; // just day number: 1,2,3...
-        return dayMap[d] ? dayMap[d].day_label : d.slice(8); // fallback to day num
-      });
       series = statusDef.map(function(s){
         return { name: s.label, data: days.map(function(d){ return (dayMap[d]&&dayMap[d][s.key]) ? dayMap[d][s.key] : 0; }) };
       });
-      colWidth = days.length > 20 ? '70%' : '50%';
-      rotateAngle = days.length > 15 ? -45 : 0;
+      rotateAngle = days.length > 20 ? -45 : 0;
     } else {
-      // Month-level
-      var cutMonth = range === '6m' ? monthCutStr(5) : (new Date().getFullYear() + '-01');
-      var months = allMonths.filter(function(m){ return m >= cutMonth; });
-      labels = months.map(function(m){ return monthMap[m] ? monthMap[m].label : m; });
+      // Month-level — always generate full range
+      var startYM;
+      if (range === '6m') {
+        var sm = new Date(today); sm.setMonth(sm.getMonth() - 5); sm.setDate(1);
+        startYM = sm.getFullYear() + '-' + String(sm.getMonth()+1).padStart(2,'0');
+      } else { // year
+        startYM = today.getFullYear() + '-01';
+      }
+      var months = genMonths(startYM, todayYM);
+      labels = months.map(fmtMonth);
       series = statusDef.map(function(s){
-        return { name: s.label, data: months.map(function(m){ return monthMap[m] ? monthMap[m][s.key]||0 : 0; }) };
+        return { name: s.label, data: months.map(function(m){ return (monthMap[m]&&monthMap[m][s.key]) ? monthMap[m][s.key] : 0; }) };
       });
-      colWidth = '60%';
       rotateAngle = 0;
     }
 
