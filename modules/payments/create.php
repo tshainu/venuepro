@@ -56,12 +56,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Update invoice paid_amount and balance
         if ($invoice_id) {
             $db->execute("UPDATE invoices SET paid_amount=paid_amount+?, balance=balance-? WHERE id=?", [$amount,$amount,$invoice_id]);
-            // Auto mark as paid if balance <= 0
-            $inv_check = $db->fetchOne("SELECT balance,total FROM invoices WHERE id=?", [$invoice_id]);
-            if ($inv_check && $inv_check['balance'] <= 0) {
-                $db->execute("UPDATE invoices SET status='paid',balance=0 WHERE id=?", [$invoice_id]);
-            } elseif ($inv_check && $inv_check['paid_amount'] > 0) {
-                $db->execute("UPDATE invoices SET status='partial' WHERE id=? AND status NOT IN ('paid','cancelled')", [$invoice_id]);
+        }
+        // Recalc status for all relevant invoices
+        $inv_ids_to_check = [];
+        if ($invoice_id) {
+            $inv_ids_to_check[] = $invoice_id;
+        }
+        if ($booking_id) {
+            $booking_invs = $db->fetchAll("SELECT id FROM invoices WHERE booking_id=? AND status NOT IN ('cancelled')", [$booking_id]);
+            foreach ($booking_invs as $bi) {
+                if (!in_array($bi['id'], $inv_ids_to_check)) $inv_ids_to_check[] = $bi['id'];
+            }
+        }
+        foreach ($inv_ids_to_check as $chk_id) {
+            $inv_check = $db->fetchOne("SELECT balance, paid_amount FROM invoices WHERE id=?", [$chk_id]);
+            if (!$inv_check) continue;
+            if ($inv_check['balance'] <= 0) {
+                $db->execute("UPDATE invoices SET status='paid', balance=0 WHERE id=?", [$chk_id]);
+            } elseif ($inv_check['paid_amount'] > 0) {
+                $db->execute("UPDATE invoices SET status='partial' WHERE id=? AND status NOT IN ('paid','cancelled')", [$chk_id]);
             }
         }
 
