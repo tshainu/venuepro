@@ -339,9 +339,9 @@ body{background:#f0f2f7;min-height:100vh;}
       </div>
 
       <div class="biz-actions">
-        <button type="button" class="btn-icon" title="Edit" onclick="openEditModal(<?= $b['id'] ?>)">
+        <button type="button" class="btn-icon" title="Edit" onclick="openEditModal(&lt;?= $b[id] ?&gt;)">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </a>
+        </button>
         <?php if ($b['status']==='active'): ?>
         <a href="action.php?id=<?= $b['id'] ?>&act=suspend" class="btn-icon danger" title="Suspend" onclick="return confirm('Suspend this business?')">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
