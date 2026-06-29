@@ -15,7 +15,7 @@ if (!$branch_id) {
 }
 
 // Handle delete
-if ($_GET['action'] === 'delete' && $_GET['id']) {
+if (($_GET['action'] ?? null) === 'delete' && ($_GET['id'] ?? null)) {
     $id = (int)$_GET['id'];
     $userCheck = $db->fetchOne("SELECT branch_id FROM users WHERE id = ?", [$id]);
     if ($userCheck && $userCheck['branch_id'] == $branch_id) {
