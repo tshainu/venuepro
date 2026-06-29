@@ -2,21 +2,15 @@
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
 
-// Only Hall Managers (branch-level) can create staff for their branch
-if (!Auth::hasRole(['hall_manager'])) {
-    Helper::redirect(BASE_URL . '/index.php');
-}
-
-$db = Database::getInstance();
-$cu = Auth::currentUser();
-$branch_id = $cu['branch_id'];
-
-if (!$branch_id) {
+// Only super admin can access
+if (!Auth::isSuperAdmin()) {
     Helper::redirect(BASE_URL . '/index.php');
 }
 
 $error = '';
 $success = '';
+
+$db = Database::getInstance();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name     = trim($_POST['name'] ?? '');
@@ -26,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     $phone    = trim($_POST['phone'] ?? '');
     $role_id  = (int)($_POST['role_id'] ?? 0);
+    $branch_id = (int)($_POST['branch_id'] ?? 0);
 
     // Validate
     if (!$name) $error = 'Name is required.';
@@ -34,14 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif (!$username) $error = 'Username is required.';
     elseif (strlen($password) < 8) $error = 'Password must be at least 8 characters.';
     elseif (!$role_id) $error = 'Please select a role.';
-
-    if (!$error) {
-        // Only allow creating reception/accountant/hall_manager roles (not super_admin)
-        $role = $db->fetchOne("SELECT slug FROM roles WHERE id = ? AND slug IN ('reception', 'accountant', 'hall_manager')", [$role_id]);
-        if (!$role) {
-            $error = 'Invalid role selected.';
-        }
-    }
 
     if (!$error) {
         // Check duplicates
@@ -57,21 +44,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->execute(
                 "INSERT INTO users (name, email, user_id, username, password, phone, role_id, branch_id, is_active, created_at)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())",
-                [$name, $email, $user_id, $username, $hashed, $phone, $role_id, $branch_id]
+                [$name, $email, $user_id, $username, $hashed, $phone, $role_id, $branch_id ?: null]
             );
-            $success = "Staff member <strong>$name</strong> created successfully.";
+            $success = "User <strong>$name</strong> created successfully.";
+            // Reset form
             $_POST = [];
         } catch (Exception $e) {
-            $error = 'Error creating user.';
+            $error = 'Error creating user: ' . $e->getMessage();
         }
     }
 }
 
-// Only show staff roles (not super_admin or hall_manager)
-$roles = $db->fetchAll("SELECT id, name FROM roles WHERE slug IN ('reception', 'accountant') ORDER BY id");
-$branch = $db->fetchOne("SELECT name FROM branches WHERE id = ?", [$branch_id]);
+$roles = $db->fetchAll("SELECT id, name FROM roles WHERE slug != 'super_admin' ORDER BY id");
+$branches = $db->fetchAll("SELECT id, name FROM branches ORDER BY name");
+$cu = Auth::currentUser();
 
-$pageTitle = 'Create Staff Member';
+$pageTitle = 'Create User';
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 
@@ -82,6 +70,7 @@ require_once __DIR__ . '/../../includes/header.php';
 .form-control { width: 100%; padding: .6rem .9rem; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: .9rem; transition: all .2s; }
 .form-control:focus { border-color: #c9a84c; box-shadow: 0 0 0 3px rgba(201,168,76,.1); outline: none; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.form-row-full { grid-column: 1 / -1; }
 .btn-submit { background: linear-gradient(135deg, #c9a84c, #e8c96a); color: #0c1a35; font-weight: 800; padding: .75rem 2rem; border: none; border-radius: 8px; cursor: pointer; transition: all .2s; font-size: .95rem; }
 .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201,168,76,.3); }
 .btn-secondary { background: #f3f4f6; color: #374151; font-weight: 700; padding: .75rem 2rem; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; transition: all .2s; display: inline-block; }
@@ -96,10 +85,10 @@ require_once __DIR__ . '/../../includes/header.php';
     <div class="col-12">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
         <div>
-          <h1 style="margin: 0; font-size: 1.75rem; font-weight: 800; color: #0c1a35;">Create Staff Member</h1>
-          <p style="margin: .5rem 0 0; color: #6b7280; font-size: .9rem;">For: <strong><?= htmlspecialchars($branch['name']) ?></strong></p>
+          <h1 style="margin: 0; font-size: 1.75rem; font-weight: 800; color: #0c1a35;">Create New User</h1>
+          <p style="margin: .5rem 0 0; color: #6b7280; font-size: .9rem;">Add a new user to the system</p>
         </div>
-        <a href="<?= BASE_URL ?>/modules/users/index.php" class="btn-secondary">Back</a>
+        <a href="<?= BASE_URL ?>/superadmin/users/index.php" class="btn-secondary">Back to Users</a>
       </div>
     </div>
   </div>
@@ -116,6 +105,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
         <?php if ($error): ?>
           <div class="alert alert-error">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <?= htmlspecialchars($error) ?>
           </div>
         <?php endif; ?>
@@ -137,7 +127,8 @@ require_once __DIR__ . '/../../includes/header.php';
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">User ID</label>
-              <input type="text" name="user_id" class="form-control" placeholder="S001" required style="text-transform: uppercase;" maxlength="10"
+              <input type="text" name="user_id" class="form-control" placeholder="A001" required
+                     style="text-transform: uppercase;" maxlength="10"
                      value="<?= htmlspecialchars(strtoupper($_POST['user_id'] ?? '')) ?>">
             </div>
             <div class="form-group">
@@ -154,28 +145,60 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
             <div class="form-group">
               <label class="form-label">Phone (Optional)</label>
-              <input type="tel" name="phone" class="form-control"
+              <input type="tel" name="phone" class="form-control" placeholder="+94 123 456 7890"
                      value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>">
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Role</label>
-            <select name="role_id" class="form-control" required>
-              <option value="">Select a role...</option>
-              <?php foreach ($roles as $r): ?>
-                <option value="<?= $r['id'] ?>" <?= ($_POST['role_id'] ?? 0) == $r['id'] ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($r['name']) ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Role</label>
+              <select name="role_id" class="form-control" required>
+                <option value="">Select a role...</option>
+                <?php foreach ($roles as $r): ?>
+                  <option value="<?= $r['id'] ?>" <?= ($_POST['role_id'] ?? 0) == $r['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($r['name']) ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Branch (Optional)</label>
+              <select name="branch_id" class="form-control">
+                <option value="">All Branches</option>
+                <?php foreach ($branches as $b): ?>
+                  <option value="<?= $b['id'] ?>" <?= ($_POST['branch_id'] ?? 0) == $b['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($b['name']) ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
           </div>
 
           <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-            <button type="submit" class="btn-submit">Create Staff Member</button>
-            <a href="<?= BASE_URL ?>/modules/users/index.php" class="btn-secondary">Cancel</a>
+            <button type="submit" class="btn-submit">Create User</button>
+            <a href="<?= BASE_URL ?>/superadmin/users/index.php" class="btn-secondary">Cancel</a>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="form-card" style="background: #f0fdf4; border-color: #86efac;">
+        <h3 style="margin: 0 0 1rem; font-size: 1rem; font-weight: 700; color: #166534;">Password Requirements</h3>
+        <ul style="margin: 0; padding: 0 0 0 1.2rem; font-size: .85rem; color: #166534; line-height: 1.8;">
+          <li>At least 8 characters</li>
+          <li>Avoid common words</li>
+          <li>Mix of upper, lower, numbers & symbols recommended</li>
+        </ul>
+      </div>
+      <div class="form-card" style="background: #eff6ff; border-color: #3b82f6; margin-top: 1.5rem;">
+        <h3 style="margin: 0 0 1rem; font-size: 1rem; font-weight: 700; color: #1e40af;">Role Guide</h3>
+        <ul style="margin: 0; padding: 0 0 0 1.2rem; font-size: .85rem; color: #1e40af; line-height: 1.8;">
+          <li><strong>Hall Manager:</strong> Full booking & admin access</li>
+          <li><strong>Reception:</strong> Create bookings & inquiries</li>
+          <li><strong>Accountant:</strong> View payments & reports</li>
+        </ul>
       </div>
     </div>
   </div>

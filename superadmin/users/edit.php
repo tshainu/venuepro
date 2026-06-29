@@ -2,26 +2,24 @@
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
 
-if (!Auth::hasRole(['hall_manager'])) {
+if (!Auth::isSuperAdmin()) {
     Helper::redirect(BASE_URL . '/index.php');
 }
 
 $db = Database::getInstance();
-$cu = Auth::currentUser();
-$branch_id = $cu['branch_id'];
 $id = (int)($_GET['id'] ?? 0);
 
 if (!$id) {
-    Helper::redirect(BASE_URL . '/modules/users/index.php');
+    Helper::redirect(BASE_URL . '/superadmin/users/index.php');
 }
 
 $user = $db->fetchOne(
-    "SELECT u.*, r.name as role_name FROM users u LEFT JOIN roles r ON u.role_id = r.id WHERE u.id = ? AND u.branch_id = ?",
-    [$id, $branch_id]
+    "SELECT u.*, r.name as role_name FROM users u LEFT JOIN roles r ON u.role_id = r.id WHERE u.id = ?",
+    [$id]
 );
 
 if (!$user) {
-    Helper::redirect(BASE_URL . '/modules/users/index.php');
+    Helper::redirect(BASE_URL . '/superadmin/users/index.php');
 }
 
 $error = '';
@@ -35,8 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     $phone    = trim($_POST['phone'] ?? '');
     $role_id  = (int)($_POST['role_id'] ?? 0);
+    $branch_id = (int)($_POST['branch_id'] ?? 0);
     $is_active = isset($_POST['is_active']) ? 1 : 0;
 
+    // Validate
     if (!$name) $error = 'Name is required.';
     elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $error = 'Invalid email.';
     elseif (!$user_id) $error = 'User ID is required.';
@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif (!$role_id) $error = 'Please select a role.';
 
     if (!$error) {
+        // Check for duplicate email, user_id, username (excluding current user)
         $dup = $db->fetchOne(
             "SELECT id FROM users WHERE id != ? AND (email = ? OR user_id = ? OR username = ?) LIMIT 1",
             [$id, $email, $user_id, $username]
@@ -55,8 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$error) {
-        $updates = ["name = ?", "email = ?", "user_id = ?", "username = ?", "phone = ?", "role_id = ?", "is_active = ?"];
-        $params = [$name, $email, $user_id, $username, $phone, $role_id, $is_active];
+        $updates = ["name = ?", "email = ?", "user_id = ?", "username = ?", "phone = ?", "role_id = ?", "branch_id = ?", "is_active = ?"];
+        $params = [$name, $email, $user_id, $username, $phone, $role_id, $branch_id ?: null, $is_active];
 
         if ($password) {
             $updates[] = "password = ?";
@@ -66,8 +67,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $params[] = $id;
         $sql = "UPDATE users SET " . implode(", ", $updates) . " WHERE id = ?";
         $db->execute($sql, $params);
-        $success = "Staff member updated successfully.";
+        $success = "User updated successfully.";
         
+        // Refresh user data
         $user = $db->fetchOne(
             "SELECT u.*, r.name as role_name FROM users u LEFT JOIN roles r ON u.role_id = r.id WHERE u.id = ?",
             [$id]
@@ -76,14 +78,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Populate form with user data
 if (!$_POST) {
     $_POST = $user;
 }
 
-$roles = $db->fetchAll("SELECT id, name FROM roles WHERE slug IN ('reception', 'accountant') ORDER BY id");
-$branch = $db->fetchOne("SELECT name FROM branches WHERE id = ?", [$branch_id]);
+$roles = $db->fetchAll("SELECT id, name FROM roles WHERE slug != 'super_admin' ORDER BY id");
+$branches = $db->fetchAll("SELECT id, name FROM branches ORDER BY name");
 
-$pageTitle = 'Edit Staff Member';
+$pageTitle = 'Edit User';
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 
@@ -111,10 +114,10 @@ require_once __DIR__ . '/../../includes/header.php';
     <div class="col-12">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
         <div>
-          <h1 style="margin: 0; font-size: 1.75rem; font-weight: 800; color: #0c1a35;">Edit Staff Member</h1>
-          <p style="margin: .5rem 0 0; color: #6b7280; font-size: .9rem;"><?= htmlspecialchars($branch['name']) ?></p>
+          <h1 style="margin: 0; font-size: 1.75rem; font-weight: 800; color: #0c1a35;">Edit User</h1>
+          <p style="margin: .5rem 0 0; color: #6b7280; font-size: .9rem;">Update user details and permissions</p>
         </div>
-        <a href="<?= BASE_URL ?>/modules/users/index.php" class="btn-secondary">Back</a>
+        <a href="<?= BASE_URL ?>/superadmin/users/index.php" class="btn-secondary">Back to Users</a>
       </div>
     </div>
   </div>
@@ -131,6 +134,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
         <?php if ($error): ?>
           <div class="alert alert-error">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <?= htmlspecialchars($error) ?>
           </div>
         <?php endif; ?>
@@ -174,29 +178,53 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Role</label>
-            <select name="role_id" class="form-control" required>
-              <?php foreach ($roles as $r): ?>
-                <option value="<?= $r['id'] ?>" <?= ($_POST['role_id'] ?? 0) == $r['id'] ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($r['name']) ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Role</label>
+              <select name="role_id" class="form-control" required>
+                <?php foreach ($roles as $r): ?>
+                  <option value="<?= $r['id'] ?>" <?= ($_POST['role_id'] ?? 0) == $r['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($r['name']) ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Branch</label>
+              <select name="branch_id" class="form-control">
+                <option value="">All Branches</option>
+                <?php foreach ($branches as $b): ?>
+                  <option value="<?= $b['id'] ?>" <?= ($_POST['branch_id'] ?? 0) == $b['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($b['name']) ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
           </div>
 
           <div class="form-group" style="margin-top: 2rem;">
             <div class="checkbox-group">
               <input type="checkbox" id="is_active" name="is_active" value="1" <?= ($_POST['is_active'] ?? 1) ? 'checked' : '' ?>>
-              <label for="is_active">Staff Member is Active</label>
+              <label for="is_active">User is Active</label>
             </div>
           </div>
 
           <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-            <button type="submit" class="btn-submit">Update Staff Member</button>
-            <a href="<?= BASE_URL ?>/modules/users/index.php" class="btn-secondary">Cancel</a>
+            <button type="submit" class="btn-submit">Update User</button>
+            <a href="<?= BASE_URL ?>/superadmin/users/index.php" class="btn-secondary">Cancel</a>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="form-card" style="background: #f8fafc; border: 1px solid #cbd5e1;">
+        <h3 style="margin: 0 0 1rem; font-size: 1rem; font-weight: 700; color: #1e293b;">User Info</h3>
+        <div style="font-size: .9rem; line-height: 2;">
+          <div><strong>Created:</strong> <?= date('M d, Y H:i', strtotime($user['created_at'])) ?></div>
+          <div><strong>Last Login:</strong> <?= $user['last_login'] ? date('M d, Y H:i', strtotime($user['last_login'])) : '—' ?></div>
+          <div><strong>Current Role:</strong> <?= htmlspecialchars($user['role_name']) ?></div>
+        </div>
       </div>
     </div>
   </div>
