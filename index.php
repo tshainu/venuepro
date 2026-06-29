@@ -679,7 +679,6 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   var statusDef = [
     { key:'confirmed',  label:'Confirmed',  color:'#059669' },
     { key:'booked',     label:'Booked',     color:'#0284c7' },
-    { key:'tentative',  label:'Tentative',  color:'#d97706' },
     { key:'inquiry',    label:'Inquiry',    color:'#7c3aed' },
     { key:'completed',  label:'Completed',  color:'#2563eb' },
     { key:'cancelled',  label:'Cancelled',  color:'#dc2626' },
@@ -688,7 +687,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   // Build daily map: { 'YYYY-MM-DD': { day_label, month_label, ym, inquiry:0, ... } }
   var dayMap = {};
   rawData.forEach(function(row) {
-    if (!dayMap[row.ymd]) dayMap[row.ymd] = { day_label: row.day_label, month_label: row.month_label, ym: row.ym, inquiry:0, tentative:0, booked:0, confirmed:0, completed:0, cancelled:0 };
+    if (!dayMap[row.ymd]) dayMap[row.ymd] = { day_label: row.day_label, month_label: row.month_label, ym: row.ym, inquiry:0, booked:0, confirmed:0, completed:0, cancelled:0 };
     if (dayMap[row.ymd][row.status] !== undefined) dayMap[row.ymd][row.status] = parseInt(row.cnt);
   });
   var allDays = Object.keys(dayMap).sort();
@@ -697,7 +696,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
   var monthMap = {};
   allDays.forEach(function(d) {
     var ym = dayMap[d].ym;
-    if (!monthMap[ym]) monthMap[ym] = { label: dayMap[d].month_label, inquiry:0, tentative:0, booked:0, confirmed:0, completed:0, cancelled:0 };
+    if (!monthMap[ym]) monthMap[ym] = { label: dayMap[d].month_label, inquiry:0, booked:0, confirmed:0, completed:0, cancelled:0 };
     statusDef.forEach(function(s){ monthMap[ym][s.key] += dayMap[d][s.key]; });
   });
   var allMonths = Object.keys(monthMap).sort();
