@@ -102,7 +102,7 @@ $invoices_by_status = $db->fetchAll(
 
 // ── TAB: Outstanding ─────────────────────────────────────────
 $outstanding_list = $db->fetchAll(
-    "SELECT b.booking_ref, b.event_date, b.status,
+    "SELECT b.id, b.booking_ref, b.event_date, b.status,
             c.name as customer_name, c.mobile,
             h.name as hall_name,
             b.final_amount, b.paid_amount, b.balance_amount,
