@@ -781,11 +781,13 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
 
     var opts = {
       chart: {
-        type: 'line', height: 240,
+        type: 'area', height: 240,
         toolbar: { show: false },
         fontFamily: 'Inter,system-ui,sans-serif',
-        animations: { enabled: true, speed: 500 },
-        dropShadow: { enabled: true, top: 2, left: 0, blur: 4, opacity: 0.08 }
+        animations: { enabled: true, speed: 700, easing: 'easeinout',
+          dynamicAnimation: { enabled: true, speed: 400 }
+        },
+        dropShadow: { enabled: false }
       },
       series: series,
       xaxis: {
@@ -809,16 +811,30 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
         tickAmount: 4
       },
       colors: colors,
-      stroke: { curve: 'smooth', width: 2.5, lineCap: 'round' },
-      markers: { size: 3, strokeWidth: 2, hover: { size: 5 } },
-      fill: { opacity: 0 },
+      stroke: { curve: 'smooth', width: 2, lineCap: 'round' },
+      markers: { size: 0, strokeWidth: 0, hover: { size: 5, sizeOffset: 2 } },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          type: 'vertical',
+          shadeIntensity: 1,
+          opacityFrom: 0.38,
+          opacityTo: 0.02,
+          stops: [0, 90, 100]
+        }
+      },
       dataLabels: { enabled: false },
       legend: {
         position: 'top', fontSize: '11px', fontWeight: 600,
         markers: { width: 9, height: 9, radius: 9 },
         itemMargin: { horizontal: 8 }
       },
-      grid: { borderColor: '#f1f4fa', strokeDashArray: 4, xaxis: { lines: { show: false } } },
+      grid: {
+        borderColor: '#f1f4fa',
+        strokeDashArray: 4,
+        xaxis: { lines: { show: false } },
+        padding: { left: 4, right: 4 }
+      },
       tooltip: { theme: 'light', shared: true, intersect: false,
         y: { formatter: function(v){ return v + ' bookings'; } }
       },
