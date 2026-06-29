@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
   <title><?= isset($pageTitle) ? Helper::sanitize($pageTitle) . ' — ' : '' ?><?= APP_NAME ?></title>
-  <link rel="shortcut icon" href="<?= BASE_URL ?>/assets/images/favicon.png"/>
+  <link rel="shortcut icon" type="image/x-icon" href="<?= BASE_URL ?>/assets/images/favicon.ico"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="<?= BASE_URL ?>/assets/images/favicon.png"/>
+  <link rel="apple-touch-icon" href="<?= BASE_URL ?>/assets/images/favicon.png"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta21/dist/css/tabler.min.css">
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/app.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,9 +49,9 @@
 
   /* ── Logo ─────────────────────────────────────────── */
   .sb-logo {
-    padding: 1.4rem 1.2rem 1.2rem;
+    padding: 1rem 1.2rem;
     border-bottom: 1px solid rgba(255,255,255,.06);
-    display: flex; align-items: center; gap: .8rem;
+    display: flex; align-items: center; justify-content: center;
     text-decoration: none; flex-shrink: 0;
     position: relative;
   }
@@ -286,11 +288,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
 
     <!-- Logo -->
     <a href="<?= BASE_URL ?>/index.php" class="sb-logo">
-      <div class="sb-logo-icon">🏛️</div>
-      <div class="sb-logo-text">
-        <span class="sb-logo-name">VenuePro</span>
-        <span class="sb-logo-sub">Event Management</span>
-      </div>
+      <img src="<?= BASE_URL ?>/assets/images/sidebar-logo.png" alt="VenuePro" style="max-height:56px;max-width:180px;object-fit:contain;display:block;">
     </a>
 
     <!-- Nav -->
