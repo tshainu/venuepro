@@ -80,21 +80,14 @@ try {
         }
     }
 
-    // ── Generate unique username ──────────────────────────────────────────
-    $baseUsername = $admin_username ?: 'admin';
-    $finalUsername = $baseUsername;
+    // ── Generate unique username — always admin_<user_id> ─────────────────
+    $admin_username = 'admin_' . strtolower($admin_user_id); // e.g. admin_f534
+    // Fallback collision guard (shouldn't happen since user_id is unique)
     $unCheck = $db->prepare("SELECT id FROM users WHERE username = ?");
-    $unCheck->execute([$finalUsername]);
+    $unCheck->execute([$admin_username]);
     if ($unCheck->fetch()) {
-        // Append suffix to make it unique
-        $suffix = 2;
-        do {
-            $finalUsername = $baseUsername . $suffix;
-            $unCheck->execute([$finalUsername]);
-            $suffix++;
-        } while ($unCheck->fetch());
+        $admin_username = 'admin_' . strtolower($admin_user_id) . '_' . rand(10, 99);
     }
-    $admin_username = $finalUsername;
 
     // ── Auto-generate password if blank ──────────────────────────────────
     if (!$admin_password) {

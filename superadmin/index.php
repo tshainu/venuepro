@@ -450,8 +450,8 @@ body{background:#f0f2f7;min-height:100vh;}
           </div>
         </div>
         <div class="form-group">
-          <label>Username</label>
-          <input type="text" name="admin_username" id="field_username" value="admin" placeholder="admin">
+          <label>Username <span style="font-weight:400;color:#94a3b8">(auto: admin_&lt;userID&gt;)</span></label>
+          <input type="text" id="field_username_preview" value="admin_???" placeholder="auto-generated" disabled style="background:#f8fafc;color:#94a3b8;font-family:monospace;">
         </div>
       </div>
       <div class="form-group">
@@ -643,7 +643,17 @@ function genUserId(){
   const uid = letters[Math.floor(Math.random()*letters.length)]
             + String(Math.floor(100 + Math.random()*900));
   document.getElementById('field_user_id').value = uid;
+  updateUsernamePreview(uid);
 }
+
+function updateUsernamePreview(uid){
+  const el = document.getElementById('field_username_preview');
+  if(el) el.value = uid ? 'admin_' + uid.toLowerCase() : 'admin_???';
+}
+
+document.getElementById('field_user_id')?.addEventListener('input', function(){
+  updateUsernamePreview(this.value);
+});
 
 function genPassword(){
   const color = COLORS[Math.floor(Math.random()*COLORS.length)];
