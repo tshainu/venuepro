@@ -477,12 +477,12 @@ $evtType = $_POST['event_type'] ?? ($fromInquiry['event_type'] ?? '');
             <label class="form-label form-required">Event Date</label>
             <div class="input-icon-wrap">
               <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-              <input type="date" name="event_date" id="event_date" class="form-control" value="<?= htmlspecialchars($prefillDateVal) ?>" required onchange="checkHallConflict()">
+              <input type="text" name="event_date" id="event_date" class="form-control" value="<?= htmlspecialchars($prefillDateVal) ?>" required placeholder="Select date" autocomplete="off">
             </div>
           </div>
           <div class="col-md-4">
             <label class="form-label">End Date <span style="color:#9ca3af;font-weight:400;">(multi-day)</span></label>
-            <input type="date" name="event_end_date" class="form-control" value="<?= htmlspecialchars($_POST['event_end_date']??'') ?>">
+            <input type="text" name="event_end_date" id="event_end_date" class="form-control" value="<?= htmlspecialchars($_POST['event_end_date']??'') ?>" placeholder="Select date" autocomplete="off">
           </div>
           <div class="col-md-4">
             <label class="form-label">Guest Count</label>
@@ -1092,10 +1092,17 @@ async function saveNewCustomer() {
 }
 </script>
 
-<!-- Flatpickr time pickers -->
+<!-- Flatpickr date & time pickers -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
 .flatpickr-calendar { border-radius:16px !important; box-shadow:0 16px 48px rgba(12,26,53,.2) !important; border:1.5px solid #e5e7eb !important; font-family:inherit !important; }
+.flatpickr-day.selected, .flatpickr-day.selected:hover { background:linear-gradient(135deg,#c9a84c,#e8c96a) !important; border-color:#c9a84c !important; }
+.flatpickr-day:hover { background:#fdf5e0 !important; }
+.flatpickr-months .flatpickr-month { background:linear-gradient(135deg,#0c1a35,#1a3060) !important; color:#fff !important; border-radius:14px 14px 0 0 !important; }
+.flatpickr-current-month, .flatpickr-current-month .flatpickr-monthDropdown-months { color:#fff !important; }
+.flatpickr-weekday { color:#c9a84c !important; font-weight:700 !important; }
+.flatpickr-prev-month, .flatpickr-next-month { color:#fff !important; fill:#fff !important; }
+.flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg { fill:#c9a84c !important; }
 .flatpickr-calendar.hasTime .flatpickr-time { border-top:1px solid #f0f2f8 !important; }
 .flatpickr-time input, .flatpickr-time .flatpickr-am-pm { font-size:1.4rem !important; font-weight:800 !important; color:#0c1a35 !important; }
 .flatpickr-time .numInputWrapper span.arrowUp:after  { border-bottom-color:#c9a84c !important; }
@@ -1104,6 +1111,19 @@ async function saveNewCustomer() {
 </style>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
+// Date pickers
+var fpEventDate = flatpickr('#event_date', {
+  dateFormat: 'Y-m-d',
+  disableMobile: true,
+  allowInput: false,
+  onChange: function() { checkHallConflict(); recalc(); }
+});
+flatpickr('#event_end_date', {
+  dateFormat: 'Y-m-d',
+  disableMobile: true,
+  allowInput: false,
+});
+
 // Time pickers
 flatpickr('#fp_start_time', {
   enableTime: true, noCalendar: true,

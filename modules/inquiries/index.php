@@ -9,11 +9,15 @@ $status     = $_GET['status'] ?? '';
 $source     = $_GET['source'] ?? '';
 $page       = max(1,(int)($_GET['page'] ?? 1));
 
+$showExpired = ($_GET['expired'] ?? '') === '1';
+
 $where = ['1=1']; $params = [];
 if ($cu['branch_id']) { $where[] = 'i.branch_id=?'; $params[] = $cu['branch_id']; }
 if ($search) { $where[] = '(i.name LIKE ? OR i.mobile LIKE ? OR i.inquiry_ref LIKE ?)'; $params[] = "%$search%"; $params[] = "%$search%"; $params[] = "%$search%"; }
 if ($status) { $where[] = 'i.status=?'; $params[] = $status; }
 if ($source) { $where[] = 'i.source=?'; $params[] = $source; }
+// Hide expired inquiries (event_date < today) unless toggle is on
+if (!$showExpired) { $where[] = "(i.event_date IS NULL OR i.event_date >= CURDATE())"; }
 
 $wstr  = implode(' AND ', $where);
 $total = $db->fetchOne("SELECT COUNT(*) as cnt FROM inquiries i WHERE $wstr", $params)['cnt'];
@@ -151,6 +155,10 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['_action']??'')==='' ) {
     </select>
     <button class="btn btn-vp-primary">Filter</button>
     <a href="<?= BASE_URL ?>/modules/inquiries/index.php" class="btn btn-vp-outline">Clear</a>
+    <a href="?search=<?= urlencode($search) ?>&status=<?= $status ?>&source=<?= $source ?>&expired=<?= $showExpired?'0':'1' ?>"
+       class="btn <?= $showExpired ? 'btn-vp-gold' : 'btn-vp-outline' ?>" style="font-size:.78rem;">
+       <?= $showExpired ? '🚫 Hide Expired' : '📅 Show Expired' ?>
+    </a>
   </form>
 </div>
 
