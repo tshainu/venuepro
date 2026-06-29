@@ -49,13 +49,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             [$pay_ref,$booking_id,$invoice_id,$customer_id,$branch_id,$payment_method,$amount,$payment_date,$reference_number,$bank_name,$notes,$cu['id']]
         );
 
-        // Update booking paid_amount and balance
+        // Recalculate booking paid_amount and balance from SUM of all payments
         if ($booking_id) {
-            $db->execute("UPDATE bookings SET paid_amount=paid_amount+?, balance_amount=balance_amount-? WHERE id=?", [$amount,$amount,$booking_id]);
+            $db->execute("UPDATE bookings SET paid_amount=(SELECT COALESCE(SUM(amount),0) FROM payments WHERE booking_id=bookings.id), balance_amount=final_amount-(SELECT COALESCE(SUM(amount),0) FROM payments WHERE booking_id=bookings.id) WHERE id=?", [$booking_id]);
         }
-        // Update invoice paid_amount and balance
+        // Recalculate invoice paid_amount and balance from SUM of all payments
         if ($invoice_id) {
-            $db->execute("UPDATE invoices SET paid_amount=paid_amount+?, balance=balance-? WHERE id=?", [$amount,$amount,$invoice_id]);
+            $db->execute("UPDATE invoices SET paid_amount=(SELECT COALESCE(SUM(amount),0) FROM payments WHERE invoice_id=invoices.id), balance=total-(SELECT COALESCE(SUM(amount),0) FROM payments WHERE invoice_id=invoices.id) WHERE id=?", [$invoice_id]);
         }
         // Recalc status for all relevant invoices
         $inv_ids_to_check = [];
