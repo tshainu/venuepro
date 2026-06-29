@@ -12,7 +12,7 @@ $errors  = [];
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save_settings') {
-    if (!Auth::hasRole(['super_admin','admin'])) { Helper::flash('error','Admin only.'); Helper::redirect(BASE_URL.'/modules/settings/index.php'); }
+    if (!Auth::hasRole(['super_admin','admin','hall_manager'])) { Helper::flash('error','Admin only.'); Helper::redirect(BASE_URL.'/modules/settings/index.php'); }
     $data = $_POST['settings'] ?? [];
     foreach ($data as $key => $val) {
         $key = preg_replace('/[^a-z0-9_]/','',$key);

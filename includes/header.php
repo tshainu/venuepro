@@ -439,7 +439,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
       </a>
       <?php endif; ?>
 
-      <?php if (Auth::hasRole(['super_admin','admin'])): ?>
+      <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
       <!-- ADMIN -->
       <div class="sb-section">Administration</div>
 
