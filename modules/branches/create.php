@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::isSuperAdmin()) { Helper::flash('error','Super Admin only.'); Helper::redirect(BASE_URL.'/index.php'); }
+if (!Auth::hasRole(['super_admin','admin','hall_manager'])) { Helper::flash('error','Super Admin only.'); Helper::redirect(BASE_URL.'/index.php'); }
 $db = Database::getInstance();
 $errors = [];
 

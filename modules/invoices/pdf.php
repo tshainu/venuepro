@@ -22,6 +22,8 @@ $items = $db->fetchAll("SELECT * FROM invoice_items WHERE invoice_id=?", [$id]);
 $app_name  = Helper::getSetting('company_name') ?? APP_NAME;
 $inv_color = Helper::getSetting('invoice_color', $inv['branch_id']) ?? '#1a3c6e';
 $inv_fsize = Helper::getSetting('invoice_font_size', $inv['branch_id']) ?? '10';
+$inv_logo  = Helper::getSetting('company_logo', $inv['branch_id']);
+$inv_show_logo = Helper::getSetting('invoice_show_logo', $inv['branch_id']) ?? '1';
 
 ob_start();
 ?>
@@ -50,9 +52,14 @@ ob_start();
 </style>
 </head>
 <body>
-<div class="header">
-  <h1><?= htmlspecialchars($app_name) ?></h1>
-  <p><?= htmlspecialchars($inv['branch_name']) ?><?= $inv['branch_address'] ? ' · '.$inv['branch_address'] : '' ?><?= $inv['branch_phone'] ? ' · '.$inv['branch_phone'] : '' ?></p>
+<div class="header" style="display:flex;align-items:center;gap:15px;">
+  <?php if ($inv_show_logo === '1' && $inv_logo && file_exists(ROOT_PATH.'/uploads/'.$inv_logo)): ?>
+    <img src="<?= ROOT_PATH.'/uploads/'.$inv_logo ?>" style="height:60px;width:auto;object-fit:contain;">
+  <?php endif; ?>
+  <div>
+    <h1><?= htmlspecialchars($app_name) ?></h1>
+    <p><?= htmlspecialchars($inv['branch_name']) ?><?= $inv['branch_address'] ? ' · '.$inv['branch_address'] : '' ?><?= $inv['branch_phone'] ? ' · '.$inv['branch_phone'] : '' ?></p>
+  </div>
 </div>
 
 <table width="100%"><tr>

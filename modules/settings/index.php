@@ -13,6 +13,39 @@ $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save_settings') {
     if (!Auth::hasRole(['super_admin','admin','hall_manager'])) { Helper::flash('error','Admin only.'); Helper::redirect(BASE_URL.'/modules/settings/index.php'); }
+    
+    // Handle logo upload
+    if (isset($_FILES['company_logo']) && $_FILES['company_logo']['error'] === 0) {
+        $file = $_FILES['company_logo'];
+        $allowed = ['image/jpeg','image/png','image/webp'];
+        if (!in_array($file['type'], $allowed)) {
+            Helper::flash('error','Only JPG, PNG, WebP allowed.');
+        } elseif ($file['size'] > 2*1024*1024) {
+            Helper::flash('error','Logo must be under 2MB.');
+        } else {
+            $ext = match($file['type']) { 'image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp' };
+            $filename = 'logo_'.$sel_branch.'_'.time().'.'.$ext;
+            $upload_dir = ROOT_PATH.'/uploads';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+            
+            if (move_uploaded_file($file['tmp_name'], $upload_dir.'/'.$filename)) {
+                // Delete old logo if exists
+                $old = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key='company_logo' AND branch_id=?", [$sel_branch]);
+                if ($old && file_exists($upload_dir.'/'.$old['setting_value'])) {
+                    @unlink($upload_dir.'/'.$old['setting_value']);
+                }
+                // Save new logo
+                $exists = $db->fetchOne("SELECT id FROM settings WHERE setting_key='company_logo' AND branch_id=?", [$sel_branch]);
+                if ($exists) {
+                    $db->execute("UPDATE settings SET setting_value=? WHERE setting_key='company_logo' AND branch_id=?", [$filename,$sel_branch]);
+                } else {
+                    $db->insert("INSERT INTO settings (setting_key,setting_value,branch_id) VALUES (?,?,?)", ['company_logo',$filename,$sel_branch]);
+                }
+                Helper::flash('success','Logo uploaded successfully.');
+            }
+        }
+    }
+    
     $data = $_POST['settings'] ?? [];
     foreach ($data as $key => $val) {
         $key = preg_replace('/[^a-z0-9_]/','',$key);
@@ -126,7 +159,7 @@ require_once ROOT_PATH . '/includes/header.php';
 
   <!-- ===== TAB: GENERAL ===== -->
   <div class="tab-pane fade <?= $active_tab==='general'?'show active':'' ?>" id="tab-general" role="tabpanel">
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
       <input type="hidden" name="_action" value="save_settings">
       <input type="hidden" name="_tab" value="general">
       <div class="row">
@@ -135,6 +168,26 @@ require_once ROOT_PATH . '/includes/header.php';
           <div class="card settings-card">
             <div class="card-header"><h3>🏢 Company Information</h3></div>
             <div class="card-body p-4">
+              <div class="mb-3">
+                <label class="form-label">Company Logo</label>
+                <div class="d-flex gap-3 align-items-start">
+                  <div>
+                    <?php $logo = $settings['company_logo'] ?? null; ?>
+                    <div class="logo-preview" style="width:120px;height:120px;border:2px dashed #e8eaf0;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#f8f9fb;overflow:hidden;margin-bottom:.8rem;">
+                      <?php if ($logo && file_exists(ROOT_PATH.'/uploads/'.$logo)): ?>
+                        <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($logo) ?>" style="max-width:100%;max-height:100%;object-fit:contain;">
+                      <?php else: ?>
+                        <div style="text-align:center;color:#9ca3af;font-size:.85rem;">
+                          <div style="font-size:2rem;margin-bottom:.2rem;">📷</div>
+                          <div>No logo</div>
+                        </div>
+                      <?php endif; ?>
+                    </div>
+                    <input type="file" name="company_logo" id="logoUpload" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp" onchange="previewLogo(this)">
+                    <div style="font-size:.75rem;color:#6b7280;margin-top:.5rem;">JPG, PNG, or WebP (max 2MB)</div>
+                  </div>
+                </div>
+              </div>
               <div class="mb-3"><label class="form-label">Company Name</label>
                 <input type="text" name="settings[company_name]" class="form-control" value="<?= Helper::sanitize($settings['company_name']??APP_NAME) ?>"></div>
               <div class="mb-3"><label class="form-label">Tagline</label>
@@ -578,6 +631,17 @@ const colorHex    = document.getElementById('invoiceColorHex');
 if (colorPicker && colorHex) {
   colorPicker.addEventListener('input', () => colorHex.value = colorPicker.value);
   colorHex.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(colorHex.value)) colorPicker.value = colorHex.value; });
+}
+
+// Logo preview
+function previewLogo(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.querySelector('.logo-preview').innerHTML = '<img src="' + e.target.result + '" style="max-width:100%;max-height:100%;object-fit:contain;">';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
 }
 </script>
 
