@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::hasRole(['super_admin','hall_manager','accountant'])) { http_response_code(403); exit; }
+if (!Auth::hasRole(['super_admin','hall_manager','manager','accountant'])) { http_response_code(403); exit; }
 $db = Database::getInstance();
 $cu = Auth::currentUser();
 

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::hasRole(['super_admin','admin','hall_manager','accountant'])) {
+if (!Auth::hasRole(['super_admin','admin','hall_manager','manager','accountant'])) {
     Helper::flash('error','Access denied.');
     Helper::redirect(BASE_URL.'/index.php');
 }

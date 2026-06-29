@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::hasRole(['super_admin','admin','hall_manager'])) { Helper::flash('error',Lang::t('access_denied')); Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=packages' : BASE_URL.'/modules/packages/index.php'); }
+if (!Auth::hasRole(['super_admin','admin','hall_manager','manager'])) { Helper::flash('error',Lang::t('access_denied')); Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=packages' : BASE_URL.'/modules/packages/index.php'); }
 $db = Database::getInstance();
 $cu = Auth::currentUser();
 $branches = $db->fetchAll("SELECT id,name FROM branches WHERE is_active=1");

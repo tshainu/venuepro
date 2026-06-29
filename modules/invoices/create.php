@@ -77,6 +77,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $db->execute("UPDATE bookings SET balance_amount = final_amount - paid_amount WHERE id=?", [$booking_id]);
         }
+        Logger::log('create', 'invoices', (int)$iid, $inv_num, null,
+            ['invoice_number'=>$inv_num,'customer_id'=>$customer_id,'invoice_type'=>$invoice_type,'total'=>$total,'status'=>$status],
+            "Created invoice $inv_num");
         Helper::flash('success',"Invoice $inv_num created.");
         Helper::redirect(BASE_URL.'/modules/invoices/view.php?id='.$iid);
     }

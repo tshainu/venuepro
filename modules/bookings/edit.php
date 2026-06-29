@@ -74,6 +74,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        Logger::log('edit', 'bookings', $id, $bk['booking_ref'],
+            ['customer_id'=>$bk['customer_id'],'hall_id'=>$bk['hall_id'],'event_date'=>$bk['event_date'],'status'=>$bk['status'],'final_amount'=>$bk['final_amount']],
+            ['customer_id'=>$customer_id,'hall_id'=>$hall_id,'event_date'=>$event_date,'status'=>$status,'final_amount'=>$final],
+            "Edited booking {$bk['booking_ref']}");
         Helper::flash('success','Booking updated.');
         Helper::redirect(BASE_URL.'/modules/bookings/view.php?id='.$id);
     }

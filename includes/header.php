@@ -422,7 +422,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Reports</span>
       </a>
 
-      <?php if (Auth::hasRole(['hall_manager'])): ?>
+      <?php if (Auth::hasRole(['hall_manager','manager'])): ?>
       <!-- STAFF MANAGEMENT -->
       <div class="sb-section">Staff</div>
 
@@ -437,7 +437,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
       </a>
       <?php endif; ?>
 
-      <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
+      <?php if (Auth::hasRole(['super_admin','admin','hall_manager','manager'])): ?>
       <!-- ADMIN -->
       <div class="sb-section">Administration</div>
 
@@ -451,6 +451,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Users</span>
       </a>
 
+      <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
       <a href="<?= BASE_URL ?>/modules/branches/index.php" class="sb-item <?= sbActive($_currentPath, '/branches') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -459,6 +460,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         </div>
         <span class="sb-label">Branches</span>
       </a>
+      <?php endif; ?>
 
       <a href="<?= BASE_URL ?>/modules/settings/index.php" class="sb-item <?= sbActive($_currentPath, '/settings') ?>">
         <div class="sb-icon">
@@ -469,6 +471,20 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         </div>
         <span class="sb-label">Settings</span>
       </a>
+
+      <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
+      <a href="<?= BASE_URL ?>/modules/logs/index.php" class="sb-item <?= sbActive($_currentPath, '/logs') ?>">
+        <div class="sb-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="2"/>
+            <path d="M9 12h6M9 16h4"/>
+          </svg>
+        </div>
+        <span class="sb-label">Activity Logs</span>
+      </a>
+      <?php endif; ?>
+
       <?php endif; ?>
 
     </nav>

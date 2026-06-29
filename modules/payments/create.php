@@ -78,6 +78,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        Logger::log('create', 'payments', null, $pay_ref, null,
+            ['payment_ref'=>$pay_ref,'customer_id'=>$customer_id,'amount'=>$amount,'method'=>$payment_method,'booking_id'=>$booking_id,'invoice_id'=>$invoice_id],
+            "Recorded payment $pay_ref — ".number_format($amount,2));
         Helper::flash('success',"Payment $pay_ref recorded — ".Helper::formatCurrency($amount));
         if ($booking_id) Helper::redirect(BASE_URL.'/modules/bookings/view.php?id='.$booking_id);
         elseif ($invoice_id) Helper::redirect(BASE_URL.'/modules/invoices/view.php?id='.$invoice_id);

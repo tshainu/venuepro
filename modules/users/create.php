@@ -2,8 +2,8 @@
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
 
-// Only Hall Managers (branch-level) can create staff for their branch
-if (!Auth::hasRole(['hall_manager'])) {
+// Hall Managers and Managers (branch-level) can create staff for their branch
+if (!Auth::hasRole(['hall_manager','manager'])) {
     Helper::redirect(BASE_URL . '/index.php');
 }
 
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$error) {
         // Only allow creating reception/accountant/hall_manager roles (not super_admin)
-        $role = $db->fetchOne("SELECT slug FROM roles WHERE id = ? AND slug IN ('reception', 'accountant', 'hall_manager')", [$role_id]);
+        $role = $db->fetchOne("SELECT slug FROM roles WHERE id = ? AND slug IN ('reception', 'accountant', 'hall_manager', 'manager')", [$role_id]);
         if (!$role) {
             $error = 'Invalid role selected.';
         }
@@ -62,6 +62,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())",
                 [$name, $email, $user_id, $username, $hashed, $phone, $role_id, $branch_id]
             );
+            $new_uid = $db->fetchOne("SELECT LAST_INSERT_ID() as id")['id'] ?? null;
+            Logger::log('create', 'users', (int)$new_uid, $username, null,
+                ['name'=>$name,'email'=>$email,'username'=>$username,'role_id'=>$role_id,'branch_id'=>$branch_id],
+                "Created user $name ($username)");
             $success = "Staff member <strong>$name</strong> created successfully.";
             $_POST = [];
         } catch (Exception $e) {
@@ -70,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Only show staff roles (not super_admin or hall_manager)
-$roles = $db->fetchAll("SELECT id, name FROM roles WHERE slug IN ('reception', 'accountant') ORDER BY id");
+// Show staff roles (not super_admin); hall_manager can also assign manager role
+$roles = $db->fetchAll("SELECT id, name FROM roles WHERE slug IN ('reception', 'accountant', 'hall_manager', 'manager') ORDER BY id");
 $branch = $db->fetchOne("SELECT name FROM branches WHERE id = ?", [$branch_id]);
 
 // Get business name from sa_businesses

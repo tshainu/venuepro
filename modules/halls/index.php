@@ -20,7 +20,7 @@ require_once __DIR__ . '/../../includes/header.php';
     <h1 class="vp-page-title">🏛️ <?= Lang::t('halls') ?></h1>
     <div class="vp-page-sub"><?= count($halls) ?> halls configured</div>
   </div>
-  <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
+  <?php if (Auth::hasRole(['super_admin','admin','hall_manager','manager'])): ?>
   <a href="<?= BASE_URL ?>/modules/halls/create.php" class="btn btn-vp-gold">
     <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
     Add Hall
@@ -60,7 +60,7 @@ require_once __DIR__ . '/../../includes/header.php';
           <td><?= $h['is_active'] ? '<span class="vp-badge badge-active">Active</span>' : '<span class="vp-badge badge-inactive">Inactive</span>' ?></td>
           <td>
             <a href="<?= BASE_URL ?>/modules/halls/view.php?id=<?= $h['id'] ?>" class="btn btn-vp-outline btn-sm">View</a>
-            <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
+            <?php if (Auth::hasRole(['super_admin','admin','hall_manager','manager'])): ?>
             <a href="<?= BASE_URL ?>/modules/halls/edit.php?id=<?= $h['id'] ?>" class="btn btn-vp-primary btn-sm">Edit</a>
             <a href="<?= BASE_URL ?>/modules/halls/delete.php?id=<?= $h['id'] ?>" class="btn btn-vp-danger btn-sm" onclick="return confirm('Delete this hall?')">Delete</a>
             <?php endif; ?>

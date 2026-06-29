@@ -4,6 +4,7 @@ require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/Auth.php';
 require_once __DIR__ . '/Helper.php';
 require_once __DIR__ . '/Lang.php';
+require_once __DIR__ . '/Logger.php';
 
 // Start session
 if (session_status() === PHP_SESSION_NONE) {

@@ -97,6 +97,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->execute("UPDATE inquiries SET status='converted' WHERE id=?", [$inquiry_id_from]);
         }
 
+        Logger::log('create', 'bookings', $booking_id, $booking_ref, null,
+            ['booking_ref'=>$booking_ref,'customer_id'=>$customer_id,'hall_id'=>$hall_id,'event_type'=>$event_type,'event_date'=>$event_date,'status'=>$status,'final_amount'=>$final],
+            "Created booking $booking_ref");
         Helper::flash('success', "Booking $booking_ref created successfully.");
         Helper::redirect(BASE_URL.'/modules/bookings/view.php?id='.$booking_id);
     }
