@@ -22,10 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif (!preg_match('/^\d{10}$/', $mobile)) $errors[] = 'Mobile number must be exactly 10 digits.';
 
     if (!$errors) {
-        $db->insert(
+        $newId = $db->insert(
             "INSERT INTO customers (branch_id,name,nic,address,city,mobile,mobile2,email,notes,created_by) VALUES (?,?,?,?,?,?,?,?,?,?)",
             [$branch_id,$name,$nic,$address,$city,$mobile,$mobile2,$email,$notes,$cu['id']]
         );
+        Logger::log('create','customers',$newId,$name,null,'name:'.$name.' mobile:'.$mobile,'Customer created');
         Helper::flash('success', 'Customer added successfully.');
         Helper::redirect(BASE_URL.'/modules/customers/index.php');
     }

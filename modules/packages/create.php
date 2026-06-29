@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$name) $errors[] = 'Package name required.';
     if (!$errors) {
         $pid = $db->insert("INSERT INTO packages (branch_id,name,description,price) VALUES (?,?,?,?)", [$branch_id,$name,$description,$price]);
+        Logger::log('create','packages',$pid,$name,null,'name:'.$name.' price:'.$price,'Package created');
         foreach ($items as $it) {
             $iname = trim($it['name'] ?? '');
             $qty   = (int)($it['qty'] ?? 1);

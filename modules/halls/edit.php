@@ -32,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$errors) {
+        Logger::log('edit','halls',$id,$hall['name'],'name:'.$hall['name'].' capacity:'.$hall['capacity'],'name:'.$name.' capacity:'.$capacity,'Hall updated');
         $db->execute(
             "UPDATE halls SET branch_id=?, name=?, description=?, capacity=?, price_per_day=?, facilities=?, image=?, is_active=? WHERE id=?",
             [$branch_id, $name, $description, $capacity, $price, $facilities, $image, $is_active, $id]

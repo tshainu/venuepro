@@ -21,6 +21,7 @@ if ($cu['branch_id'] && $q['branch_id'] != $cu['branch_id']) { Helper::flash('er
 if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['change_status'])) {
     $ns = $_POST['new_status'] ?? '';
     if (in_array($ns,['draft','sent','accepted','rejected','expired'])) {
+        Logger::log('edit','quotations',$id,$q['quotation_ref'],'status:'.$q['status'],'status:'.$ns,'Quotation status changed');
         $db->execute("UPDATE quotations SET status=? WHERE id=?",[$ns,$id]);
         Helper::flash('success','Status updated.');
         Helper::redirect(BASE_URL.'/modules/quotations/view.php?id='.$id);

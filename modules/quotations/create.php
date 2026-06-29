@@ -56,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "INSERT INTO quotations (quotation_ref,booking_id,customer_id,branch_id,valid_until,status,subtotal,discount_amount,tax_amount,total,notes,terms,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
             [$ref,$booking_id,$customer_id,$branch_id,$valid_until?:null,$status,$subtotal,$discount,$tax_total,$total,$notes,$terms,$cu['id']]
         );
+        Logger::log('create','quotations',$qid,$ref,null,'ref:'.$ref.' total:'.$total,'Quotation created');
         foreach ($items as $it) {
             $desc = trim($it['description']??''); if (!$desc) continue;
             $qty=(float)($it['quantity']??1); $up=(float)($it['unit_price']??0); $tp=(float)($it['tax_percent']??0);

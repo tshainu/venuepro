@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$payment_date) $errors[] = 'Payment date required.';
 
     if (!$errors) {
+        Logger::log('edit','payments',$id,$p['payment_ref'],'amount:'.$p['amount'].' method:'.$p['payment_method'],'amount:'.$amount.' method:'.$payment_method,'Payment updated');
         $db->execute(
             "UPDATE payments SET customer_id=?,payment_method=?,amount=?,payment_date=?,reference_number=?,bank_name=?,notes=? WHERE id=?",
             [$customer_id,$payment_method,$amount,$payment_date,$reference_number,$bank_name,$notes,$id]

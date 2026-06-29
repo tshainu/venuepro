@@ -23,10 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$name)        $errors[] = 'Room name is required.';
 
     if (!$errors) {
-        $db->insert(
+        $newId = $db->insert(
             "INSERT INTO rooms (branch_id,room_type_id,room_number,name,capacity,rate_per_night,description,status,is_active) VALUES (?,?,?,?,?,?,?,?,?)",
             [$branch_id, $room_type_id ?: null, $room_number, $name, $capacity, $rate, $description, $status, $is_active]
         );
+        Logger::log('create','rooms',$newId,$room_number,null,'room:'.$room_number.' name:'.$name,'Room created');
         Helper::flash('success', 'Room added.');
         Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=rooms' : BASE_URL.'/modules/rooms/index.php');
     }

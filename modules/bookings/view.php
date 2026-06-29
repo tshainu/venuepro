@@ -24,6 +24,7 @@ if ($cu['branch_id'] && $bk['branch_id'] != $cu['branch_id']) { Helper::flash('e
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_status'])) {
     $new_status = $_POST['new_status'] ?? '';
     if (in_array($new_status, ['inquiry','booked','confirmed','completed','cancelled'])) {
+        Logger::log('edit','bookings',$id,$bk['booking_ref'],'status:'.$bk['status'],'status:'.$new_status,'Booking status changed');
         $db->execute("UPDATE bookings SET status=? WHERE id=?", [$new_status, $id]);
         Helper::flash('success','Status updated to '.ucfirst($new_status).'.');
         Helper::redirect(BASE_URL.'/modules/bookings/view.php?id='.$id);
