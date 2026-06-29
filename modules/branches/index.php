@@ -3,11 +3,18 @@ require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
 if (!Auth::hasRole(['super_admin','admin','hall_manager'])) { Helper::flash('error','Admin access required.'); Helper::redirect(BASE_URL.'/index.php'); }
 $db = Database::getInstance();
+$cu = Auth::currentUser();
+
+// super_admin sees all, others see only their branch
+$branch_filter = Auth::isSuperAdmin() ? '' : 'WHERE b.id = ?';
+$branch_params = Auth::isSuperAdmin() ? [] : [$cu['branch_id']];
+
 $branches = $db->fetchAll(
     "SELECT b.*,
        (SELECT COUNT(*) FROM users WHERE branch_id=b.id) as user_count,
        (SELECT COUNT(*) FROM halls WHERE branch_id=b.id) as hall_count
-     FROM branches b ORDER BY b.name"
+     FROM branches b $branch_filter ORDER BY b.name",
+    $branch_params
 );
 
 $pageTitle  = 'Branches';
