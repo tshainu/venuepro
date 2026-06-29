@@ -180,7 +180,10 @@ require_once ROOT_PATH . '/includes/header.php';
               <td><?= ucfirst(str_replace('_',' ',$p['payment_method'])) ?></td>
               <td class="fw-700 text-success"><?= Helper::formatCurrency($p['amount']) ?></td>
               <td><?= Helper::sanitize($p['received_by_name'] ?? '—') ?></td>
-              <td><a href="<?= BASE_URL ?>/modules/payments/view.php?id=<?= $p['id'] ?>" class="btn btn-vp-outline btn-sm">View</a></td>
+              <td class="d-flex gap-1">
+                <a href="<?= BASE_URL ?>/modules/payments/view.php?id=<?= $p['id'] ?>" class="btn btn-vp-outline btn-sm">View</a>
+                <a href="<?= BASE_URL ?>/modules/payments/edit.php?id=<?= $p['id'] ?>" class="btn btn-vp-outline btn-sm">Edit</a>
+              </td>
             </tr>
             <?php endforeach; else: ?>
             <tr><td colspan="6" class="text-center text-secondary py-3">No payments yet.</td></tr>
