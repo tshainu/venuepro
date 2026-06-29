@@ -441,7 +441,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
       <!-- ADMIN -->
       <div class="sb-section">Administration</div>
 
-      <a href="<?= BASE_URL ?>/vpsa/users/index.php" class="sb-item <?= sbActive($_currentPath, '/users') ?>">
+      <a href="<?= BASE_URL ?>/modules/users/index.php" class="sb-item <?= sbActive($_currentPath, '/users') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
