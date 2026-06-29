@@ -288,7 +288,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
 
     <!-- Logo -->
     <a href="<?= BASE_URL ?>/index.php" class="sb-logo">
-      <img src="<?= BASE_URL ?>/assets/images/sidebar-logo.png" alt="VenuePro" style="max-height:80px;max-width:220px;width:100%;object-fit:contain;display:block;">
+      <img src="<?= BASE_URL ?>/assets/images/sidebar-logo.png" alt="VenuePro" style="max-height:55px;max-width:160px;width:100%;object-fit:contain;display:block;">
     </a>
 
     <!-- Nav -->
