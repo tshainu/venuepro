@@ -21,8 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             [$email]
         );
 
-        // Always show success to avoid user enumeration
-        if ($user) {
+        if (!$user) {
+            $error = 'No account found with that email address.';
+        } else {
             // Clean old tokens for this user
             $db->execute("DELETE FROM password_resets WHERE user_id = ?", [$user['id']]);
 
@@ -40,9 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Load mailer
             require_once ROOT_PATH . '/core/Mailer.php';
             Mailer::sendPasswordReset($user['email'], $user['name'], $resetLink);
-        }
 
-        $success = "If that email exists in our system, you'll receive a reset link shortly.";
+            $success = "Reset link sent to <strong>" . htmlspecialchars($email) . "</strong>. Check your inbox.";
+        }
     }
 }
 ?>
