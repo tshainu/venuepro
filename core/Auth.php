@@ -79,6 +79,32 @@ class Auth {
             header('Location: ' . BASE_URL . '/login.php');
             exit;
         }
+        // Re-hydrate session if role or branch_id is stale/missing
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] === '' || !isset($_SESSION['branch_id'])) {
+            $db = Database::getInstance();
+            $user = $db->fetchOne(
+                "SELECT u.*, r.slug as role_slug, r.name as role_name, b.name as branch_name 
+                 FROM users u 
+                 LEFT JOIN roles r ON u.role_id = r.id 
+                 LEFT JOIN branches b ON u.branch_id = b.id 
+                 WHERE u.id = ? AND u.is_active = 1",
+                [$_SESSION['user_id']]
+            );
+            if (!$user) {
+                session_destroy();
+                header('Location: ' . BASE_URL . '/login.php');
+                exit;
+            }
+            $_SESSION['user_role']    = $user['role_slug'];
+            $_SESSION['user_role_id'] = $user['role_id'];
+            $_SESSION['branch_id']    = $user['branch_id'];
+            $_SESSION['branch_name']  = $user['branch_name'];
+            $_SESSION['user_uid']     = $user['user_id'] ?? '';
+            $_SESSION['user_username']= $user['username'] ?? '';
+            $_SESSION['user_name']    = $user['name'];
+            $_SESSION['user_email']   = $user['email'];
+            $_SESSION['language']     = $user['language'] ?? 'en';
+        }
     }
 
     public static function isSuperAdmin() {
