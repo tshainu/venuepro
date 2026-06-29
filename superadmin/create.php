@@ -25,8 +25,24 @@ $admin_user_id  = strtoupper(trim($_POST['admin_user_id'] ?? ''));
 $admin_username = trim($_POST['admin_username'] ?? 'admin');
 $admin_password = trim($_POST['admin_password'] ?? '');
 
-if (!$business_name || !$email) {
-    $_SESSION['sa_error'] = 'Business Name and Email are required.';
+// ── Required field check ─────────────────────────────────────────────
+if (!$business_name || !$email || !$phone) {
+    $_SESSION['sa_error'] = 'Business Name, Email and Phone are required.';
+    header('Location: ' . BASE_URL . '/vpsa/');
+    exit;
+}
+
+// ── Email format ──────────────────────────────────────────────────────
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $_SESSION['sa_error'] = "Invalid email address: \"$email\". Please enter a valid email.";
+    header('Location: ' . BASE_URL . '/vpsa/');
+    exit;
+}
+
+// ── Phone format — digits, +, spaces, dashes, parens; min 7 digits ───
+$phoneDigits = preg_replace('/\D/', '', $phone);
+if (!preg_match('/^[+\d][\d\s\-().]{5,19}$/', $phone) || strlen($phoneDigits) < 7) {
+    $_SESSION['sa_error'] = "Invalid phone number: \"$phone\". Must be at least 7 digits (e.g. +94 77 000 0000).";
     header('Location: ' . BASE_URL . '/vpsa/');
     exit;
 }

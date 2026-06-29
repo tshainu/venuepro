@@ -156,6 +156,7 @@ body{background:#f0f2f7;min-height:100vh;}
 .modal-body{padding:1.5rem 1.75rem;}
 .modal-footer{padding:1rem 1.75rem 1.5rem;display:flex;gap:.75rem;justify-content:flex-end;border-top:1px solid #f1f5f9;}
 .form-group{margin-bottom:1rem;}
+.field-error{display:none;color:#ef4444;font-size:.75rem;margin-top:.3rem;font-weight:500;}
 .form-group label{display:block;font-size:.8rem;font-weight:600;color:#374151;margin-bottom:.4rem;}
 .form-group input,.form-group select,.form-group textarea{width:100%;padding:.6rem .9rem;border:1px solid #e2e8f0;border-radius:8px;font-size:.875rem;outline:none;transition:border .2s;font-family:inherit;}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#c9a84c;box-shadow:0 0 0 3px rgba(201,168,76,.1);}
@@ -367,7 +368,7 @@ body{background:#f0f2f7;min-height:100vh;}
       <h3>Add New Business</h3>
       <button class="modal-close" onclick="closeModal()">×</button>
     </div>
-    <form method="POST" action="create.php">
+    <form method="POST" action="create.php" id="createBizForm" onsubmit="return validateBizForm()">
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group">
@@ -382,11 +383,13 @@ body{background:#f0f2f7;min-height:100vh;}
       <div class="form-row">
         <div class="form-group">
           <label>Email *</label>
-          <input type="email" name="email" required placeholder="owner@business.lk">
+          <input type="email" name="email" id="biz_email" required placeholder="owner@business.lk" oninput="clearFieldError(this)">
+          <div class="field-error" id="err_email"></div>
         </div>
         <div class="form-group">
-          <label>Phone</label>
-          <input type="text" name="phone" placeholder="+94 77 000 0000">
+          <label>Phone *</label>
+          <input type="text" name="phone" id="biz_phone" required placeholder="+94 77 000 0000" oninput="clearFieldError(this)">
+          <div class="field-error" id="err_phone"></div>
         </div>
       </div>
       <div class="form-row">
@@ -574,6 +577,50 @@ body{background:#f0f2f7;min-height:100vh;}
 </div>
 
 <script>
+// ── Form validation ──
+function validateBizForm(){
+  let valid = true;
+
+  const emailEl = document.getElementById('biz_email');
+  const phoneEl = document.getElementById('biz_phone');
+
+  // Email
+  const emailVal = emailEl.value.trim();
+  const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRx.test(emailVal)) {
+    showFieldError(emailEl, 'err_email', 'Enter a valid email address.');
+    valid = false;
+  } else {
+    clearFieldError(emailEl);
+  }
+
+  // Phone — allow +, digits, spaces, dashes, parens; min 7 digits
+  const phoneVal = phoneEl.value.trim();
+  const digits = phoneVal.replace(/\D/g, '');
+  const phoneRx = /^[+\d][\d\s\-().]{5,19}$/;
+  if (!phoneRx.test(phoneVal) || digits.length < 7) {
+    showFieldError(phoneEl, 'err_phone', 'Enter a valid phone number (min 7 digits).');
+    valid = false;
+  } else {
+    clearFieldError(phoneEl);
+  }
+
+  return valid;
+}
+
+function showFieldError(el, errId, msg){
+  el.style.borderColor = '#ef4444';
+  const errEl = document.getElementById(errId);
+  if(errEl){ errEl.textContent = msg; errEl.style.display = 'block'; }
+}
+
+function clearFieldError(el){
+  el.style.borderColor = '';
+  const errId = 'err_' + (el.name === 'email' ? 'email' : 'phone');
+  const errEl = document.getElementById(errId);
+  if(errEl){ errEl.textContent = ''; errEl.style.display = 'none'; }
+}
+
 // ── Modal ──
 function openModal(){
   genUserId();
