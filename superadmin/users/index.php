@@ -32,23 +32,24 @@ require_once __DIR__ . '/../../includes/header.php';
 
 <style>
 .user-table { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.06); border: 1px solid #edf0f8; }
-.user-table table { width: 100%; border-collapse: collapse; }
-.user-table th { background: #f9fafb; padding: .9rem 1.2rem; text-align: left; font-size: .8rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .02em; border-bottom: 1.5px solid #e5e7eb; }
-.user-table td { padding: .9rem 1.2rem; border-bottom: 1px solid #f3f4f6; font-size: .9rem; }
+.user-table { overflow-x: auto; }
+.user-table table { width: 100%; border-collapse: collapse; min-width: 900px; }
+.user-table th { background: #f9fafb; padding: .9rem 1rem; text-align: left; font-size: .8rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .02em; border-bottom: 1.5px solid #e5e7eb; white-space: nowrap; }
+.user-table td { padding: .9rem 1rem; border-bottom: 1px solid #f3f4f6; font-size: .85rem; }
 .user-table tbody tr:hover { background: #f9fafb; }
 .user-badge { display: inline-flex; align-items: center; gap: .5rem; background: #eff6ff; border: 1px solid #3b82f6; color: #1e40af; padding: .4rem .8rem; border-radius: 6px; font-size: .8rem; font-weight: 600; }
 .user-badge.admin { background: #fef3c7; border-color: #f59e0b; color: #b45309; }
 .user-badge.staff { background: #dbeafe; border-color: #2563eb; color: #1e40af; }
 .status-active { color: #059669; font-weight: 700; }
 .status-inactive { color: #dc2626; font-weight: 700; }
-.btn-sm { padding: .4rem .8rem; border: none; border-radius: 6px; cursor: pointer; font-size: .8rem; font-weight: 600; transition: all .2s; text-decoration: none; display: inline-block; }
+.btn-sm { padding: .35rem .75rem; border: none; border-radius: 6px; cursor: pointer; font-size: .78rem; font-weight: 600; transition: all .2s; text-decoration: none; display: inline-block; white-space: nowrap; }
 .btn-edit { background: #dbeafe; color: #1e40af; }
 .btn-edit:hover { background: #bfdbfe; }
 .btn-delete { background: #fee2e2; color: #991b1b; }
 .btn-delete:hover { background: #fecaca; }
 .btn-toggle { background: #f3f4f6; color: #374151; }
 .btn-toggle:hover { background: #e5e7eb; }
-.action-cell { display: flex; gap: .5rem; flex-wrap: wrap; min-width: 180px; }
+.action-cell { display: flex; gap: .4rem; flex-wrap: nowrap; align-items: center; }
 </style>
 
 <div class="container-xl py-4">
@@ -80,7 +81,7 @@ require_once __DIR__ . '/../../includes/header.php';
               <th>Branch</th>
               <th>Status</th>
               <th>Created</th>
-              <th style="text-align: center;">Actions</th>
+              <th style="width: 160px;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -102,8 +103,8 @@ require_once __DIR__ . '/../../includes/header.php';
                   <?= $u['is_active'] ? '✓ Active' : '✗ Inactive' ?>
                 </td>
                 <td style="color: #9ca3af; font-size: .85rem;"><?= date('M d, Y', strtotime($u['created_at'])) ?></td>
-                <td style="text-align: center;">
-                  <div class="action-cell" style="justify-content: center;">
+                <td>
+                  <div class="action-cell">
                     <a href="<?= BASE_URL ?>/superadmin/users/edit.php?id=<?= $u['id'] ?>" class="btn-sm btn-edit">Edit</a>
                     <?php if ($u['id'] !== 1): ?>
                       <a href="?action=delete&id=<?= $u['id'] ?>" class="btn-sm btn-delete" onclick="return confirm('Delete this user?')">Delete</a>
