@@ -21,7 +21,7 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name     = trim($_POST['name'] ?? '');
     $email    = trim($_POST['email'] ?? '');
-    $user_id  = strtoupper(trim($_POST['user_id'] ?? ''));
+    $user_id  = strtoupper($cu['id'] ? $db->fetchOne("SELECT user_id FROM users WHERE id = ?", [$cu['id']])['user_id'] : '');
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
     $phone    = trim($_POST['phone'] ?? '');
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validate
     if (!$name) $error = 'Name is required.';
     elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $error = 'Invalid email.';
-    elseif (!$user_id) $error = 'User ID is required.';
+    elseif (!$user_id) $error = 'Could not determine business User ID.';
     elseif (!$username) $error = 'Username is required.';
     elseif (strlen($password) < 8) $error = 'Password must be at least 8 characters.';
     elseif (!$role_id) $error = 'Please select a role.';
@@ -44,10 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$error) {
-        // Check duplicates
-        $dup = $db->fetchOne("SELECT id FROM users WHERE email = ? OR user_id = ? OR username = ? LIMIT 1", [$email, $user_id, $username]);
+        // Check duplicates — email and username must be unique, user_id is shared per business so skip that check
+        $dup = $db->fetchOne("SELECT id FROM users WHERE email = ? OR username = ? LIMIT 1", [$email, $username]);
         if ($dup) {
-            $error = 'Email, User ID, or Username already exists.';
+            $error = 'Email or Username already exists.';
         }
     }
 
@@ -136,27 +136,20 @@ require_once __DIR__ . '/../../includes/header.php';
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">User ID</label>
-              <input type="text" name="user_id" class="form-control" placeholder="S001" required style="text-transform: uppercase;" maxlength="10"
-                     value="<?= htmlspecialchars(strtoupper($_POST['user_id'] ?? '')) ?>">
-            </div>
-            <div class="form-group">
               <label class="form-label">Username</label>
               <input type="text" name="username" class="form-control" placeholder="john.doe" required
                      value="<?= htmlspecialchars($_POST['username'] ?? '') ?>">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Password</label>
-              <input type="password" name="password" class="form-control" placeholder="Min. 8 characters" required minlength="8">
             </div>
             <div class="form-group">
               <label class="form-label">Phone (Optional)</label>
               <input type="tel" name="phone" class="form-control"
                      value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>">
             </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" placeholder="Min. 8 characters" required minlength="8">
           </div>
 
           <div class="form-group">

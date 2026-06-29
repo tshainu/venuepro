@@ -13,28 +13,28 @@ $success = '';
 $db = Database::getInstance();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name     = trim($_POST['name'] ?? '');
-    $email    = trim($_POST['email'] ?? '');
-    $user_id  = strtoupper(trim($_POST['user_id'] ?? ''));
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $phone    = trim($_POST['phone'] ?? '');
-    $role_id  = (int)($_POST['role_id'] ?? 0);
+    $name      = trim($_POST['name'] ?? '');
+    $email     = trim($_POST['email'] ?? '');
+    $user_id   = strtoupper($business_user_id); // shared across business
+    $username  = trim($_POST['username'] ?? '');
+    $password  = $_POST['password'] ?? '';
+    $phone     = trim($_POST['phone'] ?? '');
+    $role_id   = (int)($_POST['role_id'] ?? 0);
     $branch_id = (int)($_POST['branch_id'] ?? 0);
 
     // Validate
     if (!$name) $error = 'Name is required.';
     elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $error = 'Invalid email.';
-    elseif (!$user_id) $error = 'User ID is required.';
+    elseif (!$user_id) $error = 'Could not determine business User ID.';
     elseif (!$username) $error = 'Username is required.';
     elseif (strlen($password) < 8) $error = 'Password must be at least 8 characters.';
     elseif (!$role_id) $error = 'Please select a role.';
 
     if (!$error) {
-        // Check duplicates
-        $dup = $db->fetchOne("SELECT id FROM users WHERE email = ? OR user_id = ? OR username = ? LIMIT 1", [$email, $user_id, $username]);
+        // user_id is shared per business, only email and username must be unique
+        $dup = $db->fetchOne("SELECT id FROM users WHERE email = ? OR username = ? LIMIT 1", [$email, $username]);
         if ($dup) {
-            $error = 'Email, User ID, or Username already exists.';
+            $error = 'Email or Username already exists.';
         }
     }
 
@@ -58,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $roles = $db->fetchAll("SELECT id, name FROM roles WHERE slug != 'super_admin' ORDER BY id");
 $branches = $db->fetchAll("SELECT id, name FROM branches ORDER BY name");
 $cu = Auth::currentUser();
+$business_user_id = $db->fetchOne("SELECT user_id FROM users WHERE id = ?", [$cu['id']])['user_id'] ?? '';
 
 $pageTitle = 'Create User';
 require_once __DIR__ . '/../../includes/header.php';
@@ -126,28 +127,20 @@ require_once __DIR__ . '/../../includes/header.php';
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">User ID</label>
-              <input type="text" name="user_id" class="form-control" placeholder="A001" required
-                     style="text-transform: uppercase;" maxlength="10"
-                     value="<?= htmlspecialchars(strtoupper($_POST['user_id'] ?? '')) ?>">
-            </div>
-            <div class="form-group">
               <label class="form-label">Username</label>
               <input type="text" name="username" class="form-control" placeholder="john.doe" required
                      value="<?= htmlspecialchars($_POST['username'] ?? '') ?>">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Password</label>
-              <input type="password" name="password" class="form-control" placeholder="Min. 8 characters" required minlength="8">
             </div>
             <div class="form-group">
               <label class="form-label">Phone (Optional)</label>
               <input type="tel" name="phone" class="form-control" placeholder="+94 123 456 7890"
                      value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>">
             </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" placeholder="Min. 8 characters" required minlength="8">
           </div>
 
           <div class="form-row">
