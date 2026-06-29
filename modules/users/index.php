@@ -17,8 +17,11 @@ if (!$branch_id) {
 // Handle delete
 if (($_GET['action'] ?? null) === 'delete' && ($_GET['id'] ?? null)) {
     $id = (int)$_GET['id'];
-    $userCheck = $db->fetchOne("SELECT branch_id FROM users WHERE id = ?", [$id]);
+    $userCheck = $db->fetchOne("SELECT * FROM users WHERE id = ?", [$id]);
     if ($userCheck && $userCheck['branch_id'] == $branch_id) {
+        Logger::log('delete', 'users', $id, $userCheck['username'] ?? $userCheck['email'],
+            ['name' => $userCheck['name'], 'email' => $userCheck['email'], 'username' => $userCheck['username'], 'role_id' => $userCheck['role_id']],
+            null, "Deleted staff member {$userCheck['name']}");
         $db->execute("DELETE FROM users WHERE id = ?", [$id]);
     }
     Helper::redirect(BASE_URL . '/modules/users/index.php');
