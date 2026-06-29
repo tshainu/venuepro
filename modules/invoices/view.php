@@ -34,6 +34,9 @@ $payments = $db->fetchAll(
     "SELECT p.*, u.name as received_by_name FROM payments p LEFT JOIN users u ON p.received_by=u.id WHERE p.invoice_id=? ORDER BY p.payment_date DESC", [$id]
 );
 
+// Get invoice paper size setting
+$inv_paper_size = Helper::getSetting('invoice_paper_size', $inv['branch_id']) ?? 'A4';
+
 $statusColors = ['draft'=>'secondary','sent'=>'info','paid'=>'success','partial'=>'warning','overdue'=>'danger','cancelled'=>'dark'];
 $typeColors   = ['advance'=>'purple','interim'=>'blue','final'=>'green'];
 
@@ -87,7 +90,11 @@ require_once ROOT_PATH . '/includes/header.php';
       <div class="text-secondary"><?= Helper::sanitize($inv['customer_name']) ?> · <?= Helper::formatDate($inv['invoice_date']) ?></div>
     </div>
     <div class="d-flex gap-2 flex-wrap">
+      <?php if ($inv_paper_size === '80mm'): ?>
+      <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" class="btn btn-vp-outline d-print-none" target="_blank">🖨 Print Receipt</a>
+      <?php else: ?>
       <button onclick="window.print()" class="btn btn-vp-outline d-print-none">🖨 Print</button>
+      <?php endif; ?>
       <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" class="btn btn-vp-primary" target="_blank">⬇ Download PDF</a>
       <?php if ($inv['balance'] > 0): ?>
       <a href="<?= BASE_URL ?>/modules/payments/create.php?invoice_id=<?= $id ?>&booking_id=<?= $inv['booking_id'] ?>" class="btn btn-vp-gold">+ Make Payment</a>
@@ -283,7 +290,11 @@ require_once ROOT_PATH . '/includes/header.php';
       <div class="card-header">Actions</div>
       <div class="card-body p-3 d-flex flex-column gap-2">
         <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" target="_blank" class="btn btn-vp-primary w-100">⬇ Download PDF</a>
+        <?php if ($inv_paper_size === '80mm'): ?>
+        <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" target="_blank" class="btn btn-vp-outline w-100">🖨 Print Receipt</a>
+        <?php else: ?>
         <button onclick="window.print()" class="btn btn-vp-outline w-100">🖨 Print Invoice</button>
+        <?php endif; ?>
         <a href="<?= BASE_URL ?>/modules/invoices/index.php" class="btn btn-outline-secondary w-100">← Back to Invoices</a>
       </div>
     </div>
