@@ -34,8 +34,35 @@ $payments = $db->fetchAll(
     "SELECT p.*, u.name as received_by_name FROM payments p LEFT JOIN users u ON p.received_by=u.id WHERE p.invoice_id=? ORDER BY p.payment_date DESC", [$id]
 );
 
-// Get invoice paper size setting
+// Get invoice paper size + branding settings
 $inv_paper_size = Helper::getSetting('invoice_paper_size', $inv['branch_id']) ?? 'A4';
+$inv_color      = Helper::getSetting('invoice_color', $inv['branch_id']) ?? '#1a3c6e';
+$cur            = Helper::getSetting('currency_symbol', $inv['branch_id']) ?? 'Rs.';
+$app_name       = Helper::getSetting('company_name', $inv['branch_id']) ?? Helper::getSetting('company_name') ?? APP_NAME;
+$co_tagline     = Helper::getSetting('company_tagline', $inv['branch_id']) ?? '';
+$co_address     = Helper::getSetting('company_address', $inv['branch_id']) ?? $inv['branch_address'] ?? '';
+$co_phone       = Helper::getSetting('company_phone', $inv['branch_id']) ?? $inv['branch_phone'] ?? '';
+$co_email       = Helper::getSetting('company_email', $inv['branch_id']) ?? '';
+$co_website     = Helper::getSetting('company_website', $inv['branch_id']) ?? '';
+$inv_logo       = Helper::getSetting('company_logo', $inv['branch_id']);
+$inv_show_logo  = Helper::getSetting('invoice_show_logo', $inv['branch_id']) ?? '1';
+$inv_terms      = $inv['terms'] ?: (Helper::getSetting('invoice_terms', $inv['branch_id']) ?? '');
+$bank_name      = Helper::getSetting('bank_name', $inv['branch_id']) ?? '';
+$bank_acc_nm    = Helper::getSetting('bank_account_name', $inv['branch_id']) ?? '';
+$bank_acc_no    = Helper::getSetting('bank_account_number', $inv['branch_id']) ?? '';
+$bank_branch    = Helper::getSetting('bank_branch', $inv['branch_id']) ?? '';
+$has_bank       = ($bank_name || $bank_acc_no);
+$logo_path      = ($inv_show_logo === '1' && $inv_logo) ? BASE_URL.'/uploads/'.$inv_logo : null;
+
+$status_map = [
+  'paid'      => ['PAID',             '#16a34a', '#dcfce7'],
+  'partial'   => ['PARTIALLY PAID',  '#d97706', '#fef3c7'],
+  'sent'      => ['UNPAID',           '#dc2626', '#fee2e2'],
+  'overdue'   => ['OVERDUE',          '#dc2626', '#fee2e2'],
+  'draft'     => ['DRAFT',            '#64748b', '#f1f5f9'],
+  'cancelled' => ['CANCELLED',        '#475569', '#e2e8f0'],
+];
+$st = $status_map[$inv['status']] ?? ['UNPAID', '#dc2626', '#fee2e2'];
 
 $statusColors = ['draft'=>'secondary','sent'=>'info','paid'=>'success','partial'=>'warning','overdue'=>'danger','cancelled'=>'dark'];
 $typeColors   = ['advance'=>'purple','interim'=>'blue','final'=>'green'];
@@ -45,17 +72,37 @@ $breadcrumbs = [['label'=>'Invoices','url'=>BASE_URL.'/modules/invoices/index.ph
 require_once ROOT_PATH . '/includes/header.php';
 ?>
 <style>
+/* ===== PRINT STYLES ===== */
 @media print {
-  .d-print-none { display:none !important; }
-  .vp-page-header,.sidebar,.navbar,.topbar,.footer-bar { display:none !important; }
-  .invoice-print-card { box-shadow:none !important; border:none !important; }
-  body { background:#fff !important; }
-  .col-lg-4 { display:none !important; }
-  .col-lg-8 { width:100% !important; flex:0 0 100% !important; max-width:100% !important; }
-  .print-only { display:block !important; }
+  /* Hide all chrome */
+  .d-print-none, .vp-page-header, .sidebar, .navbar, .topbar,
+  .footer-bar, .col-lg-4, #sidebar, .vp-sidebar,
+  .inv-header-gradient, .totals-section, .card-body.border-top { display:none !important; }
+
+  /* Layout reset */
+  body { background:#fff !important; margin:0; padding:0; font-size:10pt; color:#1e293b; }
+  .invoice-print-card { box-shadow:none !important; border:none !important; border-radius:0 !important; margin:0 !important; }
+  .col-lg-8 { width:100% !important; flex:0 0 100% !important; max-width:100% !important; padding:0 !important; }
+  .row { display:block !important; }
   a { color:inherit !important; text-decoration:none !important; }
+  .card { border:none !important; box-shadow:none !important; }
+
+  /* Show print-only elements */
+  .print-only { display:block !important; }
+  .print-only-table { display:table !important; }
+  .print-only-row { display:table-row !important; }
+  .print-only-cell { display:table-cell !important; }
+
+  /* Items table print */
+  .items-table th { background:#f1f5f9 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+  /* Print totals */
+  .print-totals { display:block !important; }
+  .print-totals table { width:100%; border-collapse:collapse; }
+  .print-totals td { padding:5px 10px; font-size:10pt; }
 }
 .print-only { display:none; }
+.print-totals { display:none; }
 .inv-header-gradient {
   background: linear-gradient(135deg, #1a3c5e 0%, #2d6a9f 60%, #1e5a8e 100%);
   border-radius: 14px 14px 0 0;
@@ -106,6 +153,60 @@ require_once ROOT_PATH . '/includes/header.php';
 <div class="row">
   <div class="col-lg-8">
     <div class="card vp-card invoice-print-card mb-3" style="border-radius:14px;overflow:hidden;">
+
+      <!-- PRINT-ONLY HEADER (hidden on screen, visible when printing) -->
+      <div class="print-only" style="margin-bottom:16px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="width:58%;vertical-align:top;padding:0;">
+              <?php if ($logo_path): ?>
+                <img src="<?= $logo_path ?>" alt="Logo" style="max-height:60px;max-width:180px;margin-bottom:6px;"><br>
+              <?php endif; ?>
+              <div style="font-size:16pt;font-weight:bold;color:<?= htmlspecialchars($inv_color) ?>;line-height:1.1;"><?= htmlspecialchars($app_name) ?></div>
+              <?php if ($co_tagline): ?><div style="font-size:8pt;color:#64748b;margin-top:2px;"><?= htmlspecialchars($co_tagline) ?></div><?php endif; ?>
+              <div style="font-size:8pt;color:#475569;margin-top:5px;line-height:1.5;">
+                <?php if ($co_address): ?><?= nl2br(htmlspecialchars($co_address)) ?><br><?php endif; ?>
+                <?php if ($co_phone): ?>Tel: <?= htmlspecialchars($co_phone) ?><?php if ($co_email): ?> &nbsp;|&nbsp; <?php endif; ?><?php endif; ?>
+                <?php if ($co_email): ?>Email: <?= htmlspecialchars($co_email) ?><?php endif; ?>
+                <?php if ($co_website): ?><br><?= htmlspecialchars($co_website) ?><?php endif; ?>
+              </div>
+            </td>
+            <td style="width:42%;vertical-align:top;text-align:right;padding:0;">
+              <div style="font-size:24pt;font-weight:bold;color:<?= htmlspecialchars($inv_color) ?>;letter-spacing:1px;line-height:1;">INVOICE</div>
+              <table style="width:100%;border-collapse:collapse;margin-top:8px;">
+                <tr><td style="font-size:8pt;color:#94a3b8;text-align:right;padding:1px 0;">Invoice No</td><td style="font-size:8pt;font-weight:bold;text-align:right;padding:1px 0 1px 8px;"><?= htmlspecialchars($inv['invoice_number']) ?></td></tr>
+                <tr><td style="font-size:8pt;color:#94a3b8;text-align:right;padding:1px 0;">Date</td><td style="font-size:8pt;font-weight:bold;text-align:right;padding:1px 0 1px 8px;"><?= date('d M Y', strtotime($inv['invoice_date'])) ?></td></tr>
+                <?php if ($inv['due_date']): ?><tr><td style="font-size:8pt;color:#94a3b8;text-align:right;padding:1px 0;">Due Date</td><td style="font-size:8pt;font-weight:bold;text-align:right;padding:1px 0 1px 8px;"><?= date('d M Y', strtotime($inv['due_date'])) ?></td></tr><?php endif; ?>
+                <?php if ($inv['booking_ref']): ?><tr><td style="font-size:8pt;color:#94a3b8;text-align:right;padding:1px 0;">Booking Ref</td><td style="font-size:8pt;font-weight:bold;text-align:right;padding:1px 0 1px 8px;"><?= htmlspecialchars($inv['booking_ref']) ?></td></tr><?php endif; ?>
+              </table>
+              <div style="margin-top:6px;display:inline-block;padding:3px 10px;font-size:8pt;font-weight:bold;color:<?= $st[1] ?>;background:<?= $st[2] ?>;border:1px solid <?= $st[1] ?>;"><?= $st[0] ?></div>
+            </td>
+          </tr>
+        </table>
+        <div style="height:3px;background:<?= htmlspecialchars($inv_color) ?>;margin:10px 0 12px;"></div>
+        <!-- Parties -->
+        <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
+          <tr>
+            <td style="width:50%;vertical-align:top;padding-right:16px;">
+              <div style="font-size:7pt;font-weight:bold;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Bill To</div>
+              <div style="font-size:11pt;font-weight:bold;color:#0f172a;"><?= htmlspecialchars($inv['customer_name']) ?></div>
+              <div style="font-size:8pt;color:#475569;line-height:1.5;margin-top:2px;">
+                <?php if ($inv['customer_phone']): ?><?= htmlspecialchars($inv['customer_phone']) ?><br><?php endif; ?>
+                <?php if ($inv['customer_email']): ?><?= htmlspecialchars($inv['customer_email']) ?><br><?php endif; ?>
+                <?php if ($inv['customer_address']): ?><?= nl2br(htmlspecialchars($inv['customer_address'])) ?><?php endif; ?>
+              </div>
+            </td>
+            <td style="width:50%;vertical-align:top;">
+              <div style="font-size:7pt;font-weight:bold;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Branch / Venue</div>
+              <div style="font-size:11pt;font-weight:bold;color:#0f172a;"><?= htmlspecialchars($inv['branch_name']) ?></div>
+              <div style="font-size:8pt;color:#475569;line-height:1.5;margin-top:2px;">
+                <?php if ($inv['branch_address']): ?><?= nl2br(htmlspecialchars($inv['branch_address'])) ?><br><?php endif; ?>
+                <?php if ($inv['branch_phone']): ?>Tel: <?= htmlspecialchars($inv['branch_phone']) ?><?php endif; ?>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
 
       <!-- Gradient Header -->
       <div class="inv-header-gradient">
@@ -193,6 +294,79 @@ require_once ROOT_PATH . '/includes/header.php';
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- PRINT-ONLY: Totals + Bank + Signature -->
+      <div class="print-only" style="margin-top:10px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <!-- Left: bank details + notes -->
+            <td style="width:52%;vertical-align:top;padding-right:20px;">
+              <?php if ($has_bank): ?>
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:10px 12px;margin-bottom:8px;">
+                <div style="font-size:7.5pt;font-weight:bold;color:<?= htmlspecialchars($inv_color) ?>;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Bank Details</div>
+                <div style="font-size:8.5pt;color:#475569;line-height:1.6;">
+                  <?php if ($bank_name): ?><strong style="color:#1e293b;"><?= htmlspecialchars($bank_name) ?></strong><br><?php endif; ?>
+                  <?php if ($bank_acc_nm): ?>A/C Name: <?= htmlspecialchars($bank_acc_nm) ?><br><?php endif; ?>
+                  <?php if ($bank_acc_no): ?>A/C No: <strong><?= htmlspecialchars($bank_acc_no) ?></strong><br><?php endif; ?>
+                  <?php if ($bank_branch): ?>Branch: <?= htmlspecialchars($bank_branch) ?><?php endif; ?>
+                </div>
+              </div>
+              <?php endif; ?>
+              <?php if ($inv['notes']): ?>
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:10px 12px;">
+                <div style="font-size:7.5pt;font-weight:bold;color:<?= htmlspecialchars($inv_color) ?>;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Notes</div>
+                <div style="font-size:8.5pt;color:#475569;"><?= nl2br(htmlspecialchars($inv['notes'])) ?></div>
+              </div>
+              <?php endif; ?>
+            </td>
+            <!-- Right: totals -->
+            <td style="width:48%;vertical-align:top;">
+              <table style="width:100%;border-collapse:collapse;">
+                <tr><td style="padding:5px 10px;font-size:9pt;color:#64748b;">Subtotal</td><td style="padding:5px 10px;font-size:9pt;font-weight:bold;text-align:right;"><?= $cur ?> <?= number_format($inv['subtotal'],2) ?></td></tr>
+                <?php if ($inv['discount_amount'] > 0): ?>
+                <tr><td style="padding:5px 10px;font-size:9pt;color:#64748b;">Discount</td><td style="padding:5px 10px;font-size:9pt;font-weight:bold;text-align:right;color:#dc2626;">- <?= $cur ?> <?= number_format($inv['discount_amount'],2) ?></td></tr>
+                <?php endif; ?>
+                <?php if ($inv['tax_amount'] > 0): ?>
+                <tr><td style="padding:5px 10px;font-size:9pt;color:#64748b;">Tax</td><td style="padding:5px 10px;font-size:9pt;font-weight:bold;text-align:right;"><?= $cur ?> <?= number_format($inv['tax_amount'],2) ?></td></tr>
+                <?php endif; ?>
+                <tr style="-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                  <td style="padding:10px 12px;font-size:11pt;font-weight:bold;background:<?= htmlspecialchars($inv_color) ?>;color:#fff;">TOTAL</td>
+                  <td style="padding:10px 12px;font-size:11pt;font-weight:bold;text-align:right;background:<?= htmlspecialchars($inv_color) ?>;color:#fff;"><?= $cur ?> <?= number_format($inv['total'],2) ?></td>
+                </tr>
+                <?php if ($inv['paid_amount'] > 0): ?>
+                <tr><td style="padding:5px 10px;font-size:9pt;color:#16a34a;">Paid</td><td style="padding:5px 10px;font-size:9pt;font-weight:bold;text-align:right;color:#16a34a;">- <?= $cur ?> <?= number_format($inv['paid_amount'],2) ?></td></tr>
+                <?php endif; ?>
+                <?php if ($inv['balance'] > 0): ?>
+                <tr style="-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                  <td style="padding:8px 12px;font-size:10pt;font-weight:bold;background:#fef2f2;color:#b91c1c;border-top:1px solid #fecaca;">BALANCE DUE</td>
+                  <td style="padding:8px 12px;font-size:10pt;font-weight:bold;text-align:right;background:#fef2f2;color:#b91c1c;border-top:1px solid #fecaca;"><?= $cur ?> <?= number_format($inv['balance'],2) ?></td>
+                </tr>
+                <?php endif; ?>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <?php if ($inv_terms): ?>
+        <div style="margin-top:12px;padding:8px 12px;border-left:3px solid <?= htmlspecialchars($inv_color) ?>;background:#f8fafc;">
+          <div style="font-size:7.5pt;font-weight:bold;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Terms &amp; Conditions</div>
+          <div style="font-size:8pt;color:#64748b;line-height:1.5;"><?= nl2br(htmlspecialchars($inv_terms)) ?></div>
+        </div>
+        <?php endif; ?>
+
+        <table style="width:100%;border-collapse:collapse;margin-top:22px;">
+          <tr>
+            <td style="width:50%;vertical-align:bottom;padding-top:20px;">
+              <div style="border-top:1px solid #94a3b8;padding-top:4px;font-size:8pt;color:#64748b;width:70%;">Customer Signature</div>
+            </td>
+            <td style="width:50%;vertical-align:bottom;text-align:right;padding-top:20px;">
+              <div style="border-top:1px solid #94a3b8;padding-top:4px;font-size:8pt;color:#64748b;width:70%;margin-left:auto;">For <?= htmlspecialchars($app_name) ?></div>
+            </td>
+          </tr>
+        </table>
+        <div style="text-align:center;margin-top:12px;font-size:8.5pt;font-weight:bold;color:<?= htmlspecialchars($inv_color) ?>;">Thank you for your business!</div>
+        <div style="text-align:center;margin-top:3px;font-size:7pt;color:#cbd5e1;">Generated <?= date('d M Y, h:i A') ?> &middot; <?= htmlspecialchars($inv['invoice_number']) ?></div>
       </div>
 
       <!-- Notes & Terms -->
