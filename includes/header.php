@@ -424,11 +424,26 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Reports</span>
       </a>
 
+      <?php if (Auth::hasRole(['hall_manager'])): ?>
+      <!-- STAFF MANAGEMENT -->
+      <div class="sb-section">Staff</div>
+
+      <a href="<?= BASE_URL ?>/modules/users/index.php" class="sb-item <?= sbActive($p, '/users') ?>">
+        <div class="sb-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
+            <path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.85"/>
+          </svg>
+        </div>
+        <span class="sb-label">Manage Staff</span>
+      </a>
+      <?php endif; ?>
+
       <?php if (Auth::isSuperAdmin()): ?>
       <!-- ADMIN -->
       <div class="sb-section">Administration</div>
 
-      <a href="<?= BASE_URL ?>/modules/users/index.php" class="sb-item <?= sbActive($p, '/users') ?>">
+      <a href="<?= BASE_URL ?>/vpsa/users/index.php" class="sb-item <?= sbActive($p, '/users') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
