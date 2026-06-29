@@ -26,12 +26,11 @@ if ($fPlan)   { $where .= " AND plan=?";   $params[] = $fPlan; }
 
 $businesses = $db->fetchAll("
     SELECT sa.*,
-           u.user_id  AS cred_user_id,
-           u.name     AS cred_username,
-           u.email    AS cred_email
+           sa.admin_user_id       AS cred_user_id,
+           sa.admin_username      AS cred_username,
+           sa.admin_password_plain AS cred_password,
+           sa.email               AS cred_email
     FROM sa_businesses sa
-    LEFT JOIN branches br ON br.email = sa.email
-    LEFT JOIN users u ON u.branch_id = br.id AND u.role_id = 5
     $where
     ORDER BY sa.created_at DESC
 ", $params);
@@ -319,6 +318,7 @@ body{background:#f0f2f7;min-height:100vh;}
         <div class="biz-creds">
           <span class="cred-item">🪪 <strong><?= htmlspecialchars($b['cred_user_id']) ?></strong></span>
           <span class="cred-item">👤 <strong><?= htmlspecialchars($b['cred_username']) ?></strong></span>
+          <span class="cred-item">🔑 <?= htmlspecialchars($b['cred_password'] ?? '—') ?></span>
           <span class="cred-item">✉️ <?= htmlspecialchars($b['cred_email']) ?></span>
         </div>
         <?php endif; ?>
