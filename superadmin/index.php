@@ -32,6 +32,7 @@ $cu = Auth::currentUser();
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
+  <link rel="icon" type="image/png" href="<?= BASE_URL ?>/assets/images/favicon.png"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Super Admin — VenuePro</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta21/dist/css/tabler.min.css">
@@ -127,8 +128,8 @@ body{background:#f0f2f7;min-height:100vh;}
 .badge-status.suspended{background:#fee2e2;color:#991b1b;}
 .badge-status.cancelled{background:#f1f5f9;color:#475569;}
 
-.biz-actions{display:flex;gap:.5rem;flex-shrink:0;align-self:flex-start;margin-left:auto;}
-.btn-icon{width:34px;height:34px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;text-decoration:none;color:#64748b;}
+.biz-actions{display:flex;gap:.4rem;flex-shrink:0;flex-wrap:nowrap;align-items:center;align-self:flex-start;margin-left:auto;}
+.btn-icon{width:32px;height:32px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;text-decoration:none;color:#64748b;flex-shrink:0;}
 .btn-icon:hover{background:#f8fafc;border-color:#c9a84c;color:#c9a84c;}
 .btn-icon.danger:hover{background:#fee2e2;border-color:#ef4444;color:#ef4444;}
 
@@ -178,7 +179,7 @@ body{background:#f0f2f7;min-height:100vh;}
 <!-- NAV -->
 <nav class="sa-nav">
   <div class="sa-nav-brand">
-    <div class="icon">🛡️</div>
+    <img src="<?= BASE_URL ?>/assets/images/sidebar-logo.png" alt="VenuePro" style="max-height:40px;max-width:140px;object-fit:contain;">
     <div>
       <h1>Super Admin</h1>
       <span>VenuePro Control Panel</span>
