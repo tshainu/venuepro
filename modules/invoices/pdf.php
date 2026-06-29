@@ -19,7 +19,9 @@ if (!$inv) die('Invoice not found.');
 if ($cu['branch_id'] && $inv['branch_id'] != $cu['branch_id']) die('Access denied.');
 
 $items = $db->fetchAll("SELECT * FROM invoice_items WHERE invoice_id=?", [$id]);
-$app_name = Helper::getSetting('company_name') ?? APP_NAME;
+$app_name  = Helper::getSetting('company_name') ?? APP_NAME;
+$inv_color = Helper::getSetting('invoice_color', $inv['branch_id']) ?? '#1a3c6e';
+$inv_fsize = Helper::getSetting('invoice_font_size', $inv['branch_id']) ?? '10';
 
 ob_start();
 ?>
@@ -28,17 +30,17 @@ ob_start();
 <head>
 <meta charset="UTF-8">
 <style>
-  body { font-family: 'dejavusans'; font-size: 10pt; color: #222; }
-  .header { background: #1a3c6e; color: white; padding: 18px 20px; margin-bottom: 20px; }
+  body { font-family: 'dejavusans'; font-size: <?= (int)$inv_fsize ?>pt; color: #222; }
+  .header { background: <?= htmlspecialchars($inv_color) ?>; color: white; padding: 18px 20px; margin-bottom: 20px; }
   .header h1 { margin: 0; font-size: 18pt; }
   .header p { margin: 2px 0 0; font-size: 9pt; opacity: 0.85; }
-  .inv-title { font-size: 22pt; color: #1a3c6e; font-weight: bold; }
+  .inv-title { font-size: 22pt; color: <?= htmlspecialchars($inv_color) ?>; font-weight: bold; }
   table.items { width: 100%; border-collapse: collapse; margin-top: 12px; }
-  table.items thead th { background: #1a3c6e; color: white; padding: 8px; font-size: 9pt; }
+  table.items thead th { background: <?= htmlspecialchars($inv_color) ?>; color: white; padding: 8px; font-size: 9pt; }
   table.items tbody tr:nth-child(even) { background: #f7f9fc; }
-  table.items tbody td { padding: 7px 8px; border-bottom: 1px solid #e8ecf0; font-size: 9pt; }
-  table.items tfoot td { padding: 6px 8px; border-top: 1px solid #ccc; font-size: 9pt; }
-  .total-row { background: #1a3c6e; color: white; font-weight: bold; font-size: 12pt; }
+  table.items tbody td { padding: 7px 8px; border-bottom: 1px solid #e8ecf0; font-size: <?= (int)$inv_fsize ?>pt; }
+  table.items tfoot td { padding: 6px 8px; border-top: 1px solid #ccc; font-size: <?= (int)$inv_fsize ?>pt; }
+  .total-row { background: <?= htmlspecialchars($inv_color) ?>; color: white; font-weight: bold; font-size: <?= (int)$inv_fsize+2 ?>pt; }
   .text-right { text-align: right; }
   .paid-row { background: #d1fae5; color: #065f46; }
   .balance-row { background: #fee2e2; color: #991b1b; font-weight: bold; }
@@ -119,7 +121,42 @@ ob_start();
 </html>
 <?php
 $html = ob_get_clean();
-$mpdf = new \Mpdf\Mpdf(['mode'=>'utf-8','format'=>'A4','margin_top'=>5,'margin_left'=>10,'margin_right'=>10,'margin_bottom'=>10,'tempDir'=>ROOT_PATH.'/tmp/mpdf']);
+
+// --- Load invoice layout settings ---
+$inv_size        = Helper::getSetting('invoice_paper_size', $inv['branch_id']) ?? 'A4';
+$inv_margin_top  = (int)(Helper::getSetting('invoice_margin_top',    $inv['branch_id']) ?? 10);
+$inv_margin_bot  = (int)(Helper::getSetting('invoice_margin_bottom', $inv['branch_id']) ?? 10);
+$inv_margin_left = (int)(Helper::getSetting('invoice_margin_left',   $inv['branch_id']) ?? 10);
+$inv_margin_right= (int)(Helper::getSetting('invoice_margin_right',  $inv['branch_id']) ?? 10);
+
+if ($inv_size === 'custom') {
+    $cw = (int)(Helper::getSetting('invoice_paper_width',  $inv['branch_id']) ?? 210);
+    $ch = (int)(Helper::getSetting('invoice_paper_height', $inv['branch_id']) ?? 297);
+    $orient = Helper::getSetting('invoice_paper_orientation', $inv['branch_id']) ?? 'P';
+    $mpdf_format = [$cw, $ch];
+} elseif ($inv_size === '80mm') {
+    $mpdf_format  = [80, 200];   // narrow receipt
+    $orient       = 'P';
+    $inv_margin_left  = max(3, $inv_margin_left);
+    $inv_margin_right = max(3, $inv_margin_right);
+} elseif ($inv_size === 'A5') {
+    $mpdf_format = 'A5';
+    $orient      = 'P';
+} else {
+    $mpdf_format = 'A4';
+    $orient      = 'P';
+}
+
+$mpdf = new \Mpdf\Mpdf([
+    'mode'          => 'utf-8',
+    'format'        => $mpdf_format,
+    'orientation'   => $orient,
+    'margin_top'    => $inv_margin_top,
+    'margin_bottom' => $inv_margin_bot,
+    'margin_left'   => $inv_margin_left,
+    'margin_right'  => $inv_margin_right,
+    'tempDir'       => ROOT_PATH.'/tmp/mpdf',
+]);
 $mpdf->SetTitle($inv['invoice_number']);
 $mpdf->WriteHTML($html);
 $mpdf->Output($inv['invoice_number'].'.pdf','D');

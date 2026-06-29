@@ -12,7 +12,7 @@ $errors  = [];
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save_settings') {
-    if (!Auth::isSuperAdmin()) { Helper::flash('error','Super Admin only.'); Helper::redirect(BASE_URL.'/modules/settings/index.php'); }
+    if (!Auth::hasRole(['super_admin','admin'])) { Helper::flash('error','Admin only.'); Helper::redirect(BASE_URL.'/modules/settings/index.php'); }
     $data = $_POST['settings'] ?? [];
     foreach ($data as $key => $val) {
         $key = preg_replace('/[^a-z0-9_]/','',$key);
@@ -25,7 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save
         }
     }
     Helper::flash('success','Settings saved.');
-    Helper::redirect(BASE_URL.'/modules/settings/index.php?branch_id='.$sel_branch.'&tab=general');
+    $redirect_tab = $_POST['_tab'] ?? 'general';
+    Helper::redirect(BASE_URL.'/modules/settings/index.php?branch_id='.$sel_branch.'&tab='.urlencode($redirect_tab));
 }
 
 // Load settings
@@ -114,6 +115,11 @@ require_once ROOT_PATH . '/includes/header.php';
       <span class="badge bg-secondary ms-1" style="font-size:.68rem;"><?= count($packages) ?></span>
     </button>
   </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link <?= $active_tab==='invoice'?'active':'' ?>" data-bs-toggle="tab" data-bs-target="#tab-invoice" type="button" role="tab">
+      <span class="tab-icon">🧾</span> Invoice Layout
+    </button>
+  </li>
 </ul>
 
 <div class="tab-content mt-0" id="settingsTabContent">
@@ -122,6 +128,7 @@ require_once ROOT_PATH . '/includes/header.php';
   <div class="tab-pane fade <?= $active_tab==='general'?'show active':'' ?>" id="tab-general" role="tabpanel">
     <form method="post">
       <input type="hidden" name="_action" value="save_settings">
+      <input type="hidden" name="_tab" value="general">
       <div class="row">
         <div class="col-lg-8">
 
@@ -396,7 +403,154 @@ require_once ROOT_PATH . '/includes/header.php';
     </div>
   </div>
 
+  <!-- ===== TAB: INVOICE LAYOUT ===== -->
+  <div class="tab-pane fade <?= $active_tab==='invoice'?'show active':'' ?>" id="tab-invoice" role="tabpanel">
+    <form method="post">
+      <input type="hidden" name="_action" value="save_settings">
+      <input type="hidden" name="_tab" value="invoice">
+      <div class="row">
+        <div class="col-lg-8">
+
+          <div class="card settings-card">
+            <div class="card-header"><h3>🧾 Invoice Paper Size</h3></div>
+            <div class="card-body p-4">
+              <p class="text-secondary mb-3" style="font-size:.85rem;">Choose the paper format used when printing or generating PDF invoices.</p>
+
+              <?php $invSize = $settings['invoice_paper_size'] ?? 'A4'; ?>
+              <div class="row g-3 mb-4" id="paperSizePicker">
+                <?php
+                $sizes = [
+                  '80mm'   => ['label'=>'80mm Receipt','desc'=>'Thermal receipt printer','icon'=>'🧾','w'=>'80mm','h'=>'~200mm'],
+                  'A5'     => ['label'=>'A5','desc'=>'Half-page compact','icon'=>'📄','w'=>'148mm','h'=>'210mm'],
+                  'A4'     => ['label'=>'A4','desc'=>'Standard letter size','icon'=>'📋','w'=>'210mm','h'=>'297mm'],
+                  'custom' => ['label'=>'Custom','desc'=>'Set your own dimensions','icon'=>'✏️','w'=>'—','h'=>'—'],
+                ];
+                foreach ($sizes as $val => $sz):
+                  $active = $invSize === $val;
+                ?>
+                <div class="col-6 col-md-3">
+                  <label class="paper-size-card <?= $active?'selected':'' ?>" for="psize_<?= $val ?>">
+                    <input type="radio" name="settings[invoice_paper_size]" id="psize_<?= $val ?>" value="<?= $val ?>" <?= $active?'checked':'' ?> class="d-none">
+                    <div class="ps-icon"><?= $sz['icon'] ?></div>
+                    <div class="ps-label"><?= $sz['label'] ?></div>
+                    <div class="ps-desc"><?= $sz['desc'] ?></div>
+                    <div class="ps-dims"><?= $sz['w'] ?> × <?= $sz['h'] ?></div>
+                  </label>
+                </div>
+                <?php endforeach; ?>
+              </div>
+
+              <!-- Custom size fields -->
+              <div id="customSizeFields" style="display:<?= $invSize==='custom'?'block':'none' ?>">
+                <div class="card" style="background:#f8f9fb;border:1px solid #e8eaf0;border-radius:12px;">
+                  <div class="card-body p-3">
+                    <div class="row g-3">
+                      <div class="col-md-4">
+                        <label class="form-label fw-600">Width (mm)</label>
+                        <input type="number" name="settings[invoice_paper_width]" class="form-control" min="50" max="400" value="<?= $settings['invoice_paper_width'] ?? 210 ?>" placeholder="210">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label fw-600">Height (mm)</label>
+                        <input type="number" name="settings[invoice_paper_height]" class="form-control" min="80" max="600" value="<?= $settings['invoice_paper_height'] ?? 297 ?>" placeholder="297">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label fw-600">Orientation</label>
+                        <select name="settings[invoice_paper_orientation]" class="form-select">
+                          <option value="P" <?= ($settings['invoice_paper_orientation']??'P')==='P'?'selected':'' ?>>Portrait</option>
+                          <option value="L" <?= ($settings['invoice_paper_orientation']??'')==='L'?'selected':'' ?>>Landscape</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card settings-card">
+            <div class="card-header"><h3>🎨 Invoice Style</h3></div>
+            <div class="card-body p-4">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-600">Primary Color</label>
+                  <div class="d-flex gap-2 align-items-center">
+                    <input type="color" name="settings[invoice_color]" class="form-control form-control-color" style="width:52px;height:38px;border-radius:8px;padding:2px;" value="<?= $settings['invoice_color'] ?? '#1a3c6e' ?>">
+                    <input type="text" name="settings[invoice_color_hex]" class="form-control" value="<?= $settings['invoice_color'] ?? '#1a3c6e' ?>" placeholder="#1a3c6e" style="font-family:monospace;" id="invoiceColorHex">
+                  </div>
+                  <div class="form-text">Used for header, table headings, and totals row.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-600">Show Logo on Invoice</label>
+                  <select name="settings[invoice_show_logo]" class="form-select">
+                    <option value="1" <?= ($settings['invoice_show_logo']??'1')==='1'?'selected':'' ?>>Yes — show logo</option>
+                    <option value="0" <?= ($settings['invoice_show_logo']??'')==='0'?'selected':'' ?>>No — text only</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-600">Font Size</label>
+                  <select name="settings[invoice_font_size]" class="form-select">
+                    <option value="8" <?= ($settings['invoice_font_size']??'10')==='8'?'selected':'' ?>>Small (8pt)</option>
+                    <option value="10" <?= ($settings['invoice_font_size']??'10')==='10'?'selected':'' ?>>Normal (10pt)</option>
+                    <option value="12" <?= ($settings['invoice_font_size']??'')==='12'?'selected':'' ?>>Large (12pt)</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-600">Show Payment QR</label>
+                  <select name="settings[invoice_show_qr]" class="form-select">
+                    <option value="0" <?= ($settings['invoice_show_qr']??'0')==='0'?'selected':'' ?>>No</option>
+                    <option value="1" <?= ($settings['invoice_show_qr']??'')==='1'?'selected':'' ?>>Yes</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card settings-card">
+            <div class="card-header"><h3>📐 Margins &amp; Padding</h3></div>
+            <div class="card-body p-4">
+              <div class="row g-3">
+                <div class="col-6 col-md-3">
+                  <label class="form-label fw-600">Top (mm)</label>
+                  <input type="number" name="settings[invoice_margin_top]" class="form-control" min="0" max="50" value="<?= $settings['invoice_margin_top'] ?? 10 ?>">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label fw-600">Bottom (mm)</label>
+                  <input type="number" name="settings[invoice_margin_bottom]" class="form-control" min="0" max="50" value="<?= $settings['invoice_margin_bottom'] ?? 10 ?>">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label fw-600">Left (mm)</label>
+                  <input type="number" name="settings[invoice_margin_left]" class="form-control" min="0" max="50" value="<?= $settings['invoice_margin_left'] ?? 10 ?>">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label fw-600">Right (mm)</label>
+                  <input type="number" name="settings[invoice_margin_right]" class="form-control" min="0" max="50" value="<?= $settings['invoice_margin_right'] ?? 10 ?>">
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /col -->
+      </div><!-- /row -->
+
+      <div class="sticky-footer d-print-none" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e8e8;padding:12px 24px;z-index:100">
+        <button type="submit" class="btn btn-vp-gold">Save Invoice Settings</button>
+        <a href="<?= BASE_URL ?>/modules/settings/index.php?tab=invoice" class="btn btn-ghost-secondary ms-2">Cancel</a>
+      </div>
+      <div style="height:70px"></div>
+    </form>
+  </div>
+
 </div><!-- /tab-content -->
+
+<style>
+.paper-size-card { display:flex; flex-direction:column; align-items:center; gap:.3rem; padding:1.1rem .8rem; border:2px solid #e8eaf0; border-radius:14px; cursor:pointer; transition:all .18s; text-align:center; background:#fff; width:100%; }
+.paper-size-card:hover { border-color: var(--vp-navy); background:#f8f9fb; }
+.paper-size-card.selected { border-color: var(--vp-navy); background:rgba(30,42,74,.06); box-shadow: 0 0 0 3px rgba(30,42,74,.1); }
+.ps-icon { font-size:1.6rem; }
+.ps-label { font-weight:700; font-size:.88rem; color:var(--vp-navy); }
+.ps-desc { font-size:.72rem; color:#9ca3af; }
+.ps-dims { font-size:.7rem; color:#6b7280; font-family:monospace; background:#f0f2f5; border-radius:4px; padding:1px 6px; margin-top:2px; }
+</style>
 
 <script>
 // Persist active tab in URL without reload
@@ -408,6 +562,23 @@ document.querySelectorAll('#settingsTabs button[data-bs-toggle="tab"]').forEach(
     window.history.replaceState({}, '', url);
   });
 });
+
+// Paper size picker
+document.querySelectorAll('#paperSizePicker input[type=radio]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    document.querySelectorAll('.paper-size-card').forEach(c => c.classList.remove('selected'));
+    this.closest('.paper-size-card').classList.add('selected');
+    document.getElementById('customSizeFields').style.display = this.value === 'custom' ? 'block' : 'none';
+  });
+});
+
+// Sync color picker → hex input
+const colorPicker = document.querySelector('input[name="settings[invoice_color]"]');
+const colorHex    = document.getElementById('invoiceColorHex');
+if (colorPicker && colorHex) {
+  colorPicker.addEventListener('input', () => colorHex.value = colorPicker.value);
+  colorHex.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(colorHex.value)) colorPicker.value = colorHex.value; });
+}
 </script>
 
 <?php require_once ROOT_PATH . '/includes/footer.php'; ?>
