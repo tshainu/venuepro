@@ -116,7 +116,8 @@ body{background:#f0f2f7;min-height:100vh;}
 .biz-meta-item{display:flex;align-items:center;gap:.3rem;font-size:.78rem;color:#64748b;}
 .biz-meta-item svg{color:#94a3b8;}
 
-.biz-badges{display:flex;gap:.5rem;flex-shrink:0;flex-wrap:wrap;align-items:center;}
+.biz-right{display:flex;flex-direction:column;align-items:flex-end;gap:.6rem;flex-shrink:0;}
+.biz-badges{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;justify-content:flex-end;}
 .badge-plan{padding:.25rem .7rem;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
 .badge-plan.trial      {background:#f3f0ff;color:#7c3aed;}
 .badge-plan.basic    {background:#eff6ff;color:#2563eb;}
@@ -128,7 +129,7 @@ body{background:#f0f2f7;min-height:100vh;}
 .badge-status.suspended{background:#fee2e2;color:#991b1b;}
 .badge-status.cancelled{background:#f1f5f9;color:#475569;}
 
-.biz-actions{display:flex;gap:.4rem;flex-shrink:0;flex-wrap:nowrap;align-items:center;align-self:flex-start;margin-left:auto;}
+.biz-actions{display:flex;gap:.4rem;flex-wrap:nowrap;align-items:center;}
 .btn-icon{width:32px;height:32px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;text-decoration:none;color:#64748b;flex-shrink:0;}
 .btn-icon:hover{background:#f8fafc;border-color:#c9a84c;color:#c9a84c;}
 .btn-icon.danger:hover{background:#fee2e2;border-color:#ef4444;color:#ef4444;}
@@ -333,13 +334,9 @@ body{background:#f0f2f7;min-height:100vh;}
         <?php endif; ?>
       </div>
 
-      <div class="biz-badges">
-        <span class="badge-plan <?= $b['plan'] ?>"><?= ucfirst($b['plan']) ?></span>
-        <span class="badge-status <?= $b['status'] ?>"><?= ucfirst($b['status']) ?></span>
-      </div>
-
-      <div class="biz-actions">
-        <button type="button" class="btn-icon" title="Edit" onclick="openEditModal(&lt;?= $b[id] ?&gt;)">
+      <div class="biz-right">
+        <div class="biz-actions">
+        <button type="button" class="btn-icon" title="Edit" onclick="openEditModal(<?= $b['id'] ?>)">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         <?php if ($b['status']==='active'): ?>
@@ -354,6 +351,11 @@ body{background:#f0f2f7;min-height:100vh;}
         <a href="action.php?id=<?= $b['id'] ?>&act=delete" class="btn-icon danger" title="Delete" onclick="return confirm('Permanently delete this business?')">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
         </a>
+        </div>
+        <div class="biz-badges">
+          <span class="badge-plan <?= $b['plan'] ?>"><?= ucfirst($b['plan']) ?></span>
+          <span class="badge-status <?= $b['status'] ?>"><?= ucfirst($b['status']) ?></span>
+        </div>
       </div>
     </div>
     <?php endforeach; ?>
