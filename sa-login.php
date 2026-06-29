@@ -48,6 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Super Admin — VenuePro</title>
+  <link rel="shortcut icon" type="image/png" href="<?= BASE_URL ?>/assets/images/favicon.png"/>
+  <link rel="icon" type="image/png" href="<?= BASE_URL ?>/assets/images/favicon.png"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
