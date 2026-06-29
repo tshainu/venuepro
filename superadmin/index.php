@@ -108,7 +108,7 @@ body{background:#f0f2f7;min-height:100vh;}
 .plan-professional .biz-avatar{background:linear-gradient(135deg,#10b981,#059669);}
 .plan-enterprise .biz-avatar{background:linear-gradient(135deg,#c9a84c,#b8860b);}
 
-.biz-info{flex:1;min-width:0;}
+.biz-info{flex:1;min-width:0;overflow:hidden;}
 .biz-name{font-size:1rem;font-weight:700;color:#1e293b;margin-bottom:.2rem;}
 .biz-owner{font-size:.82rem;color:#64748b;margin-bottom:.4rem;}
 .biz-meta{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;}
@@ -127,7 +127,7 @@ body{background:#f0f2f7;min-height:100vh;}
 .badge-status.suspended{background:#fee2e2;color:#991b1b;}
 .badge-status.cancelled{background:#f1f5f9;color:#475569;}
 
-.biz-actions{display:flex;gap:.5rem;flex-shrink:0;}
+.biz-actions{display:flex;gap:.5rem;flex-shrink:0;align-self:flex-start;margin-left:auto;}
 .btn-icon{width:34px;height:34px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;text-decoration:none;color:#64748b;}
 .btn-icon:hover{background:#f8fafc;border-color:#c9a84c;color:#c9a84c;}
 .btn-icon.danger:hover{background:#fee2e2;border-color:#ef4444;color:#ef4444;}
@@ -450,8 +450,8 @@ body{background:#f0f2f7;min-height:100vh;}
           </div>
         </div>
         <div class="form-group">
-          <label>Username <span style="font-weight:400;color:#94a3b8">(auto: admin_&lt;userID&gt;)</span></label>
-          <input type="text" id="field_username_preview" value="admin_???" placeholder="auto-generated" disabled style="background:#f8fafc;color:#94a3b8;font-family:monospace;">
+          <label>Username</label>
+          <div style="display:flex;align-items:center;height:38px;padding:.6rem .9rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-family:monospace;font-size:.875rem;font-weight:700;color:#1e293b;letter-spacing:.04em;">admin</div>
         </div>
       </div>
       <div class="form-group">
@@ -643,16 +643,10 @@ function genUserId(){
   const uid = letters[Math.floor(Math.random()*letters.length)]
             + String(Math.floor(100 + Math.random()*900));
   document.getElementById('field_user_id').value = uid;
-  updateUsernamePreview(uid);
-}
-
-function updateUsernamePreview(uid){
-  const el = document.getElementById('field_username_preview');
-  if(el) el.value = uid ? 'admin_' + uid.toLowerCase() : 'admin_???';
 }
 
 document.getElementById('field_user_id')?.addEventListener('input', function(){
-  updateUsernamePreview(this.value);
+  // username is always "admin" — no preview needed
 });
 
 function genPassword(){

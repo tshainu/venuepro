@@ -80,14 +80,8 @@ try {
         }
     }
 
-    // ── Generate unique username — always admin_<user_id> ─────────────────
-    $admin_username = 'admin_' . strtolower($admin_user_id); // e.g. admin_f534
-    // Fallback collision guard (shouldn't happen since user_id is unique)
-    $unCheck = $db->prepare("SELECT id FROM users WHERE username = ?");
-    $unCheck->execute([$admin_username]);
-    if ($unCheck->fetch()) {
-        $admin_username = 'admin_' . strtolower($admin_user_id) . '_' . rand(10, 99);
-    }
+    // ── Username is always "admin" — unique per business via user_id scope ─
+    $admin_username = 'admin';
 
     // ── Auto-generate password if blank ──────────────────────────────────
     if (!$admin_password) {
