@@ -33,6 +33,7 @@ class Helper {
         $map = [
             'inquiry'    => 'secondary',
             'tentative'  => 'warning',
+            'booked'     => 'warning',
             'confirmed'  => 'success',
             'completed'  => 'primary',
             'cancelled'  => 'danger',
@@ -55,7 +56,7 @@ class Helper {
         $color = $map[$status] ?? 'secondary';
         // Use custom pill style for booking statuses
         $customClass = 'badge-' . $status;
-        $customStatuses = ['inquiry','tentative','confirmed','completed','cancelled'];
+        $customStatuses = ['inquiry','tentative','booked','confirmed','completed','cancelled'];
         if (in_array($status, $customStatuses)) {
             return '<span class="badge ' . $customClass . '" style="font-size:.7rem;padding:.3rem .65rem;border-radius:20px;font-weight:600;">' . ucfirst(str_replace('_', ' ', $status)) . '</span>';
         }
