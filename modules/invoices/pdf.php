@@ -8,7 +8,7 @@ $id = (int)($_GET['id'] ?? 0);
 $inv = $db->fetchOne(
     "SELECT i.*, c.name as customer_name, c.mobile as customer_phone, c.email as customer_email, c.address as customer_address,
             br.name as branch_name, br.address as branch_address, br.phone as branch_phone, br.email as branch_email,
-            b.booking_ref, b.event_date, b.event_location
+            b.booking_ref
      FROM invoices i
      LEFT JOIN customers c ON i.customer_id=c.id
      LEFT JOIN branches br ON i.branch_id=br.id
@@ -254,13 +254,12 @@ ob_start();
   </div>
   
   <div>
-    <div class="section-title">Event Location</div>
+    <div class="section-title">Booking Reference</div>
     <div class="section-content">
-      <?php if ($inv['event_location']): ?>
-        <strong><?= htmlspecialchars($inv['event_location']) ?></strong>
-      <?php endif; ?>
-      <?php if ($inv['event_date']): ?>
-        <div>Date: <?= date('d M Y', strtotime($inv['event_date'])) ?></div>
+      <?php if ($inv['booking_ref']): ?>
+        <strong><?= htmlspecialchars($inv['booking_ref']) ?></strong>
+      <?php else: ?>
+        <span style="color: #999;">—</span>
       <?php endif; ?>
     </div>
   </div>
