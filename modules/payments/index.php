@@ -72,11 +72,13 @@ require_once ROOT_PATH . '/includes/header.php';
 /* KPI */
 .kpi-card{border-radius:16px;overflow:hidden;}
 .kpi-green .card-body{background:linear-gradient(135deg,#ecfdf5,#d1fae5);}
-.kpi-navy  .card-body{background:linear-gradient(135deg,#eef1f8,#dde3f0);}
+.kpi-navy  .card-body{background:linear-gradient(135deg,#0c1a35,#1a3c6e);}
 .kpi-gold  .card-body{background:linear-gradient(135deg,#fdf5e0,#fde68a44);}
 .kpi-icon{font-size:2rem;line-height:1;}
 .kpi-val{font-size:1.45rem;font-weight:800;color:#0c1a35;letter-spacing:-.03em;}
 .kpi-lbl{font-size:.68rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-top:.2rem;}
+.kpi-navy .kpi-val{color:#fff;}
+.kpi-navy .kpi-lbl{color:#c5d3e8;}
 /* method strip */
 .vp-method-strip{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;}
 .vp-method-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.28rem .85rem;border-radius:99px;font-size:.72rem;font-weight:700;text-decoration:none;border:1.5px solid #e2e8f0;color:#374151;background:#fff;transition:all .15s;}
