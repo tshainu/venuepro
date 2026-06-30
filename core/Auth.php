@@ -18,6 +18,7 @@ class Auth {
         if ($user && password_verify($password, $user['password'])) {
             $this->db->execute("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
             $this->setSession($user);
+            Logger::log('login', 'users', $user['id'], $user['username'], null, null, "User {$user['name']} logged in");
             return true;
         }
         return false;

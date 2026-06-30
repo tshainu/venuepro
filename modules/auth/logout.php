@@ -1,6 +1,11 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 
+// Log before wiping session
+if (!empty($_SESSION['user_id'])) {
+    Logger::log('logout', 'users', (int)$_SESSION['user_id'], $_SESSION['user_username'] ?? '', null, null, "User " . ($_SESSION['user_name'] ?? '') . " logged out");
+}
+
 // Wipe all session data
 $_SESSION = [];
 
