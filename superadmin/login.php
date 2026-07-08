@@ -3,7 +3,7 @@ require_once __DIR__ . '/../core/bootstrap.php';
 
 // If already logged in as super admin, go to panel
 if (isset($_SESSION['sa_logged_in']) && $_SESSION['sa_logged_in'] === true) {
-    header('Location: ' . BASE_URL . '/superadmin/');
+    header('Location: ' . BASE_URL . '/vpsa/');
     exit;
 }
 
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['language']      = $user['language'] ?? 'en';
 
         $db->execute("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
-        header('Location: ' . BASE_URL . '/superadmin/');
+        header('Location: ' . BASE_URL . '/vpsa/');
         exit;
     } else {
         $error = 'Invalid User ID or password.';

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../core/bootstrap.php';
 if (empty($_SESSION['sa_logged_in'])) {
-    header('Location: ' . BASE_URL . '/superadmin/login.php');
+    header('Location: ' . BASE_URL . '/vpsa/login.php');
     exit;
 }
 $db = Database::getInstance();
