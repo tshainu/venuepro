@@ -8,7 +8,8 @@ $formTitle = $isEdit ? 'Edit Package' : 'Add Package';
 $fName   = htmlspecialchars($_POST['name']        ?? ($pkg['name']        ?? ''));
 $fPrice  = htmlspecialchars($_POST['price']        ?? ($pkg['price']       ?? '0'));
 $fDesc   = htmlspecialchars($_POST['description']  ?? ($pkg['description'] ?? ''));
-$fBranch = (int)($_POST['branch_id'] ?? ($pkg['branch_id'] ?? $cu['branch_id']));
+$fBranches = $_POST['branch_ids'] ?? ($isEdit ? array_column($db->fetchAll("SELECT branch_id FROM package_branches WHERE package_id=?", [$pkg['id']]), 'branch_id') : [$cu['branch_id']]);
+$fBranches = array_map('intval', $fBranches);
 
 // Items: POST takes priority, then existing DB items, then one empty row
 if (isset($_POST['items'])) {
@@ -154,13 +155,16 @@ $quickPick = [
           <label class="form-label fw-700">Price (Rs.)</label>
           <input type="number" name="price" id="pkgPrice" class="form-control" step="1" min="0" value="<?= $fPrice ?>" oninput="updateSummary()">
         </div>
-        <div class="col-md-3">
-          <label class="form-label fw-700">Branch</label>
-          <select name="branch_id" class="form-select">
+        <div class="col-12">
+          <label class="form-label fw-700">Applicable Branches</label>
+          <div class="d-flex flex-wrap gap-3 p-3" style="background:var(--vp-navy-2,#1e2a3a);border:1px solid rgba(255,255,255,.1);border-radius:10px;">
             <?php foreach ($branches as $br): ?>
-            <option value="<?= $br['id'] ?>" <?= $fBranch==$br['id']?'selected':'' ?>><?= Helper::sanitize($br['name']) ?></option>
+            <label class="form-check mb-0 d-flex align-items-center gap-2">
+              <input type="checkbox" name="branch_ids[]" class="form-check-input" value="<?= $br['id'] ?>" <?= in_array((int)$br['id'], $fBranches) ? 'checked' : '' ?>>
+              <span class="form-check-label" style="font-size:.85rem;color:var(--vp-text,#e2e8f0);"><?= Helper::sanitize($br['name']) ?></span>
+            </label>
             <?php endforeach; ?>
-          </select>
+          </div>
         </div>
         <div class="col-12">
           <label class="form-label fw-700">Description</label>

@@ -1,12 +1,23 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::hasRole(['super_admin','admin','hall_manager','manager'])) { Helper::flash('error', Lang::t('access_denied')); Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=rooms' : BASE_URL.'/modules/rooms/index.php'); }
+if (!Auth::hasRole(['super_admin','admin','hall_manager','manager','owner','general_manager'])) { Helper::flash('error', Lang::t('access_denied')); Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=rooms' : BASE_URL.'/modules/rooms/index.php'); }
 $db = Database::getInstance();
 $id = (int)($_GET['id'] ?? 0);
 $room = $db->fetchOne("SELECT * FROM rooms WHERE id=?", [$id]);
 if (!$room) { Helper::flash('error', 'Room not found.'); Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=rooms' : BASE_URL.'/modules/rooms/index.php'); }
-$branches   = $db->fetchAll("SELECT id,name FROM branches WHERE is_active=1");
+
+// Filter branches by business for owners/admins
+$user_uid = $_SESSION["user_uid"] ?? "";
+$biz_info = $db->fetchOne("SELECT id FROM sa_businesses WHERE admin_user_id = ?", [$user_uid]);
+$sa_biz_id = $biz_info ? (int)$biz_info["id"] : 0;
+if (Auth::isSuperAdmin()) {
+    $branches = $db->fetchAll("SELECT id, name FROM branches WHERE is_active=1");
+} elseif ($sa_biz_id) {
+    $branches = $db->fetchAll("SELECT id, name FROM branches WHERE is_active=1 AND business_id = ?", [$sa_biz_id]);
+} else {
+    $branches = $db->fetchAll("SELECT id, name FROM branches WHERE is_active=1 AND id = ?", [$cu["branch_id"]]);
+}
 $room_types = $db->fetchAll("SELECT id,name FROM room_types ORDER BY name");
 $errors = [];
 

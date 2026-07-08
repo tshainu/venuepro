@@ -476,17 +476,7 @@ body{background:#f0f2f7;min-height:100vh;}
     <div class="modal-footer">
       <button type="button" class="btn-secondary-sa" onclick="closeEditModal()">Cancel</button>
       <button type="submit" class="btn-primary-sa">Save Changes</button>
-    </div>
-    </form>
-  </div>
-</div>
-
-<!-- ADD MODAL -->
-<div class="modal-overlay" id="addModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>Add New Business</h3>
-      <button class="modal-close" onclick="closeModal()">×</button>
+</div>    <div class="modal-footer">      <button type="button" class="btn-secondary-sa" onclick="closeEditModal()">Cancel</button>      <button type="submit" class="btn-primary-sa">Save Changes</button>    </div>    </form>    <div style="padding:0 1.75rem 1.5rem;">    <hr style="border:0;border-top:1px solid #f1f5f9;margin:0 0 1.5rem;">    <h4 style="font-size:.9rem;font-weight:700;color:#1e293b;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;">👤 Create New Owner User</h4>    <form method="POST" action="<?= BASE_URL ?>/vpsa/create_owner.php">    <input type="hidden" name="business_id" id="owner_business_id">    <div class="form-row">      <div class="form-group">        <label>Username</label>        <input type="text" name="username" value="admin" required>      </div>      <div class="form-group">        <label>Email *</label>        <input type="email" name="email" placeholder="owner@email.com" required>      </div>    </div>    <div class="form-row">      <div class="form-group">        <label>Password *</label>        <input type="password" name="password" required>      </div>      <div class="form-group" style="display:flex;align-items:flex-end;">        <button type="submit" class="btn-primary-sa" style="width:100%;">Create Owner User</button>      </div>    </div>    </form>    </div>
     </div>
     <form method="POST" action="<?= BASE_URL ?>/vpsa/create.php">
     <div class="modal-body">
@@ -575,6 +565,7 @@ document.getElementById('addModal').addEventListener('click', function(e){ if(e.
 // Edit modal
 function openEditModal(b){
   document.getElementById('edit_id').value            = b.id;
+  document.getElementById('owner_business_id').value = b.id;
   document.getElementById('edit_business_name').value = b.business_name || '';
   document.getElementById('edit_owner_name').value    = b.owner_name    || '';
   document.getElementById('edit_email').value         = b.email         || '';

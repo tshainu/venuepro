@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::hasRole(['super_admin','admin','hall_manager'])) { Helper::flash('error','Admin access required.'); Helper::redirect(BASE_URL.'/index.php'); }
+if (!Auth::hasRole(['super_admin','admin','hall_manager','owner','general_manager'])) { Helper::flash('error','Admin access required.'); Helper::redirect(BASE_URL.'/index.php'); }
 $db = Database::getInstance();
 $id = (int)($_GET['id'] ?? 0);
 $confirm = $_GET['confirm'] ?? '';

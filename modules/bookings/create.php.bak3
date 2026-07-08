@@ -9,7 +9,7 @@ $halls       = $db->fetchAll("SELECT id,name,capacity,price_per_day FROM halls W
 $packages    = $db->fetchAll("SELECT id,name,price FROM packages WHERE is_active=1" . ($cu['branch_id'] ? " AND (branch_id={$cu['branch_id']} OR branch_id IS NULL)" : "") . " ORDER BY name");
 $addons      = $db->fetchAll("SELECT id,name,price,unit,tax_percent FROM addons WHERE is_available=1" . ($cu['branch_id'] ? " AND (branch_id={$cu['branch_id']} OR branch_id IS NULL)" : "") . " ORDER BY name");
 $branches    = $db->fetchAll("SELECT id,name FROM branches WHERE is_active=1");
-$event_types = ['Wedding','Engagement','Wedding Reception','Puberty','Birthday','Corporate','Conference','Get Together','Other'];
+$event_types = ['Wedding','Engagement','Wedding Reception','Birthday','Corporate','Conference','Get Together','Other'];
 $errors = [];
 
 // Pre-fill date from calendar click
@@ -54,9 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $groom_dob_day  = (int)($_POST['groom_dob_day'] ?? 0);
     $groom_dob_month= (int)($_POST['groom_dob_month'] ?? 0);
     $groom_dob      = ($groom_dob_day && $groom_dob_month) ? $groom_dob_day.'/'.$groom_dob_month : '';
-    $hero_dob_day   = (int)($_POST['hero_dob_day'] ?? 0);
-    $hero_dob_month = (int)($_POST['hero_dob_month'] ?? 0);
-    $hero_dob       = ($hero_dob_day && $hero_dob_month) ? $hero_dob_day.'/'.$hero_dob_month : '';
     $hero_name      = trim($_POST['hero_name'] ?? '');
 
     if (!$customer_id) $errors[] = 'Customer is required.';
@@ -79,9 +76,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $booking_ref = Helper::generateRef('BK', 'bookings', 'booking_ref');
 
         $booking_id = $db->insert(
-            "INSERT INTO bookings (booking_ref,branch_id,customer_id,hall_id,package_id,event_type,bride_name,bride_dob,groom_name,groom_dob,hero_name,hero_dob,event_date,event_end_date,event_time,event_end_time,guest_count,status,notes,total_amount,discount_amount,tax_amount,final_amount,paid_amount,balance_amount,created_by)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            [$booking_ref,$branch_id,$customer_id,$hall_id,$package_id,$event_type,$bride_name,$bride_dob,$groom_name,$groom_dob,$hero_name,$hero_dob,$event_date,$event_end_date,$event_time,$event_end_time,$guest_count,$status,$notes,$subtotal,$discount,$tax,$final,$final,$cu['id']]
+            "INSERT INTO bookings (booking_ref,branch_id,customer_id,hall_id,package_id,event_type,bride_name,bride_dob,groom_name,groom_dob,hero_name,event_date,event_end_date,event_time,event_end_time,guest_count,status,notes,total_amount,discount_amount,tax_amount,final_amount,paid_amount,balance_amount,created_by)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,?,?)",
+            [$booking_ref,$branch_id,$customer_id,$hall_id,$package_id,$event_type,$bride_name,$bride_dob,$groom_name,$groom_dob,$hero_name,$event_date,$event_end_date,$event_time,$event_end_time,$guest_count,$status,$notes,$subtotal,$discount,$tax,$final,$final,$cu['id']]
         );
 
         // Save add-ons
@@ -121,28 +118,7 @@ require_once ROOT_PATH . '/includes/header.php';
 
 <!-- Tom Select -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js">
-function openCustomerHistory() {
-  const cid = document.getElementById('customer_select').value;
-  if (!cid) return;
-  
-  const modal = new bootstrap.Modal(document.getElementById('historyModal'));
-  const container = document.getElementById('history-content');
-  
-  container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Loading history...</p></div>';
-  modal.show();
-  
-  fetch('customer_history.php?customer_id=' + cid)
-    .then(r => r.text())
-    .then(html => {
-      container.innerHTML = html;
-    })
-    .catch(err => {
-      container.innerHTML = '<div class="alert alert-danger m-3">Error loading history.</div>';
-    });
-}
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
 <style>
 /* ── Event Registration Page ───────────────────────── */
@@ -448,7 +424,7 @@ $evtType = $_POST['event_type'] ?? ($fromInquiry['event_type'] ?? '');
       <div class="evt-card-body">
         <div class="evt-type-grid">
           <?php
-          $typeIcons = ['Wedding'=>'💍','Engagement'=>'💑','Wedding Reception'=>'🥂','Puberty'=>'👧','Birthday'=>'🎂','Corporate'=>'🏢','Conference'=>'🎙️','Get Together'=>'🎊','Other'=>'📋'];
+          $typeIcons = ['Wedding'=>'💍','Engagement'=>'💑','Wedding Reception'=>'🥂','Birthday'=>'🎂','Corporate'=>'🏢','Conference'=>'🎙️','Get Together'=>'🎊','Other'=>'📋'];
           foreach ($event_types as $et):
             $icon = $typeIcons[$et] ?? '📋';
           ?>
@@ -521,23 +497,6 @@ $evtType = $_POST['event_type'] ?? ($fromInquiry['event_type'] ?? '');
             <div class="col-md-6">
               <label class="form-label" id="hero-name-label">🎉 Name</label>
               <input type="text" name="hero_name" class="form-control" placeholder="E.g. Birthday person's name" value="<?= htmlspecialchars($_POST['hero_name']??'') ?>">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">🎂 Date of Birth <span style="font-size:.75rem;color:#9ca3af;">(Day &amp; Month only)</span></label>
-              <div class="d-flex gap-2">
-                <select name="hero_dob_day" class="form-select">
-                  <option value="">Day</option>
-                  <?php for($d=1;$d<=31;$d++): $sel=((int)explode('/',$_POST['hero_dob']??'0/0')[0]===$d)?'selected':''; ?>
-                  <option value="<?= $d ?>" <?= $sel ?>><?= $d ?></option>
-                  <?php endfor; ?>
-                </select>
-                <select name="hero_dob_month" class="form-select">
-                  <option value="">Month</option>
-                  <?php $months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; foreach($months as $mi=>$mn): $sel=((int)explode('/',$_POST['hero_dob']??'0/0')[1]===($mi+1))?'selected':''; ?>
-                  <option value="<?= $mi+1 ?>" <?= $sel ?>><?= $mn ?></option>
-                  <?php endforeach; ?>
-                </select>
-              </div>
             </div>
           </div>
         </div>
@@ -678,13 +637,7 @@ $evtType = $_POST['event_type'] ?? ($fromInquiry['event_type'] ?? '');
             <div class="cust-info-name" id="cust-preview-name"></div>
             <div class="cust-info-meta" id="cust-preview-meta"></div>
           </div>
-          <div class="ms-auto d-flex align-items-center gap-2">
-            <button type="button" id="btn-cust-history" class="btn" style="padding:0.35rem 0.85rem; font-size:0.75rem; font-weight:600; background:rgba(255,255,255,0.1); color:#fff; border:1.5px solid rgba(255,255,255,0.2); border-radius:10px; display:none; align-items:center; gap:6px; transition:all 0.2s;" onclick="openCustomerHistory()" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              Customer History
-            </button>
-            <span class="cust-info-badge">✓ Selected</span>
-          </div>
+          <div class="ms-auto"><span class="cust-info-badge">✓ Selected</span></div>
         </div>
       </div>
     </div>
@@ -929,12 +882,7 @@ if (initType) selectEventType(initType);
 function showCustomerPreview(sel) {
   var opt = sel.options[sel.selectedIndex];
   var preview = document.getElementById('cust-preview');
-  if (!opt.value) { 
-    preview.classList.remove('show'); 
-    const histBtn = document.getElementById('btn-cust-history');
-    if (histBtn) histBtn.style.display = 'none';
-    return; 
-  }
+  if (!opt.value) { preview.classList.remove('show'); return; }
   document.getElementById('cust-avatar-init').textContent = opt.text.trim().charAt(0).toUpperCase();
   document.getElementById('cust-preview-name').textContent = opt.text.split('·')[0].trim();
   var meta = opt.dataset.phone || '';
@@ -943,10 +891,6 @@ function showCustomerPreview(sel) {
   if (opt.dataset.groom) meta += ' 🤵 ' + opt.dataset.groom;
   document.getElementById('cust-preview-meta').textContent = meta;
   preview.classList.add('show');
-  
-  // Show History button
-  const histBtn = document.getElementById('btn-cust-history');
-  if (histBtn) histBtn.style.display = 'flex';
 }
 // Init customer preview
 var cs = document.getElementById('customer_select');
@@ -1189,27 +1133,6 @@ async function saveNewCustomer() {
     console.error('saveNewCustomer:', err);
   }
 }
-
-function openCustomerHistory() {
-  const cid = document.getElementById('customer_select').value;
-  if (!cid) return;
-  
-  const modal = new bootstrap.Modal(document.getElementById('historyModal'));
-  const container = document.getElementById('history-content');
-  
-  container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Loading history...</p></div>';
-  modal.show();
-  
-  fetch('customer_history.php?customer_id=' + cid)
-    .then(r => r.text())
-    .then(html => {
-      container.innerHTML = html;
-    })
-    .catch(err => {
-      container.innerHTML = '<div class="alert alert-danger m-3">Error loading history.</div>';
-    });
-}
-
 </script>
 
 <!-- Flatpickr date & time pickers -->
@@ -1229,28 +1152,7 @@ function openCustomerHistory() {
 .flatpickr-time .numInputWrapper span.arrowDown:after { border-top-color:#c9a84c !important; }
 .flatpickr-time .flatpickr-am-pm { color:#c9a84c !important; font-weight:700 !important; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr">
-function openCustomerHistory() {
-  const cid = document.getElementById('customer_select').value;
-  if (!cid) return;
-  
-  const modal = new bootstrap.Modal(document.getElementById('historyModal'));
-  const container = document.getElementById('history-content');
-  
-  container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Loading history...</p></div>';
-  modal.show();
-  
-  fetch('customer_history.php?customer_id=' + cid)
-    .then(r => r.text())
-    .then(html => {
-      container.innerHTML = html;
-    })
-    .catch(err => {
-      container.innerHTML = '<div class="alert alert-danger m-3">Error loading history.</div>';
-    });
-}
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 // Date pickers
 var fpEventDate = flatpickr('#event_date', {
@@ -1293,50 +1195,5 @@ saveNewCustomer = async function() {
   return _origSaveNewCustomer.apply(this, arguments);
 };
 document.getElementById('nc_mobile').addEventListener('input', function(){ this.value = this.value.replace(/\D/g,''); });
-
-function openCustomerHistory() {
-  const cid = document.getElementById('customer_select').value;
-  if (!cid) return;
-  
-  const modal = new bootstrap.Modal(document.getElementById('historyModal'));
-  const container = document.getElementById('history-content');
-  
-  container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Loading history...</p></div>';
-  modal.show();
-  
-  fetch('customer_history.php?customer_id=' + cid)
-    .then(r => r.text())
-    .then(html => {
-      container.innerHTML = html;
-    })
-    .catch(err => {
-      container.innerHTML = '<div class="alert alert-danger m-3">Error loading history.</div>';
-    });
-}
-
 </script>
-
-<!-- Customer History Modal -->
-<div class="modal fade" id="historyModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content" style="border-radius:16px;overflow:hidden;border:none;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
-      <div class="modal-header bg-navy text-white border-0 py-3">
-        <h5 class="modal-title d-flex align-items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          Customer Booking History
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body p-0" id="history-content">
-        <div class="text-center py-5">
-          <div class="spinner-border text-primary" role="status"></div>
-          <p class="mt-2 text-muted">Loading history...</p>
-        </div>
-      </div>
-      <div class="modal-footer border-0 bg-light py-2">
-        <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal" style="border-radius:8px;">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
 <?php require_once ROOT_PATH . '/includes/footer.php'; ?>
