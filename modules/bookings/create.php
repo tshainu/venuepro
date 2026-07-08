@@ -80,8 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $booking_id = $db->insert(
             "INSERT INTO bookings (booking_ref,branch_id,customer_id,hall_id,package_id,event_type,bride_name,bride_dob,groom_name,groom_dob,hero_name,hero_dob,event_date,event_end_date,event_time,event_end_time,guest_count,status,notes,total_amount,discount_amount,tax_amount,final_amount,paid_amount,balance_amount,created_by)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            [$booking_ref,$branch_id,$customer_id,$hall_id,$package_id,$event_type,$bride_name,$bride_dob,$groom_name,$groom_dob,$hero_name,$hero_dob,$event_date,$event_end_date,$event_time,$event_end_time,$guest_count,$status,$notes,$subtotal,$discount,$tax,$final,$final,$cu['id']]
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            [$booking_ref,$branch_id,$customer_id,$hall_id,$package_id,$event_type,$bride_name,$bride_dob,$groom_name,$groom_dob,$hero_name,$hero_dob,$event_date,$event_end_date,$event_time,$event_end_time,$guest_count,$status,$notes,$subtotal,$discount,$tax,$final,0,$final,$cu['id']]
         );
 
         // Save add-ons
@@ -679,7 +679,7 @@ $evtType = $_POST['event_type'] ?? ($fromInquiry['event_type'] ?? '');
             <div class="cust-info-meta" id="cust-preview-meta"></div>
           </div>
           <div class="ms-auto d-flex align-items-center gap-2">
-            <button type="button" id="btn-cust-history" class="btn" style="padding:0.35rem 0.85rem; font-size:0.75rem; font-weight:600; background:rgba(255,255,255,0.1); color:#fff; border:1.5px solid rgba(255,255,255,0.2); border-radius:10px; display:none; align-items:center; gap:6px; transition:all 0.2s;" onclick="openCustomerHistory()" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+            <button type="button" id="btn-cust-history" class="btn" style="padding:0.35rem 0.85rem; font-size:0.75rem; font-weight:700; background:#0c1a35; color:#fff; border:1.5px solid #0c1a35; border-radius:10px; display:none; align-items:center; gap:6px; transition:all 0.2s; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);" onclick="openCustomerHistory()" onmouseover="this.style.background='#1a3060'" onmouseout="this.style.background='#0c1a35'">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               Customer History
             </button>
@@ -1320,8 +1320,8 @@ function openCustomerHistory() {
 <div class="modal fade" id="historyModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content" style="border-radius:16px;overflow:hidden;border:none;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
-      <div class="modal-header bg-navy text-white border-0 py-3">
-        <h5 class="modal-title d-flex align-items-center gap-2">
+      <div class="modal-header border-0 py-3" style="background:#0c1a35; color:#fff;">
+        <h5 class="modal-title d-flex align-items-center gap-2" style="color:#fff !important; font-weight:700;">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           Customer Booking History
         </h5>

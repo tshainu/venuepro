@@ -25,7 +25,11 @@ if ($booking_id) {
     }
 }
 
-$customers = $db->fetchAll("SELECT id,name,mobile as phone FROM customers ORDER BY name");
+if ($booking) {
+    $customers = $db->fetchAll("SELECT id,name,mobile as phone FROM customers WHERE id = ? LIMIT 1", [$booking['customer_id']]);
+} else {
+    $customers = $db->fetchAll("SELECT id,name,mobile as phone FROM customers ORDER BY name");
+}
 $branches  = $db->fetchAll("SELECT id,name FROM branches WHERE is_active=1");
 $errors = [];
 

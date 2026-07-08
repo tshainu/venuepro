@@ -63,6 +63,10 @@ require_once ROOT_PATH . '/includes/header.php';
         Edit
       </a>
       <?php endif; ?>
+      <a href="<?= BASE_URL ?>/modules/bookings/print.php?id=<?= $id ?>" target="_blank" class="btn btn-sm" style="background:#3b82f6;color:#fff;border:none;border-radius:8px;font-weight:600;padding:.42rem .9rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="me-1"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+        Print Booking Sheet
+      </a>
       <a href="<?= BASE_URL ?>/modules/invoices/create.php?booking_id=<?= $id ?>" class="btn btn-vp-gold btn-sm">+ Invoice</a>
       <a href="<?= BASE_URL ?>/modules/quotations/create.php?booking_id=<?= $id ?>" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.35);border-radius:8px;font-weight:600;padding:.42rem .9rem;backdrop-filter:blur(4px);">+ Quotation</a>
       <a href="<?= BASE_URL ?>/modules/payments/create.php?booking_id=<?= $id ?>" class="btn btn-sm" style="background:#059669;color:#fff;border:none;border-radius:8px;font-weight:600;padding:.42rem .9rem;">+ Payment</a>
@@ -81,8 +85,31 @@ require_once ROOT_PATH . '/includes/header.php';
       </div>
       <div class="card-body">
         <div class="row g-3">
+
           <?php
+          // Calculate Day/Night event
+          $event_time_type = "—";
+          if ($bk['event_time']) {
+              $hour = (int)date('H', strtotime($bk['event_time']));
+              $event_time_type = ($hour < 18) ? "☀️ Day Event" : "🌙 Night Event";
+          }
+
+          // Determine Honoree/Couple/Company info
+          $person_info = "—";
+          if (in_array($bk['event_type'], ['Wedding', 'Engagement', 'Wedding Reception'])) {
+              $person_info = "💍 " . Helper::sanitize($bk['bride_name'] ?? '—') . " & " . Helper::sanitize($bk['groom_name'] ?? '—');
+          } elseif ($bk['event_type'] === 'Puberty') {
+              $person_info = "👧 " . Helper::sanitize($bk['hero_name'] ?? '—');
+          } elseif ($bk['hero_name']) {
+              $person_info = "🎉 " . Helper::sanitize($bk['hero_name']);
+          } else {
+              $person_info = "👤 " . Helper::sanitize($bk['customer_name']);
+          }
+
           $fields = [
+            'Event Type' => $bk['event_type'] ?? '—',
+            'Event For' => $person_info,
+            'Time Slot' => $event_time_type,
             'Branch' => $bk['branch_name'],
             'Created By' => $bk['created_by_name'] ?? '—',
             'Event Date' => Helper::formatDate($bk['event_date']),
