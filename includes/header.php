@@ -362,9 +362,6 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Rooms</span>
       </a>
 
-      <!-- FINANCE -->
-      <div class="sb-section">Finance</div>
-
       <a href="<?= BASE_URL ?>/modules/packages/index.php" class="sb-item <?= sbActive($_currentPath, '/packages') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -383,6 +380,9 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         </div>
         <span class="sb-label">Add-ons</span>
       </a>
+
+      <!-- FINANCE -->
+      <div class="sb-section">Finance</div>
 
       <a href="<?= BASE_URL ?>/modules/quotations/index.php" class="sb-item <?= sbActive($_currentPath, '/quotations') ?>">
         <div class="sb-icon">
@@ -451,7 +451,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Users</span>
       </a>
 
-      <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
+      <?php if (Auth::hasRole(['super_admin','admin','owner','general_manager','hall_manager'])): ?>
       <a href="<?= BASE_URL ?>/modules/branches/index.php" class="sb-item <?= sbActive($_currentPath, '/branches') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -472,7 +472,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Settings</span>
       </a>
 
-      <?php if (Auth::hasRole(['super_admin','admin','hall_manager'])): ?>
+      <?php if (Auth::hasRole(['super_admin','admin','owner','general_manager','hall_manager'])): ?>
       <a href="<?= BASE_URL ?>/modules/logs/index.php" class="sb-item <?= sbActive($_currentPath, '/logs') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
