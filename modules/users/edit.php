@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
 
-if (!Auth::hasRole(['hall_manager','manager'])) {
+if (!Auth::hasRole(['super_admin','admin','owner','general_manager','hall_manager','manager'])) {
     Helper::redirect(BASE_URL . '/index.php');
 }
 

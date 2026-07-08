@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
 
 // Only hall_manager (and super_admin) can see logs. Manager role is explicitly excluded.
-if (!Auth::hasRole(['super_admin', 'admin', 'hall_manager'])) {
+if (!Auth::hasRole(['super_admin', 'admin', 'owner', 'general_manager', 'hall_manager'])) {
     Helper::flash('error', 'Access denied.');
     Helper::redirect(BASE_URL . '/index.php');
 }
@@ -431,3 +431,4 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDiff();
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>
+
