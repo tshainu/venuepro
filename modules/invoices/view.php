@@ -156,12 +156,13 @@ require_once ROOT_PATH . '/includes/header.php';
       <div class="text-secondary"><?= Helper::sanitize($inv['customer_name']) ?> · <?= Helper::formatDate($inv['invoice_date']) ?></div>
     </div>
     <div class="d-flex gap-2 flex-wrap">
+      <a href="<?= BASE_URL ?>/modules/invoices/edit.php?id=<?= $id ?>" class="btn btn-vp-primary d-print-none">✏ Edit</a>
       <?php if ($inv_paper_size === '80mm'): ?>
       <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" class="btn btn-vp-outline d-print-none" target="_blank">🖨 Print Receipt</a>
       <?php else: ?>
       <button onclick="window.print()" class="btn btn-vp-outline d-print-none"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>
       <?php endif; ?>
-      <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" class="btn btn-vp-primary" target="_blank">⬇ Download PDF</a>
+      <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" class="btn btn-vp-outline" target="_blank">⬇ Download PDF</a>
       <?php if ($inv['balance'] > 0): ?>
       <a href="<?= BASE_URL ?>/modules/payments/create.php?invoice_id=<?= $id ?>&booking_id=<?= $inv['booking_id'] ?>" class="btn btn-vp-gold">+ Make Payment</a>
       <?php endif; ?>
@@ -470,7 +471,8 @@ require_once ROOT_PATH . '/includes/header.php';
     <div class="sidebar-card">
       <div class="card-header">Actions</div>
       <div class="card-body p-3 d-flex flex-column gap-2">
-        <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" target="_blank" class="btn btn-vp-primary w-100">⬇ Download PDF</a>
+        <a href="<?= BASE_URL ?>/modules/invoices/edit.php?id=<?= $id ?>" class="btn btn-vp-primary w-100">✏ Edit Invoice</a>
+        <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" target="_blank" class="btn btn-vp-outline w-100">⬇ Download PDF</a>
         <?php if ($inv_paper_size === '80mm'): ?>
         <a href="<?= BASE_URL ?>/modules/invoices/pdf.php?id=<?= $id ?>" target="_blank" class="btn btn-vp-outline w-100">🖨 Print Receipt</a>
         <?php else: ?>

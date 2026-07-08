@@ -55,6 +55,7 @@ if (($bk_cnt > 0 || $halls_cnt > 0 || $users_cnt > 0) && !$confirm) {
 
 // Delete the branch and cascade delete related data
 if ($confirm === 'yes') {
+    Logger::log('delete','branches',$id,$br['name'],'name:'.$br['name'],null,'Branch deleted with cascade');
     $db->execute("DELETE FROM bookings WHERE branch_id=?", [$id]);
     $db->execute("DELETE FROM halls WHERE branch_id=?", [$id]);
     $db->execute("DELETE FROM rooms WHERE branch_id=?", [$id]);
@@ -65,6 +66,7 @@ if ($confirm === 'yes') {
     Helper::redirect(BASE_URL.'/modules/branches/index.php');
 } else {
     // No related data, just delete
+    Logger::log('delete','branches',$id,$br['name'],'name:'.$br['name'],null,'Branch deleted');
     $db->execute("DELETE FROM branches WHERE id=?", [$id]);
     Helper::flash('success','Branch deleted successfully.');
     Helper::redirect(BASE_URL.'/modules/branches/index.php');

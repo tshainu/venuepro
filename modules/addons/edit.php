@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$name) $errors[] = 'Name is required.';
 
     if (!$errors) {
+        Logger::log('edit','addons',$id,$addon['name'],'name:'.$addon['name'].' price:'.$addon['price'],'name:'.$name.' price:'.$price,'Add-on updated');
         $db->execute(
             "UPDATE addons SET branch_id=?,category_id=?,name=?,description=?,price=?,unit=?,tax_percent=?,is_available=? WHERE id=?",
             [$branch_id, $category_id, $name, $description, $price, $unit, $tax_percent, $is_available, $id]

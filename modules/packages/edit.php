@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $items       = $_POST['items'] ?? [];
     if (!$name) $errors[] = 'Package name required.';
     if (!$errors) {
+        Logger::log('edit','packages',$id,$pkg['name'],'name:'.$pkg['name'].' price:'.$pkg['price'],'name:'.$name.' price:'.$price,'Package updated');
         $db->execute("UPDATE packages SET branch_id=?,name=?,description=?,price=? WHERE id=?", [$branch_id,$name,$description,$price,$id]);
         $db->execute("DELETE FROM package_items WHERE package_id=?", [$id]);
         foreach ($items as $it) {

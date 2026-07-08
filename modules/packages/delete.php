@@ -9,6 +9,7 @@ if (!$pkg) { Helper::flash('error','Package not found.'); Helper::redirect(($_GE
 // Check if used in bookings
 $used = $db->fetchOne("SELECT COUNT(*) as cnt FROM bookings WHERE package_id=?", [$id]);
 if ($used['cnt'] > 0) { Helper::flash('error','Cannot delete — package is used in ' . $used['cnt'] . ' booking(s).'); Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=packages' : BASE_URL.'/modules/packages/index.php'); }
+Logger::log('delete','packages',$id,$pkg['name'],'name:'.$pkg['name'],null,'Package deleted');
 $db->execute("DELETE FROM package_items WHERE package_id=?", [$id]);
 $db->execute("DELETE FROM packages WHERE id=?", [$id]);
 Helper::flash('success','Package deleted.');

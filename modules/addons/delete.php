@@ -8,6 +8,7 @@ $addon = $db->fetchOne("SELECT * FROM addons WHERE id=?", [$id]);
 if (!$addon) { Helper::flash('error','Add-on not found.'); Helper::redirect(BASE_URL.'/modules/addons/index.php'); }
 $used = $db->fetchOne("SELECT COUNT(*) as cnt FROM booking_addons WHERE addon_id=?", [$id]);
 if ($used['cnt'] > 0) { Helper::flash('error','Cannot delete — add-on is used in ' . $used['cnt'] . ' booking(s).'); Helper::redirect(BASE_URL.'/modules/addons/index.php'); }
+Logger::log('delete','addons',$id,$addon['name'],'name:'.$addon['name'],null,'Add-on deleted');
 $db->execute("DELETE FROM addons WHERE id=?", [$id]);
 Helper::flash('success','Add-on deleted.');
 Helper::redirect(BASE_URL.'/modules/addons/index.php');

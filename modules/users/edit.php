@@ -66,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $params[] = $id;
         $sql = "UPDATE users SET " . implode(", ", $updates) . " WHERE id = ?";
         $db->execute($sql, $params);
+        Logger::log('edit','users',$id,$user['username'],'name:'.$user['name'].' role:'.$user['role_name'],'name:'.$name,'User updated');
         $success = "Staff member updated successfully.";
         
         $user = $db->fetchOne(

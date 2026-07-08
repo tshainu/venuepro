@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $is_active    = isset($_POST['is_active']) ? 1 : 0;
     if (!$room_number || !$name) $errors[] = 'Room number and name are required.';
     if (!$errors) {
+        Logger::log('edit','rooms',$id,$room['room_number'],'room:'.$room['room_number'].' name:'.$room['name'],'room:'.$room_number.' name:'.$name,'Room updated');
         $db->execute(
             "UPDATE rooms SET branch_id=?,room_type_id=?,room_number=?,name=?,capacity=?,rate_per_night=?,description=?,status=?,is_active=? WHERE id=?",
             [$branch_id, $room_type_id ?: null, $room_number, $name, $capacity, $rate, $description, $status, $is_active, $id]

@@ -23,10 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($price < 0) $errors[] = 'Price cannot be negative.';
 
     if (!$errors) {
-        $db->insert(
+        $newId = $db->insert(
             "INSERT INTO addons (branch_id,category_id,name,description,price,unit,tax_percent,is_available) VALUES (?,?,?,?,?,?,?,?)",
             [$branch_id, $category_id, $name, $description, $price, $unit, $tax_percent, $is_available]
         );
+        Logger::log('create','addons',$newId,$name,null,'name:'.$name.' price:'.$price,'Add-on created');
         Helper::flash('success', "Add-on '$name' created.");
         Helper::redirect(BASE_URL.'/modules/addons/index.php');
     }

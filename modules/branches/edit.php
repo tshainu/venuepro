@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $is_active = isset($_POST['is_active']) ? 1 : 0;
     if (!$name) $errors[] = 'Name required.';
     if (!$errors) {
+        Logger::log('edit','branches',$id,$br['name'],'name:'.$br['name'],'name:'.$name,'Branch updated');
         $db->execute("UPDATE branches SET name=?,address=?,phone=?,email=?,is_active=? WHERE id=?", [$name,$address,$phone,$email,$is_active,$id]);
         Helper::flash('success','Branch updated.');
         Helper::redirect(BASE_URL.'/modules/branches/index.php');

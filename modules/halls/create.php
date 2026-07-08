@@ -30,10 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$errors) {
-        $db->insert(
+        $newId = $db->insert(
             "INSERT INTO halls (branch_id, name, description, capacity, price_per_day, facilities, image, is_active) VALUES (?,?,?,?,?,?,?,?)",
             [$branch_id, $name, $description, $capacity, $price, $facilities, $image, $is_active]
         );
+        Logger::log('create','halls',$newId,$name,null,'name:'.$name.' capacity:'.$capacity,'Hall created');
         Helper::flash('success', 'Hall added successfully.');
         Helper::redirect(($_GET['return']??'')==='settings' ? BASE_URL.'/modules/settings/index.php?tab=halls' : BASE_URL.'/modules/halls/index.php');
     }

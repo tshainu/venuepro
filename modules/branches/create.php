@@ -13,7 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $is_active = isset($_POST['is_active']) ? 1 : 0;
     if (!$name) $errors[] = 'Name required.';
     if (!$errors) {
-        $db->insert("INSERT INTO branches (name,address,phone,email,is_active) VALUES (?,?,?,?,?)", [$name,$address,$phone,$email,$is_active]);
+        $newId = $db->insert("INSERT INTO branches (name,address,phone,email,is_active) VALUES (?,?,?,?,?)", [$name,$address,$phone,$email,$is_active]);
+        Logger::log('create','branches',$newId,$name,null,'name:'.$name,'Branch created');
         Helper::flash('success',"Branch '$name' created.");
         Helper::redirect(BASE_URL.'/modules/branches/index.php');
     }
