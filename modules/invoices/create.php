@@ -164,12 +164,12 @@ require_once ROOT_PATH . '/includes/header.php';
           <tbody id="items-body">
             <?php
             $display_items = isset($_POST['items']) ? $_POST['items'] : ($prefill_items ?: [['description'=>'','quantity'=>1,'unit_price'=>0,'tax_percent'=>0,'total'=>0]]);
-            foreach ($display_items as $it): ?>
+            foreach ($display_items as $k => $it): ?>
             <tr class="item-row">
-              <td><input type="text" name="items[][description]" class="form-control form-control-sm item-desc" value="<?= Helper::sanitize($it['description']??'') ?>"></td>
-              <td><input type="number" name="items[][quantity]" class="form-control form-control-sm item-qty" min="1" step="0.01" value="<?= $it['quantity']??1 ?>"></td>
-              <td><input type="number" name="items[][unit_price]" class="form-control form-control-sm item-price" step="0.01" min="0" value="<?= $it['unit_price']??0 ?>"></td>
-              <td><input type="number" name="items[][tax_percent]" class="form-control form-control-sm item-tax" step="0.01" min="0" max="100" value="<?= $it['tax_percent']??0 ?>"></td>
+              <td><input type="text" name="items[<?= $k ?>][description]" class="form-control form-control-sm item-desc" value="<?= Helper::sanitize($it['description']??'') ?>"></td>
+              <td><input type="number" name="items[<?= $k ?>][quantity]" class="form-control form-control-sm item-qty" min="1" step="0.01" value="<?= $it['quantity']??1 ?>"></td>
+              <td><input type="number" name="items[<?= $k ?>][unit_price]" class="form-control form-control-sm item-price" step="0.01" min="0" value="<?= $it['unit_price']??0 ?>"></td>
+              <td><input type="number" name="items[<?= $k ?>][tax_percent]" class="form-control form-control-sm item-tax" step="0.01" min="0" max="100" value="<?= $it['tax_percent']??0 ?>"></td>
               <td class="item-total fw-bold align-middle">Rs. <?= number_format(($it['total']??0),2) ?></td>
               <td><button type="button" class="btn btn-sm btn-ghost-danger remove-item">✕</button></td>
             </tr>
@@ -203,8 +203,18 @@ require_once ROOT_PATH . '/includes/header.php';
 </div>
 </form>
 <script>
-const rowTpl=`<tr class="item-row"><td><input type="text" name="items[][description]" class="form-control form-control-sm item-desc"></td><td><input type="number" name="items[][quantity]" class="form-control form-control-sm item-qty" min="1" step="0.01" value="1"></td><td><input type="number" name="items[][unit_price]" class="form-control form-control-sm item-price" step="0.01" min="0" value="0"></td><td><input type="number" name="items[][tax_percent]" class="form-control form-control-sm item-tax" step="0.01" min="0" max="100" value="0"></td><td class="item-total fw-bold align-middle">Rs. 0.00</td><td><button type="button" class="btn btn-sm btn-ghost-danger remove-item">✕</button></td></tr>`;
-document.getElementById('add-item').addEventListener('click',()=>{document.getElementById('items-body').insertAdjacentHTML('beforeend',rowTpl);bindRow(document.querySelector('#items-body tr:last-child'));recalc();});
+const rowTpl = () => {
+    const idx = document.querySelectorAll("#items-body tr").length;
+    return `<tr class="item-row">
+        <td><input type="text" name="items[${idx}][description]" class="form-control form-control-sm item-desc"></td>
+        <td><input type="number" name="items[${idx}][quantity]" class="form-control form-control-sm item-qty" min="1" step="0.01" value="1"></td>
+        <td><input type="number" name="items[${idx}][unit_price]" class="form-control form-control-sm item-price" step="0.01" min="0" value="0"></td>
+        <td><input type="number" name="items[${idx}][tax_percent]" class="form-control form-control-sm item-tax" step="0.01" min="0" max="100" value="0"></td>
+        <td class="item-total fw-bold align-middle">Rs. 0.00</td>
+        <td><button type="button" class="btn btn-sm btn-ghost-danger remove-item">✕</button></td>
+    </tr>`;
+};
+document.getElementById('add-item').addEventListener('click',()=>{document.getElementById('items-body').insertAdjacentHTML('beforeend',rowTpl());bindRow(document.querySelector('#items-body tr:last-child'));recalc();});
 document.querySelectorAll('.item-row').forEach(bindRow);
 function bindRow(row){row.querySelectorAll('.item-qty,.item-price,.item-tax').forEach(el=>el.addEventListener('input',recalc));row.querySelector('.remove-item').addEventListener('click',function(){this.closest('tr').remove();recalc();});}
 document.getElementById('discount_input').addEventListener('input',recalc);
