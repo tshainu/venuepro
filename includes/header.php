@@ -422,7 +422,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Reports</span>
       </a>
 
-      <?php if (Auth::hasRole(['hall_manager','manager'])): ?>
+      <?php if (Auth::hasRole(['manager'])): ?>
       <!-- STAFF MANAGEMENT -->
       <div class="sb-section">Staff</div>
 
