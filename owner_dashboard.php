@@ -124,6 +124,39 @@ $monthlyRevChart = $db->fetchAll(
      GROUP BY ym, label ORDER BY ym ASC"
 );
 
+// ── Branch-wise monthly revenue (last 6 months) ───────────────────────────
+$branchMonthlyRev = [];
+foreach ($bizBranches as $br) {
+    $rows = $db->fetchAll(
+        "SELECT DATE_FORMAT(payment_date,'%Y-%m') as ym,
+                COALESCE(SUM(amount),0) as revenue
+         FROM payments
+         WHERE branch_id = ?
+         AND payment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+         GROUP BY ym ORDER BY ym ASC",
+        [$br['id']]
+    );
+    $branchMonthlyRev[$br['id']] = [
+        'name' => $br['name'],
+        'data' => array_column($rows, 'revenue', 'ym'),
+    ];
+}
+
+// ── Per-branch KPI breakdown ──────────────────────────────────────────────
+$branchKpi = [];
+foreach ($bizBranches as $br) {
+    $bid = (int)$br['id'];
+    $branchKpi[$bid] = [
+        'name'        => $br['name'],
+        'revenue'     => (float)($db->fetchOne("SELECT COALESCE(SUM(amount),0) as t FROM payments WHERE branch_id=?", [$bid])['t'] ?? 0),
+        'bookings'    => (int)($db->fetchOne("SELECT COUNT(*) as c FROM bookings WHERE branch_id=?", [$bid])['c'] ?? 0),
+        'active'      => (int)($db->fetchOne("SELECT COUNT(*) as c FROM bookings WHERE branch_id=? AND status IN ('confirmed','tentative','booked')", [$bid])['c'] ?? 0),
+        'upcoming'    => (int)($db->fetchOne("SELECT COUNT(*) as c FROM bookings WHERE branch_id=? AND event_date >= CURDATE() AND status IN ('confirmed','tentative','booked')", [$bid])['c'] ?? 0),
+        'outstanding' => (float)($db->fetchOne("SELECT COALESCE(SUM(balance_amount),0) as t FROM bookings WHERE branch_id=? AND balance_amount>0 AND status NOT IN ('cancelled','completed')", [$bid])['t'] ?? 0),
+        'customers'   => (int)($db->fetchOne("SELECT COUNT(*) as c FROM customers WHERE branch_id=?", [$bid])['c'] ?? 0),
+    ];
+}
+
 // ── Booking Status Breakdown ──────────────────────────────────────────────
 $statusBreakdown = $db->fetchAll(
     "SELECT status, COUNT(*) as cnt FROM bookings
@@ -323,6 +356,31 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
   font-size:.68rem; font-weight:700; color:#9ca3af;
   text-transform:uppercase; letter-spacing:.07em; margin-top:.25rem;
 }
+.od-kpi-branch-list {
+  margin-top:.6rem; padding-top:.5rem;
+  border-top:1px solid #f1f4fa;
+  display:flex; flex-direction:column; gap:.25rem;
+}
+.od-kpi-branch-row {
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:.7rem; color:#6b7280;
+}
+.od-kpi-branch-row span:first-child { font-weight:500; color:#374151; max-width:60%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.od-kpi-branch-row span:last-child { font-weight:600; color:#1e293b; }
+.od-hs-branch-list {
+  margin-top:.5rem;
+  display:flex; flex-direction:column; gap:.2rem;
+}
+.od-hs-branch-row {
+  display:flex; align-items:center; gap:.35rem;
+  font-size:.65rem; color:rgba(255,255,255,.65);
+}
+.od-hs-branch-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:rgba(201,168,76,.8); flex-shrink:0;
+}
+.od-hs-branch-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.od-hs-branch-val { font-weight:600; color:rgba(255,255,255,.9); white-space:nowrap; }
 .od-kpi-footer {
   margin-top:.8rem; padding-top:.65rem;
   border-top:1px solid #f1f4fa;
@@ -511,22 +569,77 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
     <div class="od-hero-stat">
       <div class="od-hs-val gold">Rs. <?= number_format($totalRevenue/1000,0) ?>K</div>
       <div class="od-hs-lbl">Total Revenue</div>
+      <?php if (count($branchKpi) > 1): ?>
+      <div class="od-hs-branch-list">
+        <?php foreach ($branchKpi as $bkpi): ?>
+        <div class="od-hs-branch-row">
+          <span class="od-hs-branch-dot"></span>
+          <span class="od-hs-branch-name"><?= htmlspecialchars($bkpi['name']) ?></span>
+          <span class="od-hs-branch-val">Rs. <?= number_format($bkpi['revenue']/1000,0) ?>K</span>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
     </div>
     <div class="od-hero-stat">
       <div class="od-hs-val"><?= $totalBookings ?></div>
       <div class="od-hs-lbl">Total Bookings</div>
+      <?php if (count($branchKpi) > 1): ?>
+      <div class="od-hs-branch-list">
+        <?php foreach ($branchKpi as $bkpi): ?>
+        <div class="od-hs-branch-row">
+          <span class="od-hs-branch-dot"></span>
+          <span class="od-hs-branch-name"><?= htmlspecialchars($bkpi['name']) ?></span>
+          <span class="od-hs-branch-val"><?= $bkpi['bookings'] ?></span>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
     </div>
     <div class="od-hero-stat">
       <div class="od-hs-val"><?= $upcomingEvents ?></div>
       <div class="od-hs-lbl">Upcoming Events</div>
+      <?php if (count($branchKpi) > 1): ?>
+      <div class="od-hs-branch-list">
+        <?php foreach ($branchKpi as $bkpi): ?>
+        <div class="od-hs-branch-row">
+          <span class="od-hs-branch-dot"></span>
+          <span class="od-hs-branch-name"><?= htmlspecialchars($bkpi['name']) ?></span>
+          <span class="od-hs-branch-val"><?= $bkpi['upcoming'] ?></span>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
     </div>
     <div class="od-hero-stat">
       <div class="od-hs-val red">Rs. <?= number_format($totalOutstanding/1000,0) ?>K</div>
       <div class="od-hs-lbl">Outstanding</div>
+      <?php if (count($branchKpi) > 1): ?>
+      <div class="od-hs-branch-list">
+        <?php foreach ($branchKpi as $bkpi): ?>
+        <div class="od-hs-branch-row">
+          <span class="od-hs-branch-dot" style="background:#dc2626;"></span>
+          <span class="od-hs-branch-name"><?= htmlspecialchars($bkpi['name']) ?></span>
+          <span class="od-hs-branch-val" style="color:#dc2626;">Rs. <?= number_format($bkpi['outstanding']/1000,0) ?>K</span>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
     </div>
     <div class="od-hero-stat">
       <div class="od-hs-val"><?= $totalCustomers ?></div>
       <div class="od-hs-lbl">Customers</div>
+      <?php if (count($branchKpi) > 1): ?>
+      <div class="od-hs-branch-list">
+        <?php foreach ($branchKpi as $bkpi): ?>
+        <div class="od-hs-branch-row">
+          <span class="od-hs-branch-dot"></span>
+          <span class="od-hs-branch-name"><?= htmlspecialchars($bkpi['name']) ?></span>
+          <span class="od-hs-branch-val"><?= $bkpi['customers'] ?></span>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
     </div>
   </div>
 </div>
@@ -550,9 +663,15 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
       <div class="od-kpi-icon" style="background:#eef2ff;">📅</div>
       <div class="od-kpi-val"><?= $activeBookings ?></div>
       <div class="od-kpi-lbl">Active Bookings</div>
-      <div class="od-kpi-footer">
-        <span class="od-kpi-sub"><?= $todayEvents ?> event<?= $todayEvents !== 1 ? 's' : '' ?> today</span>
+      <?php if (count($branchKpi) > 1): ?>
+      <div class="od-kpi-branch-list">
+        <?php foreach ($branchKpi as $bkpi): ?>
+        <div class="od-kpi-branch-row"><span><?= htmlspecialchars($bkpi['name']) ?></span><span><?= $bkpi['active'] ?></span></div>
+        <?php endforeach; ?>
       </div>
+      <?php else: ?>
+      <div class="od-kpi-footer"><span class="od-kpi-sub"><?= $todayEvents ?> event<?= $todayEvents !== 1 ? 's' : '' ?> today</span></div>
+      <?php endif; ?>
     </div>
   </div>
   <div class="col-6 col-md-4 col-xl-2">
@@ -560,9 +679,15 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
       <div class="od-kpi-icon" style="background:#eff6ff;">🔮</div>
       <div class="od-kpi-val"><?= $upcomingEvents ?></div>
       <div class="od-kpi-lbl">Upcoming (30 days)</div>
-      <div class="od-kpi-footer">
-        <a href="<?= BASE_URL ?>/modules/bookings/index.php" class="od-kpi-sub text-decoration-none" style="color:#2563eb;">View all →</a>
+      <?php if (count($branchKpi) > 1): ?>
+      <div class="od-kpi-branch-list">
+        <?php foreach ($branchKpi as $bkpi): ?>
+        <div class="od-kpi-branch-row"><span><?= htmlspecialchars($bkpi['name']) ?></span><span><?= $bkpi['upcoming'] ?></span></div>
+        <?php endforeach; ?>
       </div>
+      <?php else: ?>
+      <div class="od-kpi-footer"><a href="<?= BASE_URL ?>/modules/bookings/index.php" class="od-kpi-sub text-decoration-none" style="color:#2563eb;">View all →</a></div>
+      <?php endif; ?>
     </div>
   </div>
   <div class="col-6 col-md-4 col-xl-2">
@@ -570,9 +695,15 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
       <div class="od-kpi-icon" style="background:#fff1f2;">⚠️</div>
       <div class="od-kpi-val">Rs. <?= number_format($totalOutstanding) ?></div>
       <div class="od-kpi-lbl">Total Outstanding</div>
-      <div class="od-kpi-footer">
-        <span class="od-kpi-sub"><?= count($outstandingList) ?> booking<?= count($outstandingList) !== 1 ? 's' : '' ?> pending</span>
+      <?php if (count($branchKpi) > 1): ?>
+      <div class="od-kpi-branch-list">
+        <?php foreach ($branchKpi as $bkpi): ?>
+        <div class="od-kpi-branch-row"><span><?= htmlspecialchars($bkpi['name']) ?></span><span style="color:#dc2626;">Rs. <?= number_format($bkpi['outstanding']/1000,0) ?>K</span></div>
+        <?php endforeach; ?>
       </div>
+      <?php else: ?>
+      <div class="od-kpi-footer"><span class="od-kpi-sub"><?= count($outstandingList) ?> booking<?= count($outstandingList) !== 1 ? 's' : '' ?> pending</span></div>
+      <?php endif; ?>
     </div>
   </div>
   <div class="col-6 col-md-4 col-xl-2">
@@ -580,9 +711,15 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
       <div class="od-kpi-icon" style="background:#f0fdf4;">👥</div>
       <div class="od-kpi-val"><?= $totalCustomers ?></div>
       <div class="od-kpi-lbl">Total Customers</div>
-      <div class="od-kpi-footer">
-        <a href="<?= BASE_URL ?>/modules/customers/index.php" class="od-kpi-sub text-decoration-none" style="color:#059669;">View all →</a>
+      <?php if (count($branchKpi) > 1): ?>
+      <div class="od-kpi-branch-list">
+        <?php foreach ($branchKpi as $bkpi): ?>
+        <div class="od-kpi-branch-row"><span><?= htmlspecialchars($bkpi['name']) ?></span><span><?= $bkpi['customers'] ?></span></div>
+        <?php endforeach; ?>
       </div>
+      <?php else: ?>
+      <div class="od-kpi-footer"><a href="<?= BASE_URL ?>/modules/customers/index.php" class="od-kpi-sub text-decoration-none" style="color:#059669;">View all →</a></div>
+      <?php endif; ?>
     </div>
   </div>
   <div class="col-6 col-md-4 col-xl-2">
@@ -605,8 +742,10 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
       <div class="od-chart-header">
         <div>
           <div class="od-chart-title">Revenue Trend</div>
-          <div class="od-chart-sub">Monthly collections — last 6 months</div>
+          <div class="od-chart-sub">Branch-wise monthly collections — last 6 months</div>
         </div>
+        <!-- Branch legend -->
+        <div class="d-flex gap-3 flex-wrap" id="branchLegend"></div>
       </div>
       <div class="od-chart-body">
         <canvas id="revenueChart" height="90"></canvas>
@@ -918,31 +1057,36 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-// Revenue Chart
-const revLabels  = <?= json_encode($chartLabels) ?>;
-const revData    = <?= json_encode(array_map('floatval', $chartRevenue)) ?>;
+// ── Branch-wise Revenue Chart ─────────────────────────────────────────────
+const revLabels = <?= json_encode($chartLabels) ?>;
+const branchRevData = <?= json_encode(array_values($branchMonthlyRev)) ?>;
+const branchColors = ['#c9a84c','#2563eb','#059669','#d97706','#7c3aed','#dc2626','#0891b2'];
+
+// Build datasets: one per branch, filling 0 for missing months
+const revDatasets = branchRevData.map((br, i) => ({
+  label: br.name,
+  data: revLabels.map((lbl, idx) => {
+    // match by index against the sorted ym keys
+    const ymKeys = Object.keys(br.data);
+    return ymKeys[idx] !== undefined ? parseFloat(br.data[ymKeys[idx]]) : 0;
+  }),
+  backgroundColor: branchColors[i % branchColors.length] + 'bb',
+  borderColor: branchColors[i % branchColors.length],
+  borderWidth: 2,
+  borderRadius: 6,
+  borderSkipped: false,
+}));
 
 new Chart(document.getElementById('revenueChart'), {
   type: 'bar',
-  data: {
-    labels: revLabels,
-    datasets: [{
-      label: 'Revenue (Rs.)',
-      data: revData,
-      backgroundColor: 'rgba(201,168,76,.75)',
-      borderColor: '#c9a84c',
-      borderWidth: 2,
-      borderRadius: 8,
-      borderSkipped: false,
-    }]
-  },
+  data: { labels: revLabels, datasets: revDatasets },
   options: {
     responsive: true,
     plugins: {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: ctx => 'Rs. ' + ctx.parsed.y.toLocaleString()
+          label: ctx => ctx.dataset.label + ': Rs. ' + ctx.parsed.y.toLocaleString()
         }
       }
     },
@@ -958,6 +1102,15 @@ new Chart(document.getElementById('revenueChart'), {
       x: { grid: { display: false }, ticks: { font: { size: 11 } } }
     }
   }
+});
+
+// Build legend
+const legendEl = document.getElementById('branchLegend');
+branchRevData.forEach((br, i) => {
+  const dot = document.createElement('span');
+  dot.style.cssText = 'display:inline-flex;align-items:center;gap:5px;font-size:.75rem;color:#374151;font-weight:500;';
+  dot.innerHTML = '<span style="width:10px;height:10px;border-radius:50%;background:' + branchColors[i % branchColors.length] + ';display:inline-block;"></span>' + br.name;
+  legendEl.appendChild(dot);
 });
 
 // Status Donut
