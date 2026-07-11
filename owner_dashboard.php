@@ -5,13 +5,29 @@ Auth::check();
 $db = Database::getInstance();
 $cu = Auth::currentUser();
 
-// ── Get owner's business branches strictly from DB (never from session) ──────
-$userUid = $_SESSION['user_uid'] ?? '';
+// ── Get business branches ────────────────────────────────────────────────────
+$userUid  = $_SESSION['user_uid'] ?? '';
+$userRole = $cu['role'] ?? '';
 $business_id = null;
-$biz = $db->fetchOne("SELECT id, business_name FROM sa_businesses WHERE admin_user_id = ? LIMIT 1", [$userUid]);
-if ($biz) $business_id = $biz['id'];
+$biz = null;
 
-// Always load branches from DB scoped to THIS owner's business_id
+if ($userRole === 'owner') {
+    // Owner: look up business by admin_user_id
+    $biz = $db->fetchOne("SELECT id, business_name FROM sa_businesses WHERE admin_user_id = ? LIMIT 1", [$userUid]);
+    if ($biz) $business_id = $biz['id'];
+} else {
+    // General Manager: use their branch to find the business
+    $branchId = $cu['branch_id'] ?? null;
+    if ($branchId) {
+        $branchRow = $db->fetchOne("SELECT business_id FROM branches WHERE id = ? LIMIT 1", [$branchId]);
+        if ($branchRow) {
+            $business_id = $branchRow['business_id'];
+            $biz = $db->fetchOne("SELECT id, business_name FROM sa_businesses WHERE id = ? LIMIT 1", [$business_id]);
+        }
+    }
+}
+
+// Load all active branches for this business
 $bizBranches = [];
 if ($business_id) {
     $bizBranches = $db->fetchAll(
@@ -745,7 +761,7 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
         <div class="d-flex gap-3 flex-wrap" id="branchLegend"></div>
       </div>
       <div class="od-chart-body">
-        <canvas id="revenueChart" height="90"></canvas>
+        <canvas id="revenueChart" height="75"></canvas>
       </div>
     </div>
   </div>
@@ -760,7 +776,7 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
         </div>
       </div>
       <div class="od-chart-body d-flex flex-column align-items-center">
-        <canvas id="statusChart" height="160" style="max-width:200px;"></canvas>
+        <canvas id="statusChart" height="120" style="max-width:180px;"></canvas>
         <div class="mt-3 w-100">
           <?php
           $statusColors = ['confirmed'=>'#059669','booked'=>'#2563eb','tentative'=>'#d97706','cancelled'=>'#dc2626','completed'=>'#6b7280'];
@@ -1089,29 +1105,66 @@ const revDatasets = branchRevData.map((br, i) => ({
   borderSkipped: false,
 }));
 
-new Chart(document.getElementById('revenueChart'), {
-  type: 'bar',
-  data: { labels: revLabels, datasets: revDatasets },
+// Build gradient fills for each branch dataset
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+const gradientColors = [
+  { line: '#c9a84c', start: 'rgba(201,168,76,0.35)', end: 'rgba(201,168,76,0.02)' },
+  { line: '#2563eb', start: 'rgba(37,99,235,0.30)', end: 'rgba(37,99,235,0.02)' },
+  { line: '#059669', start: 'rgba(5,150,105,0.30)', end: 'rgba(5,150,105,0.02)' },
+];
+const styledDatasets = revDatasets.map((ds, i) => {
+  const gc = gradientColors[i % gradientColors.length];
+  const grad = revenueCtx.createLinearGradient(0, 0, 0, 220);
+  grad.addColorStop(0, gc.start);
+  grad.addColorStop(1, gc.end);
+  return {
+    ...ds,
+    type: 'line',
+    fill: true,
+    backgroundColor: grad,
+    borderColor: gc.line,
+    borderWidth: 2.5,
+    pointBackgroundColor: gc.line,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    tension: 0.4,
+  };
+});
+new Chart(revenueCtx, {
+  type: 'line',
+  data: { labels: revLabels, datasets: styledDatasets },
   options: {
     responsive: true,
+    interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: { display: false },
       tooltip: {
+        backgroundColor: 'rgba(12,26,53,0.92)',
+        titleColor: '#f9fafb',
+        bodyColor: '#d1d5db',
+        padding: 10,
+        cornerRadius: 8,
         callbacks: {
-          label: ctx => ctx.dataset.label + ': Rs. ' + ctx.parsed.y.toLocaleString()
+          label: ctx => ' ' + ctx.dataset.label + ': Rs. ' + ctx.parsed.y.toLocaleString()
         }
       }
     },
     scales: {
       y: {
         beginAtZero: true,
-        grid: { color: 'rgba(0,0,0,.05)' },
+        grid: { color: 'rgba(0,0,0,.04)', drawBorder: false },
         ticks: {
           callback: v => 'Rs. ' + (v >= 1000 ? (v/1000).toFixed(0)+'K' : v),
-          font: { size: 11 }
-        }
+          font: { size: 11 },
+          color: '#6b7280'
+        },
+        border: { display: false }
       },
-      x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      x: {
+        grid: { display: false },
+        ticks: { font: { size: 11 }, color: '#6b7280' },
+        border: { display: false }
+      }
     }
   }
 });

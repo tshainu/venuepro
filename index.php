@@ -3,8 +3,8 @@ require_once __DIR__ . '/core/bootstrap.php';
 Auth::check();
 
 $cu = Auth::currentUser();
-// Redirect owner to their dedicated dashboard
-if (($cu['role'] ?? '') === 'owner') {
+// Redirect owner and general_manager to the advanced dashboard
+if (in_array($cu['role'] ?? '', ['owner', 'general_manager'])) {
     header('Location: ' . BASE_URL . '/owner_dashboard.php');
     exit;
 }
