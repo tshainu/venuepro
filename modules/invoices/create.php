@@ -19,9 +19,58 @@ if ($booking_id) {
          WHERE b.id=?", [$booking_id]
     );
     if ($booking) {
-        if ($booking['package_price']) $prefill_items[] = ['description'=>$booking['package_name'].' (Package)','quantity'=>1,'unit_price'=>$booking['package_price'],'tax_percent'=>0,'total'=>$booking['package_price']];
+        $booking_total   = (float)($booking['total_amount'] ?? 0);
+        $package_price   = (float)($booking['package_price'] ?? 0);
         $ba = $db->fetchAll("SELECT * FROM booking_addons WHERE booking_id=?", [$booking_id]);
-        foreach ($ba as $a) $prefill_items[] = ['description'=>$a['name'],'quantity'=>$a['quantity'],'unit_price'=>$a['unit_price'],'tax_percent'=>$a['tax_percent'],'total'=>$a['total_price']];
+        $addon_total = array_sum(array_column($ba, 'total_price'));
+
+        if ($package_price > 0) {
+            // Add package as a line item
+            $prefill_items[] = [
+                'description' => $booking['package_name'] . ' (Package)',
+                'quantity'    => 1,
+                'unit_price'  => $package_price,
+                'tax_percent' => 0,
+                'total'       => $package_price
+            ];
+        }
+
+        // Add add-on services as individual line items
+        foreach ($ba as $a) {
+            $prefill_items[] = [
+                'description' => $a['name'],
+                'quantity'    => $a['quantity'],
+                'unit_price'  => $a['unit_price'],
+                'tax_percent' => $a['tax_percent'],
+                'total'       => $a['total_price']
+            ];
+        }
+
+        // If booking total_amount exceeds package + addons (manual charges were added),
+        // add a line item for the remaining amount so the invoice matches the booking total
+        $accounted = $package_price + $addon_total;
+        $remainder = round($booking_total - $accounted, 2);
+        if ($remainder > 0.01) {
+            $prefill_items[] = [
+                'description' => 'Additional Charges',
+                'quantity'    => 1,
+                'unit_price'  => $remainder,
+                'tax_percent' => 0,
+                'total'       => $remainder
+            ];
+        }
+
+        // If there are no items at all (no package, no addons, no remainder),
+        // fall back to the full booking total as a single line item
+        if (empty($prefill_items) && $booking_total > 0) {
+            $prefill_items[] = [
+                'description' => 'Event Services — ' . $booking['booking_ref'],
+                'quantity'    => 1,
+                'unit_price'  => $booking_total,
+                'tax_percent' => 0,
+                'total'       => $booking_total
+            ];
+        }
     }
 }
 
