@@ -532,7 +532,7 @@ $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Ev
           <div class="vp-chart-sub">Current distribution</div>
         </div>
       </div>
-      <div class="vp-chart-body">
+      <div class="vp-chart-body d-flex flex-column justify-content-center" style="min-height: 280px;">
         <div id="chart-status"></div>
         <div class="mt-2">
           <?php
