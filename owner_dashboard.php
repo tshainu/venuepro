@@ -658,7 +658,7 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
 </div>
 
 <!-- ═══════ KPI CARDS ═══════ -->
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-5">
   <div class="col-6 col-md-4 col-xl-2">
     <div class="od-kpi od-kpi-gold">
       <div class="od-kpi-icon" style="background:#fef9e7;">💰</div>
@@ -770,15 +770,15 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
 
   <!-- Booking Status Donut -->
   <div>
-    <div class="od-chart-card h-100">
+    <div class="od-chart-card">
       <div class="od-chart-header" style="padding-bottom:8px;">
         <div>
           <div class="od-chart-title">Booking Status</div>
           <div class="od-chart-sub">All time breakdown</div>
         </div>
       </div>
-      <div class="od-chart-body d-flex flex-column align-items-center justify-content-center" style="padding-top:8px;padding-bottom:16px; min-height: 220px;">
-        <canvas id="statusChart" height="130" style="max-width:160px;"></canvas>
+      <div class="od-chart-body d-flex flex-column align-items-center justify-content-center" style="padding-top:8px;padding-bottom:12px;">
+        <canvas id="statusChart" height="110" style="max-width:140px;"></canvas>
         <div class="mt-3 w-100">
           <?php
           $statusColors = ['confirmed'=>'#059669','booked'=>'#2563eb','tentative'=>'#d97706','cancelled'=>'#dc2626','completed'=>'#6b7280'];
