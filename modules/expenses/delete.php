@@ -26,6 +26,6 @@ if (!in_array($cu['role'], $allowed_roles)) {
 }
 
 $db->execute("DELETE FROM expenses WHERE id = ?", [$id]);
-Helper::logActivity('expense_deleted', "Expense {$expense['expense_ref']} deleted — {$expense['title']}");
+Logger::log('delete', 'expenses', $id, $expense['expense_ref'], ['title'=>$expense['title'],'amount'=>$expense['amount']], null, "Expense {$expense['expense_ref']} deleted");
 header('Location: ' . BASE_URL . '/modules/expenses/index.php?success=deleted');
 exit;

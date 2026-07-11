@@ -286,10 +286,10 @@ require_once ROOT_PATH . '/includes/header.php';
 </div>
 
 <!-- Pagination -->
-<?php if ($pg['total_pages'] > 1): ?>
+<?php if ($pg['pages'] > 1): ?>
 <nav class="mt-3">
   <ul class="pagination pagination-sm justify-content-center">
-    <?php for ($i = 1; $i <= $pg['total_pages']; $i++): ?>
+    <?php for ($i = 1; $i <= $pg['pages']; $i++): ?>
     <li class="page-item <?= $i == $page ? 'active' : '' ?>">
       <a class="page-link" href="?page=<?= $i ?>&search=<?= urlencode($search) ?>&category=<?= $cat_id ?>&date_from=<?= $date_from ?>&date_to=<?= $date_to ?>"><?= $i ?></a>
     </li>

@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "UPDATE expenses SET branch_id=?, category_id=?, title=?, description=?, amount=?, expense_date=?, payment_method=?, reference_number=?, status=?, updated_at=NOW() WHERE id=?",
             [$branch_id, $category_id, $title, $description, $amount, $expense_date, $payment_method, $reference_number, $status, $id]
         );
-        Helper::logActivity('expense_updated', "Expense {$expense['expense_ref']} updated — $title");
+        Logger::log('edit', 'expenses', $id, $expense['expense_ref'], null, ['title'=>$title,'amount'=>$amount], "Expense {$expense['expense_ref']} updated");
         header('Location: ' . BASE_URL . '/modules/expenses/view.php?id=' . $id . '&success=updated');
         exit;
     }

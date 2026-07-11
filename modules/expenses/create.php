@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             [$expense_ref, $branch_id, $category_id, $title, $description, $amount, $expense_date, $payment_method, $reference_number, $status, $cu['id']]
         );
 
-        Helper::logActivity('expense_created', "Expense $expense_ref created — $title — " . Helper::formatCurrency($amount));
+        Logger::log('create', 'expenses', null, $expense_ref, null, ['title'=>$title,'amount'=>$amount,'branch_id'=>$branch_id], "Expense $expense_ref created — $title");
         header('Location: ' . BASE_URL . '/modules/expenses/index.php?success=created');
         exit;
     }
