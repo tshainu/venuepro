@@ -18,12 +18,8 @@ if (!$expense || !in_array($expense['branch_id'], $branch_ids)) {
     exit;
 }
 
-// Only owner, general_manager, manager can delete
-$allowed_roles = ['owner', 'general_manager', 'manager', 'super_admin', 'admin'];
-if (!in_array($cu['role'], $allowed_roles)) {
-    header('Location: ' . BASE_URL . '/modules/expenses/index.php?error=noperm');
-    exit;
-}
+// All roles with access to expenses module can delete
+// Removed restriction to allow all roles to delete expenses.
 
 $db->execute("DELETE FROM expenses WHERE id = ?", [$id]);
 Logger::log('delete', 'expenses', $id, $expense['expense_ref'], ['title'=>$expense['title'],'amount'=>$expense['amount']], null, "Expense {$expense['expense_ref']} deleted");

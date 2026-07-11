@@ -413,7 +413,6 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Payments</span>
       </a>
 
-      <?php if (!Auth::hasRole(['hall_manager'])): ?>
       <a href="<?= BASE_URL ?>/modules/expenses/index.php" class="sb-item <?= sbActive($_currentPath, '/expenses') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -424,7 +423,6 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         </div>
         <span class="sb-label">Expenses</span>
       </a>
-      <?php endif; ?>
 
       <a href="<?= BASE_URL ?>/modules/reports/index.php" class="sb-item <?= sbActive($_currentPath, '/reports') ?>">
         <div class="sb-icon">

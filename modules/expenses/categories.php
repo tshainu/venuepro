@@ -2,11 +2,8 @@
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
 
-// Only owner, general_manager, admin, super_admin can manage categories
-if (Auth::hasRole(['hall_manager'])) {
-    header('Location: ' . BASE_URL . '/modules/expenses/index.php');
-    exit;
-}
+// Only owner, general_manager, admin, super_admin, hall_manager can manage categories
+// Removed restriction for hall_manager to allow access to categories.
 
 $db = Database::getInstance();
 $cu = Auth::currentUser();
