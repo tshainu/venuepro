@@ -80,8 +80,7 @@ $cancelledBookings = $db->fetchOne(
      WHERE branch_id IN ($branchIn) AND status = 'cancelled'"
 )['c'] ?? 0;
 
-// ── Hall Performance — use owner's primary branch_id (same as halls page) ────
-$ownerBranchId = $cu['branch_id'] ?? 0;
+// ── Hall Performance — all halls across all owner's branches ────────────────
 $hallPerformance = $db->fetchAll(
     "SELECT h.id, h.name as hall_name, br.name as branch_name,
             COUNT(b.id) as total_bookings,
@@ -92,7 +91,7 @@ $hallPerformance = $db->fetchAll(
      FROM halls h
      LEFT JOIN branches br ON h.branch_id = br.id
      LEFT JOIN bookings b ON b.hall_id = h.id
-     WHERE " . ($ownerBranchId ? "h.branch_id = " . intval($ownerBranchId) : "h.branch_id IN ($branchIn)") . "
+     WHERE h.branch_id IN ($branchIn)
      GROUP BY h.id, h.name, br.name
      ORDER BY total_revenue DESC"
 );
