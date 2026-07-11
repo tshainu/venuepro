@@ -1265,7 +1265,7 @@ flatpickr('#event_end_date', {
   allowInput: false,
 });
 
-// Time pickers
+// Time pickers — end time always defaults to 5 hours after start time
 	var fpEndTime = flatpickr('#fp_end_time', {
 	  enableTime: true, noCalendar: true,
 	  dateFormat: 'H:i', time_24hr: true,
@@ -1273,7 +1273,7 @@ flatpickr('#event_end_date', {
 	  minuteIncrement: 15,
 	  onChange: function() { checkHallConflict(); }
 	});
-	flatpickr('#fp_start_time', {
+	var fpStartTime = flatpickr('#fp_start_time', {
 	  enableTime: true, noCalendar: true,
 	  dateFormat: 'H:i', time_24hr: true,
 	  disableMobile: true,
@@ -1281,13 +1281,28 @@ flatpickr('#event_end_date', {
 	  minuteIncrement: 15,
 	  onChange: function(selectedDates, timeStr) {
 	    if (selectedDates.length > 0) {
-	      var date = selectedDates[0];
-	      var newDate = new Date(date.getTime() + 5 * 60 * 60 * 1000);
-	      fpEndTime.setDate(newDate);
+	      var d = selectedDates[0];
+	      fpEndTime.setDate(new Date(d.getTime() + 5 * 60 * 60 * 1000));
 	    }
 	    checkHallConflict();
 	  }
 	});
+	// On page load: if start time already has a value (e.g. pre-filled after POST error),
+	// calculate end time from it; otherwise use the default 10:00 → 15:00
+	(function() {
+	  var startEl = document.getElementById('fp_start_time');
+	  var endEl   = document.getElementById('fp_end_time');
+	  if (endEl && !endEl.value) {
+	    var startVal = (startEl && startEl.value) ? startEl.value : '10:00';
+	    var parts = startVal.split(':');
+	    if (parts.length === 2) {
+	      var h = parseInt(parts[0], 10) + 5;
+	      var m = parseInt(parts[1], 10);
+	      var endH = h % 24;
+	      fpEndTime.setDate(String(endH).padStart(2,'0') + ':' + String(m).padStart(2,'0'));
+	    }
+	  }
+	})();
 
 // Phone validation on New Customer modal
 var _origSaveNewCustomer = saveNewCustomer;

@@ -354,11 +354,14 @@ require_once ROOT_PATH . '/includes/header.php';
           </div>
           <div class="col-md-6">
             <label class="form-label">Start Time</label>
-            <input type="time" name="event_time" class="form-control" value="<?= $_POST['event_time']??'' ?>">
+            <input type="time" name="event_time" id="edit_start_time" class="form-control"
+              value="<?= htmlspecialchars($_POST['event_time'] ?? $bk['event_time'] ?? '') ?>"
+              oninput="autoSetEditEndTime(this.value)">
           </div>
           <div class="col-md-6">
             <label class="form-label">End Time</label>
-            <input type="time" name="event_end_time" class="form-control" value="<?= $_POST['event_end_time']??'' ?>">
+            <input type="time" name="event_end_time" id="edit_end_time" class="form-control"
+              value="<?= htmlspecialchars($_POST['event_end_time'] ?? $bk['event_end_time'] ?? '') ?>">
           </div>
         </div>
       </div>
@@ -550,6 +553,18 @@ function recalc() {
 }
 
 recalc();
+
+// Auto-set end time to 5 hours after start time when start changes
+function autoSetEditEndTime(startVal) {
+  if (!startVal) return;
+  var endEl = document.getElementById('edit_end_time');
+  if (!endEl || endEl.value) return; // don't overwrite an already-set end time
+  var parts = startVal.split(':');
+  if (parts.length < 2) return;
+  var h = (parseInt(parts[0], 10) + 5) % 24;
+  var m = parseInt(parts[1], 10);
+  endEl.value = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
 </script>
 
 <?php require_once ROOT_PATH . '/includes/footer.php'; ?>
