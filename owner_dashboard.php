@@ -810,8 +810,28 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
     <div class="od-sh-title">Hall Performance</div>
     <a href="<?= BASE_URL ?>/modules/settings/index.php?tab=halls" class="od-sh-link">Manage Halls</a>
   </div>
+  <?php
+    // Group halls by branch_name
+    $hallsByBranch = [];
+    foreach ($hallPerformance as $hall) {
+      $hallsByBranch[$hall['branch_name']][] = $hall;
+    }
+  ?>
+  <?php if (empty($hallPerformance)): ?>
   <div class="row g-3">
-    <?php foreach ($hallPerformance as $hall):
+    <div class="col-12"><div class="text-center text-muted py-4" style="font-size:.85rem;">No halls found. <a href="<?= BASE_URL ?>/modules/halls/create.php">Add a hall</a></div></div>
+  </div>
+  <?php else: ?>
+  <?php foreach ($hallsByBranch as $branchLabel => $branchHalls): ?>
+  <!-- Branch group header -->
+  <div class="d-flex align-items-center gap-2 mb-2 mt-2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2"><path d="M3 21h18M3 7l9-4 9 4M4 21V7.5L12 4l8 3.5V21"/></svg>
+    <span style="font-size:.78rem;font-weight:700;color:#b8860b;letter-spacing:.06em;text-transform:uppercase;"><?= Helper::sanitize($branchLabel) ?></span>
+    <div style="flex:1;height:1px;background:linear-gradient(90deg,#b8860b33,transparent);"></div>
+    <span style="font-size:.72rem;color:#6b7280;"><?= count($branchHalls) ?> hall<?= count($branchHalls) > 1 ? 's' : '' ?></span>
+  </div>
+  <div class="row g-3 mb-3">
+    <?php foreach ($branchHalls as $hall):
       $paidPct = $hall['total_revenue'] > 0 ? min(100, round($hall['total_paid'] / $hall['total_revenue'] * 100)) : 0;
     ?>
     <div class="col-sm-6 col-xl-3">
@@ -819,10 +839,6 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
         <div class="d-flex align-items-start justify-content-between">
           <div>
             <div class="od-hall-name"><?= Helper::sanitize($hall['hall_name']) ?></div>
-            <div class="od-hall-branch">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;"><path d="M3 21h18M3 7l9-4 9 4M4 21V7.5L12 4l8 3.5V21"/></svg>
-              <?= Helper::sanitize($hall['branch_name']) ?>
-            </div>
           </div>
           <span class="od-badge od-badge-confirmed"><?= $hall['upcoming'] ?> upcoming</span>
         </div>
@@ -856,10 +872,9 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
       </div>
     </div>
     <?php endforeach; ?>
-    <?php if (empty($hallPerformance)): ?>
-    <div class="col-12"><div class="text-center text-muted py-4" style="font-size:.85rem;">No halls found. <a href="<?= BASE_URL ?>/modules/halls/create.php">Add a hall</a></div></div>
-    <?php endif; ?>
   </div>
+  <?php endforeach; ?>
+  <?php endif; ?>
 </div>
 
 <!-- ═══════ OUTSTANDING + UPCOMING ═══════ -->
