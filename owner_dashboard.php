@@ -5,20 +5,17 @@ Auth::check();
 $db = Database::getInstance();
 $cu = Auth::currentUser();
 
-// ── Get owner's business branches from session ────────────────────────────
+// ── Get owner's business branches strictly from DB (never from session) ──────
 $userUid = $_SESSION['user_uid'] ?? '';
 $business_id = null;
 $biz = $db->fetchOne("SELECT id, business_name FROM sa_businesses WHERE admin_user_id = ? LIMIT 1", [$userUid]);
 if ($biz) $business_id = $biz['id'];
 
-// Use accessible_branches from session (already loaded by Auth)
-$sessionBranches = $cu['accessible_branches'] ?? [];
-$bizBranches = $sessionBranches;
-
-// If session branches empty, load directly from DB
-if (empty($bizBranches) && $business_id) {
+// Always load branches from DB scoped to THIS owner's business_id
+$bizBranches = [];
+if ($business_id) {
     $bizBranches = $db->fetchAll(
-        "SELECT id, name FROM branches WHERE business_id = ? AND is_active = 1",
+        "SELECT id, name FROM branches WHERE business_id = ? AND is_active = 1 ORDER BY name ASC",
         [$business_id]
     );
 }
