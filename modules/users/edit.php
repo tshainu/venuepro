@@ -80,12 +80,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$role_id) $errors[] = 'Please select a role.';
 
     if (!$errors) {
-        $dup = $db->fetchOne(
-            "SELECT id FROM users WHERE id != ? AND (email = ? OR user_id = ? OR username = ?) LIMIT 1",
-            [$id, $email, $user_id, $username]
+        // Check if email is taken by another user
+        $dup_email = $db->fetchOne(
+            "SELECT id FROM users WHERE id != ? AND email = ? LIMIT 1",
+            [$id, $email]
         );
-        if ($dup) {
-            $errors[] = 'Email, User ID, or Username already exists.';
+        if ($dup_email) {
+            $errors[] = 'Email address is already in use by another account.';
+        }
+        // Check if username is taken by another user
+        $dup_username = $db->fetchOne(
+            "SELECT id FROM users WHERE id != ? AND username = ? LIMIT 1",
+            [$id, $username]
+        );
+        if ($dup_username) {
+            $errors[] = 'Username is already in use by another account.';
         }
     }
 

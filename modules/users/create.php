@@ -71,16 +71,24 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name     = trim($_POST['name'] ?? '');
     $email    = trim($_POST['email'] ?? '');
-    $user_id  = strtoupper($creator_user_id);
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
     $phone    = trim($_POST['phone'] ?? '');
     $role_id  = (int)($_POST['role_id'] ?? 0);
 
+    // Auto-generate a unique staff User ID (e.g. S001, S002...)
+    $user_id = '';
+    $prefix = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $name), 0, 1) ?: 'S');
+    for ($attempt = 1; $attempt <= 999; $attempt++) {
+        $candidate = $prefix . str_pad($attempt, 3, '0', STR_PAD_LEFT);
+        $exists = $db->fetchOne("SELECT id FROM users WHERE user_id = ? LIMIT 1", [$candidate]);
+        if (!$exists) { $user_id = $candidate; break; }
+    }
+    if (!$user_id) $user_id = strtoupper(substr(md5(uniqid()), 0, 6));
+
     // Validate
     if (!$name) $errors[] = 'Full Name is required.';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email address.';
-    if (!$user_id) $errors[] = 'Could not determine business User ID.';
     if (!$username) $errors[] = 'Username is required.';
     if (strlen($password) < 8) $errors[] = 'Password must be at least 8 characters.';
     if (!$role_id) $errors[] = 'Please select a role.';
