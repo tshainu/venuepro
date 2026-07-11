@@ -157,6 +157,60 @@ $customers_detail = $db->fetchAll(
     [$date_from, $date_to]
 );
 
+// ── TAB: Expenses ────────────────────────────────────────────
+// Build branch filter for expenses
+if ($branch_id && in_array($branch_id, $accessible_branch_ids)) {
+    $bfExp = "AND e.branch_id=$branch_id";
+} else {
+    $bfExp = "AND e.branch_id IN ($in_clause)";
+}
+
+$expenses_detail = $db->fetchAll(
+    "SELECT e.expense_ref, e.expense_date, e.title, ec.name as category_name,
+            br.name as branch_name, e.payment_method, e.amount, e.status, e.reference_number
+     FROM expenses e
+     JOIN expense_categories ec ON e.category_id = ec.id
+     JOIN branches br ON e.branch_id = br.id
+     WHERE e.expense_date BETWEEN ? AND ? $bfExp
+       AND e.status != 'rejected'
+     ORDER BY e.expense_date DESC",
+    [$date_from, $date_to]
+);
+
+$kpi_expenses = (float)($db->fetchOne(
+    "SELECT COALESCE(SUM(e.amount),0) as v FROM expenses e
+     WHERE e.expense_date BETWEEN ? AND ? $bfExp AND e.status != 'rejected'",
+    [$date_from, $date_to]
+)['v'] ?? 0);
+
+$expenses_by_category = $db->fetchAll(
+    "SELECT ec.name, COUNT(*) as cnt, SUM(e.amount) as total
+     FROM expenses e
+     JOIN expense_categories ec ON e.category_id = ec.id
+     WHERE e.expense_date BETWEEN ? AND ? $bfExp AND e.status != 'rejected'
+     GROUP BY ec.id, ec.name ORDER BY total DESC",
+    [$date_from, $date_to]
+);
+
+$expenses_by_branch = $db->fetchAll(
+    "SELECT br.name as branch_name, COUNT(*) as cnt, SUM(e.amount) as total
+     FROM expenses e
+     JOIN branches br ON e.branch_id = br.id
+     WHERE e.expense_date BETWEEN ? AND ? $bfExp AND e.status != 'rejected'
+     GROUP BY br.id, br.name ORDER BY total DESC",
+    [$date_from, $date_to]
+);
+
+$expenses_monthly = $db->fetchAll(
+    "SELECT DATE_FORMAT(e.expense_date,'%Y-%m') as ym, SUM(e.amount) as total, COUNT(*) as cnt
+     FROM expenses e
+     WHERE e.expense_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH) $bfExp AND e.status != 'rejected'
+     GROUP BY ym ORDER BY ym ASC"
+);
+
+// Net P&L for the period
+$kpi_net = $kpi_revenue - $kpi_expenses;
+
 $branches = $db->fetchAll("SELECT id,name FROM branches WHERE is_active=1");
 
 $pageTitle  = 'Reports';
@@ -256,6 +310,16 @@ require_once ROOT_PATH . '/includes/header.php';
     <div class="kpi-lbl">Outstanding Balance</div>
     <div class="kpi-sub">Active bookings only</div>
   </div>
+  <div class="kpi-box" style="border-left:4px solid #dc2626;">
+    <div class="kpi-val" style="color:#dc2626;"><?= Helper::formatCurrency($kpi_expenses) ?></div>
+    <div class="kpi-lbl">Total Expenses</div>
+    <div class="kpi-sub"><?= count($expenses_detail) ?> records in period</div>
+  </div>
+  <div class="kpi-box" style="border-left:4px solid <?= $kpi_net>=0?'#059669':'#dc2626' ?>;">
+    <div class="kpi-val" style="color:<?= $kpi_net>=0?'#059669':'#dc2626' ?>"><?= Helper::formatCurrency(abs($kpi_net)) ?></div>
+    <div class="kpi-lbl">Net <?= $kpi_net>=0?'Profit':'Loss' ?></div>
+    <div class="kpi-sub">Revenue minus Expenses</div>
+  </div>
   <div class="kpi-box navy">
     <div class="kpi-val"><?= number_format($kpi_bookings) ?></div>
     <div class="kpi-lbl">Total Bookings</div>
@@ -275,6 +339,9 @@ require_once ROOT_PATH . '/includes/header.php';
   <button class="rpt-tab <?= $active_tab==='invoices'?'active':'' ?>"    onclick="rptTab('invoices')">Invoices</button>
   <button class="rpt-tab <?= $active_tab==='outstanding'?'active':'' ?>" onclick="rptTab('outstanding')">Outstanding</button>
   <button class="rpt-tab <?= $active_tab==='customers'?'active':'' ?>"   onclick="rptTab('customers')">Customers</button>
+  <?php if (!Auth::hasRole(['hall_manager'])): ?>
+  <button class="rpt-tab <?= $active_tab==='expenses'?'active':'' ?>"    onclick="rptTab('expenses')" style="color:#dc2626;">💸 Expenses</button>
+  <?php endif; ?>
 </div>
 
 <!-- ═══ TAB: REVENUE ═══ -->
@@ -664,11 +731,162 @@ require_once ROOT_PATH . '/includes/header.php';
   </div>
 </div>
 
+<!-- ═══ TAB: EXPENSES ═══ -->
+<?php if (!Auth::hasRole(['hall_manager'])): ?>
+<div class="rpt-pane <?= $active_tab==='expenses'?'active':'' ?>" id="rpt-expenses">
+  <div class="export-bar d-print-none">
+    <a class="export-btn" href="<?= BASE_URL ?>/modules/expenses/index.php" style="color:#dc2626;border-color:#dc2626;">Manage Expenses →</a>
+    <button class="export-btn" onclick="window.print()">&#128424; Print</button>
+  </div>
+
+  <!-- Summary by category -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="rpt-section h-100">
+        <div class="rpt-section-hd">
+          <h4 class="rpt-section-title">By Category</h4>
+          <span class="rpt-section-total" style="color:#dc2626;"><?= Helper::formatCurrency($kpi_expenses) ?></span>
+        </div>
+        <table class="rpt-table">
+          <thead><tr><th>Category</th><th class="num">Records</th><th class="num">Total</th><th>Share</th></tr></thead>
+          <tbody>
+            <?php foreach ($expenses_by_category as $ec):
+              $pct = $kpi_expenses>0 ? round($ec['total']/$kpi_expenses*100) : 0; ?>
+            <tr>
+              <td style="font-weight:600;"><?= Helper::sanitize($ec['name']) ?></td>
+              <td class="num"><?= $ec['cnt'] ?></td>
+              <td class="num" style="color:#dc2626;font-weight:700;"><?= Helper::formatCurrency($ec['total']) ?></td>
+              <td>
+                <div class="bar-cell">
+                  <div class="bar-track"><div class="bar-fill" style="width:<?= $pct ?>%;background:#dc2626;"></div></div>
+                  <span style="font-size:.72rem;color:#6b7280;min-width:30px;"><?= $pct ?>%</span>
+                </div>
+              </td>
+            </tr>
+            <?php endforeach; ?>
+            <?php if (!$expenses_by_category): ?>
+            <tr><td colspan="4"><div class="empty-rpt"><div class="empty-rpt-icon">&#128184;</div>No expenses in this period.</div></td></tr>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <?php if (count($expenses_by_branch) > 1): ?>
+    <div class="col-md-6">
+      <div class="rpt-section h-100">
+        <div class="rpt-section-hd"><h4 class="rpt-section-title">By Branch</h4></div>
+        <table class="rpt-table">
+          <thead><tr><th>Branch</th><th class="num">Records</th><th class="num">Total</th></tr></thead>
+          <tbody>
+            <?php foreach ($expenses_by_branch as $eb): ?>
+            <tr>
+              <td style="font-weight:600;"><?= Helper::sanitize($eb['branch_name']) ?></td>
+              <td class="num"><?= $eb['cnt'] ?></td>
+              <td class="num" style="color:#dc2626;font-weight:700;"><?= Helper::formatCurrency($eb['total']) ?></td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <?php endif; ?>
+  </div>
+
+  <!-- P&L Summary -->
+  <div class="rpt-section mb-3" style="border-left:4px solid <?= $kpi_net>=0?'#059669':'#dc2626' ?>;">
+    <div class="rpt-section-hd">
+      <h4 class="rpt-section-title">Profit & Loss Summary</h4>
+      <span style="font-size:.78rem;color:#6b7280;"><?= date('d M Y',strtotime($date_from)) ?> — <?= date('d M Y',strtotime($date_to)) ?></span>
+    </div>
+    <table class="rpt-table">
+      <tbody>
+        <tr><td style="font-weight:600;">Revenue Collected</td><td class="amt"><?= Helper::formatCurrency($kpi_revenue) ?></td></tr>
+        <tr><td style="font-weight:600;color:#dc2626;">Total Expenses</td><td class="num" style="color:#dc2626;font-weight:700;">(<?= Helper::formatCurrency($kpi_expenses) ?>)</td></tr>
+        <tr style="background:#f8fafc;">
+          <td style="font-weight:800;font-size:.9rem;"><?= $kpi_net>=0?'Net Profit':'Net Loss' ?></td>
+          <td style="font-weight:900;font-size:1rem;color:<?= $kpi_net>=0?'#059669':'#dc2626' ?>;text-align:right;"><?= Helper::formatCurrency(abs($kpi_net)) ?></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Monthly trend -->
+  <div class="rpt-section mb-3">
+    <div class="rpt-section-hd"><h4 class="rpt-section-title">Monthly Expenses — Last 12 Months</h4></div>
+    <table class="rpt-table">
+      <thead><tr><th>Month</th><th class="num">Records</th><th class="num">Total Expenses</th></tr></thead>
+      <tbody>
+        <?php foreach ($expenses_monthly as $em): ?>
+        <tr>
+          <td><?= date('M Y',strtotime($em['ym'].'-01')) ?></td>
+          <td class="num"><?= $em['cnt'] ?></td>
+          <td class="num" style="color:#dc2626;font-weight:700;"><?= Helper::formatCurrency($em['total']) ?></td>
+        </tr>
+        <?php endforeach; ?>
+        <?php if (!$expenses_monthly): ?>
+        <tr><td colspan="3"><div class="empty-rpt"><div class="empty-rpt-icon">&#128202;</div>No data.</div></td></tr>
+        <?php endif; ?>
+      </tbody>
+      <?php if ($expenses_monthly): ?>
+      <tfoot><tr>
+        <td>TOTAL</td>
+        <td class="num"><?= array_sum(array_column($expenses_monthly,'cnt')) ?></td>
+        <td class="num" style="color:#dc2626;font-weight:800;"><?= Helper::formatCurrency(array_sum(array_column($expenses_monthly,'total'))) ?></td>
+      </tr></tfoot>
+      <?php endif; ?>
+    </table>
+  </div>
+
+  <!-- Detailed expenses -->
+  <div class="rpt-section">
+    <div class="rpt-section-hd">
+      <h4 class="rpt-section-title">All Expenses in Period (<?= count($expenses_detail) ?>)</h4>
+      <span class="rpt-section-total" style="color:#dc2626;"><?= Helper::formatCurrency($kpi_expenses) ?></span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="rpt-table">
+        <thead><tr><th>Ref</th><th>Date</th><th>Title</th><th>Category</th><th>Branch</th><th>Method</th><th>Status</th><th class="num">Amount</th></tr></thead>
+        <tbody>
+          <?php foreach ($expenses_detail as $exp): ?>
+          <tr>
+            <td><span class="ref"><?= Helper::sanitize($exp['expense_ref']) ?></span></td>
+            <td style="white-space:nowrap;"><?= date('d M Y',strtotime($exp['expense_date'])) ?></td>
+            <td style="font-weight:600;"><?= Helper::sanitize($exp['title']) ?></td>
+            <td><span style="background:#ede9fe;color:#5b21b6;border-radius:99px;padding:.1rem .5rem;font-size:.7rem;font-weight:700;"><?= Helper::sanitize($exp['category_name']) ?></span></td>
+            <td style="font-size:.75rem;color:#6b7280;"><?= Helper::sanitize($exp['branch_name']) ?></td>
+            <td style="font-size:.75rem;"><?= ucwords(str_replace('_',' ',$exp['payment_method'])) ?></td>
+            <td>
+              <?php
+              $sc = ['approved'=>'#d1fae5;color:#065f46','pending'=>'#fef3c7;color:#92400e','rejected'=>'#fee2e2;color:#991b1b'];
+              $ss = $sc[$exp['status']] ?? '#f1f5f9;color:#374151';
+              ?>
+              <span style="background:<?= $ss ?>;border-radius:99px;padding:.1rem .5rem;font-size:.7rem;font-weight:700;"><?= ucfirst($exp['status']) ?></span>
+            </td>
+            <td class="num" style="color:#dc2626;font-weight:700;"><?= Helper::formatCurrency($exp['amount']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          <?php if (!$expenses_detail): ?>
+          <tr><td colspan="8"><div class="empty-rpt"><div class="empty-rpt-icon">&#128184;</div>No expenses in this range.</div></td></tr>
+          <?php endif; ?>
+        </tbody>
+        <?php if ($expenses_detail): ?>
+        <tfoot><tr>
+          <td colspan="7">TOTAL (<?= count($expenses_detail) ?>)</td>
+          <td class="num" style="color:#dc2626;font-weight:800;"><?= Helper::formatCurrency(array_sum(array_column($expenses_detail,'amount'))) ?></td>
+        </tr></tfoot>
+        <?php endif; ?>
+      </table>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
+
 <script>
 function rptTab(name) {
   document.querySelectorAll('.rpt-tab').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.rpt-pane').forEach(p => p.classList.remove('active'));
-  document.querySelector('.rpt-tab[onclick="rptTab(\''+name+'\')"]').classList.add('active');
+  document.querySelector('.rpt-tab[onclick="rptTab(\'"+name+"\')"').classList.add('active');
   document.getElementById('rpt-'+name).classList.add('active');
   const u = new URL(window.location.href); u.searchParams.set('tab', name); history.replaceState(null,'',u);
 }
