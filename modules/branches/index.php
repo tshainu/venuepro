@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::hasRole(['super_admin','admin','hall_manager','owner','general_manager'])) { Helper::flash('error','Admin access required.'); Helper::redirect(BASE_URL.'/index.php'); }
+if (!Auth::hasRole(['super_admin','admin','hall_manager','owner'])) { Helper::flash('error','Admin access required.'); Helper::redirect(BASE_URL.'/index.php'); }
 $db = Database::getInstance();
 $cu = Auth::currentUser();
 // Fetch business info from sa_businesses using the current user's user_id

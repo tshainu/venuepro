@@ -11,7 +11,21 @@ $date_to   = $_GET['date_to'] ?? '';
 $page = max(1,(int)($_GET['page'] ?? 1));
 
 $where = ['1=1']; $params = [];
-if ($cu['branch_id']) { $where[] = 'p.branch_id=?'; $params[] = $cu['branch_id']; }
+
+$accessible_branch_ids = Auth::getAccessibleBranches();
+if (!empty($accessible_branch_ids)) {
+    $branch_ids = array_column($accessible_branch_ids, 'id');
+    if (!empty($branch_ids)) {
+        $in_clause = implode(',', array_fill(0, count($branch_ids), '?'));
+        $where[] = "p.branch_id IN ($in_clause)";
+        $params = array_merge($params, $branch_ids);
+    } else {
+        $where[] = 'p.branch_id = -1'; // Fallback
+    }
+} else if ($cu['branch_id']) { 
+    $where[] = 'p.branch_id=?'; 
+    $params[] = $cu['branch_id']; 
+}
 if ($search)    { $where[] = '(p.payment_ref LIKE ? OR c.name LIKE ? OR p.reference_number LIKE ?)'; $params[] = "%$search%"; $params[] = "%$search%"; $params[] = "%$search%"; }
 if ($method)    { $where[] = 'p.payment_method=?'; $params[] = $method; }
 if ($date_from) { $where[] = 'p.payment_date >= ?'; $params[] = $date_from; }
@@ -22,7 +36,18 @@ $total        = $db->fetchOne("SELECT COUNT(*) as cnt FROM payments p LEFT JOIN 
 $total_amount = $db->fetchOne("SELECT SUM(p.amount) as total FROM payments p LEFT JOIN customers c ON p.customer_id=c.id WHERE $wstr", $params)['total'] ?? 0;
 
 // Pending balances — confirmed/tentative bookings with balance > 0
-$pb_cond = $cu['branch_id'] ? "AND b.branch_id=".(int)$cu['branch_id'] : "";
+$pb_cond = "";
+if (!empty($accessible_branch_ids)) {
+    $branch_ids = array_column($accessible_branch_ids, 'id');
+    if (!empty($branch_ids)) {
+        $in_clause = implode(',', array_map('intval', $branch_ids));
+        $pb_cond = "AND b.branch_id IN ($in_clause)";
+    } else {
+        $pb_cond = "AND b.branch_id = -1";
+    }
+} else if ($cu['branch_id']) {
+    $pb_cond = "AND b.branch_id=".(int)$cu['branch_id'];
+}
 $pending_balances = $db->fetchAll(
     "SELECT b.id, b.booking_ref, b.event_date, b.event_type, b.final_amount,
             b.paid_amount, b.balance_amount, b.status,
@@ -37,9 +62,22 @@ $pending_balances = $db->fetchAll(
 );
 
 // Method breakdown (unfiltered by method for KPI purposes)
-$method_params = array_filter([$cu['branch_id'] ?? null]);
-$method_cond = $cu['branch_id'] ? 'WHERE p.branch_id=?' : '';
-$method_breakdown = $db->fetchAll("SELECT p.payment_method, COUNT(*) as cnt, SUM(p.amount) as total FROM payments p $method_cond GROUP BY p.payment_method ORDER BY total DESC", $cu['branch_id'] ? [$cu['branch_id']] : []);
+$method_cond = "";
+$method_params = [];
+if (!empty($accessible_branch_ids)) {
+    $branch_ids = array_column($accessible_branch_ids, 'id');
+    if (!empty($branch_ids)) {
+        $in_clause = implode(',', array_fill(0, count($branch_ids), '?'));
+        $method_cond = "WHERE p.branch_id IN ($in_clause)";
+        $method_params = $branch_ids;
+    } else {
+        $method_cond = "WHERE p.branch_id = -1";
+    }
+} else if ($cu['branch_id']) {
+    $method_cond = "WHERE p.branch_id=?";
+    $method_params = [$cu['branch_id']];
+}
+$method_breakdown = $db->fetchAll("SELECT p.payment_method, COUNT(*) as cnt, SUM(p.amount) as total FROM payments p $method_cond GROUP BY p.payment_method ORDER BY total DESC", $method_params);
 
 $pg = Helper::paginate($total, $page);
 $payments = $db->fetchAll(

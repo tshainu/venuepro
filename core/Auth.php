@@ -49,11 +49,53 @@ class Auth {
         $_SESSION['user_email']  = $user['email'];
         $_SESSION['user_role']   = $user['role_slug'];
         $_SESSION['user_role_id']= $user['role_id'];
-        $_SESSION['branch_id']   = $user['branch_id'];
-        $_SESSION['branch_name'] = $user['branch_name'];
         $_SESSION['language']    = $user['language'] ?? 'en';
         $_SESSION['user_uid']      = $user['user_id'] ?? '';
         $_SESSION['user_username'] = $user['username'] ?? '';
+
+        // Handle multiple accessible branches
+        $accessible_branches = [];
+        $primary_branch_id = $user['branch_id'];
+        $primary_branch_name = $user['branch_name'];
+
+        if ($user['id']) {
+            $branches = $this->db->fetchAll(
+                "SELECT b.id, b.name FROM user_accessible_branches uab JOIN branches b ON uab.branch_id = b.id WHERE uab.user_id = ?",
+                [$user['id']]
+            );
+            if (!empty($branches)) {
+                $accessible_branches = $branches;
+                if (!$primary_branch_id) {
+                    $primary_branch_id = $branches[0]['id'];
+                    $primary_branch_name = $branches[0]['name'];
+                }
+            } else {
+                // For owner role: auto-load all branches belonging to their business
+                if (!empty($user['user_id'])) {
+                    $biz = $this->db->fetchOne(
+                        "SELECT id FROM sa_businesses WHERE admin_user_id = ? LIMIT 1",
+                        [$user['user_id']]
+                    );
+                    if ($biz) {
+                        $biz_branches = $this->db->fetchAll(
+                            "SELECT id, name FROM branches WHERE business_id = ? AND is_active = 1",
+                            [$biz['id']]
+                        );
+                        if (!empty($biz_branches)) {
+                            $accessible_branches = $biz_branches;
+                            if (!$primary_branch_id) {
+                                $primary_branch_id = $biz_branches[0]['id'];
+                                $primary_branch_name = $biz_branches[0]['name'];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $_SESSION['branch_id']   = $primary_branch_id;
+        $_SESSION['branch_name'] = $primary_branch_name;
+        $_SESSION['accessible_branches'] = $accessible_branches;
 
         // Load business name for business admin users (no branch assigned)
         $business_name = '';
@@ -100,13 +142,52 @@ class Auth {
             }
             $_SESSION['user_role']    = $user['role_slug'];
             $_SESSION['user_role_id'] = $user['role_id'];
-            $_SESSION['branch_id']    = $user['branch_id'];
-            $_SESSION['branch_name']  = $user['branch_name'];
             $_SESSION['user_uid']     = $user['user_id'] ?? '';
             $_SESSION['user_username']= $user['username'] ?? '';
             $_SESSION['user_name']    = $user['name'];
             $_SESSION['user_email']   = $user['email'];
             $_SESSION['language']     = $user['language'] ?? 'en';
+
+            $accessible_branches = [];
+            $primary_branch_id = $user['branch_id'];
+            $primary_branch_name = $user['branch_name'];
+
+            $branches = $db->fetchAll(
+                "SELECT b.id, b.name FROM user_accessible_branches uab JOIN branches b ON uab.branch_id = b.id WHERE uab.user_id = ?",
+                [$user['id']]
+            );
+            if (!empty($branches)) {
+                $accessible_branches = $branches;
+                if (!$primary_branch_id) {
+                    $primary_branch_id = $branches[0]['id'];
+                    $primary_branch_name = $branches[0]['name'];
+                }
+            } else {
+                // For owner role: auto-load all branches belonging to their business
+                if (!empty($user['user_id'])) {
+                    $biz = $db->fetchOne(
+                        "SELECT id FROM sa_businesses WHERE admin_user_id = ? LIMIT 1",
+                        [$user['user_id']]
+                    );
+                    if ($biz) {
+                        $biz_branches = $db->fetchAll(
+                            "SELECT id, name FROM branches WHERE business_id = ? AND is_active = 1",
+                            [$biz['id']]
+                        );
+                        if (!empty($biz_branches)) {
+                            $accessible_branches = $biz_branches;
+                            if (!$primary_branch_id) {
+                                $primary_branch_id = $biz_branches[0]['id'];
+                                $primary_branch_name = $biz_branches[0]['name'];
+                            }
+                        }
+                    }
+                }
+            }
+
+            $_SESSION['branch_id']   = $primary_branch_id;
+            $_SESSION['branch_name'] = $primary_branch_name;
+            $_SESSION['accessible_branches'] = $accessible_branches;
         }
     }
 
@@ -128,6 +209,7 @@ class Auth {
             'role_id'       => $_SESSION['user_role_id'] ?? null,
             'branch_id'     => $_SESSION['branch_id'] ?? null,
             'branch_name'   => $_SESSION['branch_name'] ?? '',
+            'accessible_branches' => $_SESSION['accessible_branches'] ?? [],
             'business_name' => $_SESSION['business_name'] ?? '',
             'language'      => $_SESSION['language'] ?? 'en',
         ];
@@ -135,5 +217,9 @@ class Auth {
 
     public static function branchId() {
         return $_SESSION['branch_id'] ?? null;
+    }
+
+    public static function getAccessibleBranches() {
+        return $_SESSION['accessible_branches'] ?? [];
     }
 }

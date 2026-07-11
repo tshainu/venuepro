@@ -10,7 +10,21 @@ $page   = max(1, (int)($_GET['page'] ?? 1));
 
 $where  = "WHERE 1 ";
 $params = [];
-if ($bid)    { $where .= "AND c.branch_id=? "; $params[] = $bid; }
+
+$accessible_branch_ids = Auth::getAccessibleBranches();
+if (!empty($accessible_branch_ids)) {
+    $branch_ids = array_column($accessible_branch_ids, 'id');
+    if (!empty($branch_ids)) {
+        $in_clause = implode(',', array_fill(0, count($branch_ids), '?'));
+        $where .= "AND c.branch_id IN ($in_clause) ";
+        $params = array_merge($params, $branch_ids);
+    } else {
+        $where .= "AND c.branch_id = -1 ";
+    }
+} else if ($bid) { 
+    $where .= "AND c.branch_id=? "; 
+    $params[] = $bid; 
+}
 if ($search) { $where .= "AND (c.name LIKE ? OR c.mobile LIKE ? OR c.nic LIKE ? OR c.email LIKE ?) "; $s="%$search%"; $params=array_merge($params,[$s,$s,$s,$s]); }
 
 $total = $db->fetchOne("SELECT COUNT(*) as cnt FROM customers c $where", $params)['cnt'] ?? 0;

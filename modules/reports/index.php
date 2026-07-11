@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
-if (!Auth::hasRole(['super_admin','admin','hall_manager','manager','accountant'])) {
+if (!Auth::hasRole(['super_admin','admin','owner','hall_manager','manager','accountant'])) {
     Helper::flash('error','Access denied.');
     Helper::redirect(BASE_URL.'/index.php');
 }
@@ -10,12 +10,36 @@ $cu = Auth::currentUser();
 
 $date_from   = $_GET['date_from'] ?? date('Y-m-01');
 $date_to     = $_GET['date_to']   ?? date('Y-m-d');
-$branch_id   = $cu['branch_id']   ?? (int)($_GET['branch_id'] ?? 0);
+$branch_id   = (int)($_GET['branch_id'] ?? 0);
 $active_tab  = $_GET['tab']       ?? 'revenue';
 
-$bfBk  = $branch_id ? "AND b.branch_id=$branch_id"  : "";
-$bfPay = $branch_id ? "AND p.branch_id=$branch_id"  : "";
-$bfInv = $branch_id ? "AND i.branch_id=$branch_id"  : "";
+// Determine accessible branches
+$accessible_branch_ids = [];
+if (Auth::hasRole(["super_admin", "admin", "owner"])) {
+    $creator_user_id = $db->fetchOne("SELECT user_id FROM users WHERE id = ?", [$cu['id']])['user_id'] ?? '';
+    $current_business_id = $db->fetchOne("SELECT id FROM sa_businesses WHERE admin_user_id = ?", [$creator_user_id])['id'] ?? null;
+    $all_branches = $db->fetchAll("SELECT id FROM branches WHERE is_active = 1 AND business_id = ?", [$current_business_id]);
+    $accessible_branch_ids = array_column($all_branches, 'id');
+} else {
+    $accessible_branch_ids = array_column($cu['accessible_branches'] ?? [], 'id');
+}
+
+if (empty($accessible_branch_ids)) {
+    $accessible_branch_ids = [-1]; // Fallback
+}
+
+$in_clause = implode(',', $accessible_branch_ids);
+
+// Filter by specific branch if requested and allowed, else filter by all accessible
+if ($branch_id && in_array($branch_id, $accessible_branch_ids)) {
+    $bfBk  = "AND b.branch_id=$branch_id";
+    $bfPay = "AND p.branch_id=$branch_id";
+    $bfInv = "AND i.branch_id=$branch_id";
+} else {
+    $bfBk  = "AND b.branch_id IN ($in_clause)";
+    $bfPay = "AND p.branch_id IN ($in_clause)";
+    $bfInv = "AND i.branch_id IN ($in_clause)";
+}
 
 // ── KPIs ──────────────────────────────────────────────────────
 $kpi_revenue    = (float)($db->fetchOne("SELECT SUM(p.amount) as v FROM payments p WHERE p.payment_date BETWEEN ? AND ? $bfPay", [$date_from,$date_to])['v'] ?? 0);
@@ -206,11 +230,13 @@ require_once ROOT_PATH . '/includes/header.php';
     <input type="date" name="date_from" class="form-control" value="<?= $date_from ?>" style="max-width:150px;">
     <span class="align-self-center text-muted fw-600">to</span>
     <input type="date" name="date_to" class="form-control" value="<?= $date_to ?>" style="max-width:150px;">
-    <?php if (Auth::isSuperAdmin()): ?>
+    <?php if (Auth::hasRole(["super_admin", "admin", "owner"])): ?>
     <select name="branch_id" class="form-select" style="max-width:160px;">
       <option value="">All Branches</option>
       <?php foreach ($branches as $br): ?>
-      <option value="<?= $br['id'] ?>" <?= $branch_id==$br['id']?'selected':'' ?>><?= Helper::sanitize($br['name']) ?></option>
+        <?php if (in_array($br['id'], $accessible_branch_ids)): ?>
+        <option value="<?= $br['id'] ?>" <?= $branch_id==$br['id']?'selected':'' ?>><?= Helper::sanitize($br['name']) ?></option>
+        <?php endif; ?>
       <?php endforeach; ?>
     </select>
     <?php endif; ?>

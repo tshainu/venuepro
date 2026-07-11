@@ -451,7 +451,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Users</span>
       </a>
 
-      <?php if (Auth::hasRole(['super_admin','admin','owner','general_manager','hall_manager'])): ?>
+      <?php if (Auth::hasRole(['super_admin','admin','owner','hall_manager'])): ?>
       <a href="<?= BASE_URL ?>/modules/branches/index.php" class="sb-item <?= sbActive($_currentPath, '/branches') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

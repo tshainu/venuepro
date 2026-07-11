@@ -10,7 +10,21 @@ $type   = $_GET['invoice_type'] ?? '';
 $page   = max(1,(int)($_GET['page'] ?? 1));
 
 $where = ['1=1']; $params = [];
-if ($cu['branch_id']) { $where[] = 'i.branch_id=?'; $params[] = $cu['branch_id']; }
+
+$accessible_branch_ids = Auth::getAccessibleBranches();
+if (!empty($accessible_branch_ids)) {
+    $branch_ids = array_column($accessible_branch_ids, 'id');
+    if (!empty($branch_ids)) {
+        $in_clause = implode(',', array_fill(0, count($branch_ids), '?'));
+        $where[] = "i.branch_id IN ($in_clause)";
+        $params = array_merge($params, $branch_ids);
+    } else {
+        $where[] = 'i.branch_id = -1'; // Fallback
+    }
+} else if ($cu['branch_id']) { 
+    $where[] = 'i.branch_id=?'; 
+    $params[] = $cu['branch_id']; 
+}
 if ($search) { $where[] = '(i.invoice_number LIKE ? OR c.name LIKE ?)'; $params[] = "%$search%"; $params[] = "%$search%"; }
 if ($status) { $where[] = 'i.status=?'; $params[] = $status; }
 if ($type)   { $where[] = 'i.invoice_type=?'; $params[] = $type; }
@@ -28,11 +42,34 @@ $invoices = $db->fetchAll(
 );
 
 // Status totals
-$statusStats = $db->fetchAll("SELECT i.status, COUNT(*) as cnt, COALESCE(SUM(i.total),0) as total, COALESCE(SUM(i.balance),0) as balance FROM invoices i WHERE 1 " . ($cu['branch_id'] ? "AND i.branch_id=".(int)$cu['branch_id'] : "") . " GROUP BY i.status");
+$status_where = "1";
+if (!empty($accessible_branch_ids)) {
+    $branch_ids = array_column($accessible_branch_ids, 'id');
+    if (!empty($branch_ids)) {
+        $in_clause = implode(',', array_map('intval', $branch_ids));
+        $status_where .= " AND i.branch_id IN ($in_clause)";
+    } else {
+        $status_where .= " AND i.branch_id = -1";
+    }
+} else if ($cu['branch_id']) {
+    $status_where .= " AND i.branch_id=".(int)$cu['branch_id'];
+}
+$statusStats = $db->fetchAll("SELECT i.status, COUNT(*) as cnt, COALESCE(SUM(i.total),0) as total, COALESCE(SUM(i.balance),0) as balance FROM invoices i WHERE $status_where GROUP BY i.status");
 $stMap = []; foreach ($statusStats as $s) $stMap[$s['status']] = $s;
 
 // Unpaid bookings (balance > 0, not cancelled, no active unpaid invoice)
-$bk_cond = $cu['branch_id'] ? "AND b.branch_id=".(int)$cu['branch_id'] : "";
+$bk_cond = "";
+if (!empty($accessible_branch_ids)) {
+    $branch_ids = array_column($accessible_branch_ids, 'id');
+    if (!empty($branch_ids)) {
+        $in_clause = implode(',', array_map('intval', $branch_ids));
+        $bk_cond = "AND b.branch_id IN ($in_clause)";
+    } else {
+        $bk_cond = "AND b.branch_id = -1";
+    }
+} else if ($cu['branch_id']) {
+    $bk_cond = "AND b.branch_id=".(int)$cu['branch_id'];
+}
 $unpaid_bookings = $db->fetchAll(
     "SELECT b.id, b.booking_ref, b.event_date, b.event_type, b.final_amount, b.paid_amount, b.balance_amount,
             c.name as customer_name, h.name as hall_name

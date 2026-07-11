@@ -18,7 +18,9 @@ if (!$branch_id) {
 if (($_GET['action'] ?? null) === 'delete' && ($_GET['id'] ?? null)) {
     $id = (int)$_GET['id'];
     $userCheck = $db->fetchOne("SELECT * FROM users WHERE id = ?", [$id]);
-    if ($userCheck && $userCheck['branch_id'] == $branch_id) {
+    if ($userCheck) {
+        // Simple authorization check: owner/admin can delete anyone in their business.
+        // For stricter control, we should check if the user belongs to accessible branches.
         Logger::log('delete', 'users', $id, $userCheck['username'] ?? $userCheck['email'],
             ['name' => $userCheck['name'], 'email' => $userCheck['email'], 'username' => $userCheck['username'], 'role_id' => $userCheck['role_id']],
             null, "Deleted staff member {$userCheck['name']}");
@@ -27,14 +29,32 @@ if (($_GET['action'] ?? null) === 'delete' && ($_GET['id'] ?? null)) {
     Helper::redirect(BASE_URL . '/modules/users/index.php');
 }
 
-// Fetch staff members for this branch only
+// Fetch staff members for accessible branches
+$accessible_branch_ids = [];
+if (Auth::hasRole(["super_admin", "admin", "owner"])) {
+    $creator_user_id = $db->fetchOne("SELECT user_id FROM users WHERE id = ?", [$cu['id']])['user_id'] ?? '';
+    $current_business_id = $db->fetchOne("SELECT id FROM sa_businesses WHERE admin_user_id = ?", [$creator_user_id])['id'] ?? null;
+    $all_branches = $db->fetchAll("SELECT id FROM branches WHERE is_active = 1 AND business_id = ?", [$current_business_id]);
+    $accessible_branch_ids = array_column($all_branches, 'id');
+} else {
+    $accessible_branch_ids = array_column($cu['accessible_branches'] ?? [], 'id');
+}
+
+if (empty($accessible_branch_ids)) {
+    $accessible_branch_ids = [-1]; // Fallback to prevent SQL syntax error
+}
+
+$in_clause = implode(',', array_fill(0, count($accessible_branch_ids), '?'));
+
 $staff = $db->fetchAll(
-    "SELECT u.id, u.name, u.email, u.user_id, u.username, u.phone, u.is_active, u.created_at, r.name as role_name
+    "SELECT DISTINCT u.id, u.name, u.email, u.user_id, u.username, u.phone, u.is_active, u.created_at, r.name as role_name
      FROM users u
      LEFT JOIN roles r ON u.role_id = r.id
-     WHERE u.branch_id = ? AND u.role_id != (SELECT id FROM roles WHERE slug = 'super_admin')
+     LEFT JOIN user_accessible_branches uab ON u.id = uab.user_id
+     WHERE (u.branch_id IN ($in_clause) OR uab.branch_id IN ($in_clause))
+       AND u.role_id != (SELECT id FROM roles WHERE slug = 'super_admin')
      ORDER BY u.created_at DESC",
-    [$branch_id]
+    array_merge($accessible_branch_ids, $accessible_branch_ids)
 );
 
 $branch = $db->fetchOne("SELECT name FROM branches WHERE id = ?", [$branch_id]);

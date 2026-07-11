@@ -47,9 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save
     }
     
     $data = $_POST['settings'] ?? [];
+    
+
+
     foreach ($data as $key => $val) {
         $key = preg_replace('/[^a-z0-9_]/','',$key);
-        $val = trim($val);
+        $val = is_array($val) ? json_encode($val) : trim($val);
         $exists = $db->fetchOne("SELECT id FROM settings WHERE setting_key=? AND branch_id=?", [$key,$sel_branch]);
         if ($exists) {
             $db->execute("UPDATE settings SET setting_value=? WHERE setting_key=? AND branch_id=?", [$val,$key,$sel_branch]);
@@ -590,6 +593,8 @@ require_once ROOT_PATH . '/includes/header.php';
       </div>
     </form>
   </div>
+
+
 
 </div><!-- /tab-content -->
 

@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $event_end_date = trim($_POST['event_end_date'] ?? '') ?: null;
     $event_time     = trim($_POST['event_time'] ?? '') ?: null;
     $event_end_time = trim($_POST['event_end_time'] ?? '') ?: null;
-    $guest_count    = (int)($_POST['guest_count'] ?? 0);
+    $guest_count    = ($_POST['guest_count'] !== '' && $_POST['guest_count'] !== null) ? (int)$_POST['guest_count'] : null;
     $status         = $_POST['status'] ?? 'inquiry';
     $notes          = trim($_POST['notes'] ?? '');
     $discount       = (float)($_POST['discount_amount'] ?? 0);
@@ -572,7 +572,7 @@ $evtType = $_POST['event_type'] ?? ($fromInquiry['event_type'] ?? '');
             <label class="form-label">Guest Count</label>
             <div class="input-icon-wrap">
               <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-              <input type="number" name="guest_count" class="form-control" min="0" value="<?= intval(($_POST['guest_count'] ?? '') ?: ($fromInquiry['guest_count'] ?? '')) ?>" placeholder="e.g. 200">
+              <input type="number" name="guest_count" class="form-control" min="0" value="<?= htmlspecialchars(($_POST['guest_count'] ?? '') ?: ($fromInquiry['guest_count'] ?? '')) ?>" placeholder="e.g. 200">
             </div>
           </div>
         </div>
@@ -1266,20 +1266,28 @@ flatpickr('#event_end_date', {
 });
 
 // Time pickers
-flatpickr('#fp_start_time', {
-  enableTime: true, noCalendar: true,
-  dateFormat: 'H:i', time_24hr: true,
-  disableMobile: true,
-  minuteIncrement: 15,
-  onChange: function() { checkHallConflict(); }
-});
-flatpickr('#fp_end_time', {
-  enableTime: true, noCalendar: true,
-  dateFormat: 'H:i', time_24hr: true,
-  disableMobile: true,
-  minuteIncrement: 15,
-  onChange: function() { checkHallConflict(); }
-});
+	var fpEndTime = flatpickr('#fp_end_time', {
+	  enableTime: true, noCalendar: true,
+	  dateFormat: 'H:i', time_24hr: true,
+	  disableMobile: true,
+	  minuteIncrement: 15,
+	  onChange: function() { checkHallConflict(); }
+	});
+	flatpickr('#fp_start_time', {
+	  enableTime: true, noCalendar: true,
+	  dateFormat: 'H:i', time_24hr: true,
+	  disableMobile: true,
+	  defaultDate: '10:00',
+	  minuteIncrement: 15,
+	  onChange: function(selectedDates, timeStr) {
+	    if (selectedDates.length > 0) {
+	      var date = selectedDates[0];
+	      var newDate = new Date(date.getTime() + 5 * 60 * 60 * 1000);
+	      fpEndTime.setDate(newDate);
+	    }
+	    checkHallConflict();
+	  }
+	});
 
 // Phone validation on New Customer modal
 var _origSaveNewCustomer = saveNewCustomer;

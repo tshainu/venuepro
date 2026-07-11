@@ -11,7 +11,21 @@ $date_to   = $_GET['date_to'] ?? '';
 $page = max(1, (int)($_GET['page'] ?? 1));
 
 $where = ['1=1']; $params = [];
-if ($cu['branch_id']) { $where[] = 'b.branch_id=?'; $params[] = $cu['branch_id']; }
+
+$accessible_branch_ids = Auth::getAccessibleBranches();
+if (!empty($accessible_branch_ids)) {
+    $branch_ids = array_column($accessible_branch_ids, 'id');
+    if (!empty($branch_ids)) {
+        $in_clause = implode(',', array_fill(0, count($branch_ids), '?'));
+        $where[] = "b.branch_id IN ($in_clause)";
+        $params = array_merge($params, $branch_ids);
+    } else {
+        $where[] = 'b.branch_id = -1'; // Fallback to prevent showing all if empty
+    }
+} else if ($cu['branch_id']) { 
+    $where[] = 'b.branch_id=?'; 
+    $params[] = $cu['branch_id']; 
+}
 if ($search) { $where[] = '(b.booking_ref LIKE ? OR c.name LIKE ? OR c.mobile LIKE ?)'; $params[] = "%$search%"; $params[] = "%$search%"; $params[] = "%$search%"; }
 if ($status) { $where[] = 'b.status=?'; $params[] = $status; }
 if ($date_from) { $where[] = 'b.event_date >= ?'; $params[] = $date_from; }
