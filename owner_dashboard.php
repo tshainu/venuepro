@@ -761,7 +761,9 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
         <div class="d-flex gap-3 flex-wrap" id="branchLegend"></div>
       </div>
       <div class="od-chart-body">
-        <canvas id="revenueChart" height="75"></canvas>
+        <div style="position:relative;height:220px;">
+          <canvas id="revenueChart"></canvas>
+        </div>
       </div>
     </div>
   </div>
@@ -1135,6 +1137,7 @@ new Chart(revenueCtx, {
   data: { labels: revLabels, datasets: styledDatasets },
   options: {
     responsive: true,
+    maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: { display: false },
