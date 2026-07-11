@@ -748,7 +748,7 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
 </div>
 
 <!-- ═══════ CHARTS ROW ═══════ -->
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-4 align-items-start">
   <!-- Revenue Chart -->
   <div class="col-lg-8">
     <div class="od-chart-card">
