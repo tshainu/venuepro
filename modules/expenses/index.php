@@ -65,7 +65,7 @@ $branch_breakdown = $db->fetchAll(
     $params
 );
 
-// Categories for filter
+// Categories for filter (all, including inactive — for filtering existing records)
 $categories = $db->fetchAll("SELECT id, name FROM expense_categories ORDER BY name");
 
 // Branches for filter (only accessible)
@@ -114,10 +114,18 @@ require_once ROOT_PATH . '/includes/header.php';
     <h1 class="vp-page-title">💸 Expenses</h1>
     <div class="vp-page-sub"><?= number_format($total) ?> expense records</div>
   </div>
-  <a href="<?= BASE_URL ?>/modules/expenses/create.php" class="btn btn-vp-gold">
-    <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
-    Add Expense
-  </a>
+  <div class="d-flex gap-2">
+    <?php if (!Auth::hasRole(['hall_manager'])): ?>
+    <a href="<?= BASE_URL ?>/modules/expenses/categories.php" class="btn btn-vp-outline">
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      Categories
+    </a>
+    <?php endif; ?>
+    <a href="<?= BASE_URL ?>/modules/expenses/create.php" class="btn btn-vp-gold">
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
+      Add Expense
+    </a>
+  </div>
 </div>
 
 <!-- KPI Cards -->

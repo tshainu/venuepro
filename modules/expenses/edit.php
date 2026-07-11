@@ -26,7 +26,7 @@ if (!empty($branch_ids)) {
     $branches = $db->fetchAll("SELECT id, name FROM branches WHERE id IN ($in) ORDER BY name");
 }
 
-$categories = $db->fetchAll("SELECT id, name FROM expense_categories ORDER BY name");
+$categories = $db->fetchAll("SELECT id, name, color FROM expense_categories WHERE is_active = 1 ORDER BY name");
 
 $errors = [];
 
@@ -43,7 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!in_array($branch_id, $branch_ids)) $errors[] = 'Invalid branch selected.';
     if (!$category_id)  $errors[] = 'Please select a category.';
-    if (!$title)        $errors[] = 'Title is required.';
     if ($amount <= 0)   $errors[] = 'Amount must be greater than 0.';
     if (!$expense_date) $errors[] = 'Expense date is required.';
 
@@ -115,8 +114,8 @@ require_once ROOT_PATH . '/includes/header.php';
             </div>
 
             <div class="col-12">
-              <label class="form-label fw-700">Expense Title <span class="text-danger">*</span></label>
-              <input type="text" name="title" class="form-control" value="<?= Helper::sanitize($expense['title']) ?>" required>
+              <label class="form-label fw-700">Expense Title</label>
+              <input type="text" name="title" class="form-control" value="<?= Helper::sanitize($expense['title']) ?>" placeholder="e.g. Electricity Bill - July 2026">
             </div>
 
             <div class="col-12">
