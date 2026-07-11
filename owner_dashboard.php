@@ -126,32 +126,32 @@ $branchPerformance = $db->fetchAll(
      ORDER BY total_revenue DESC"
 );
 
-// ── Monthly Revenue (last 6 months) ──────────────────────────────────────
-$monthlyRevChart = $db->fetchAll(
-    "SELECT DATE_FORMAT(payment_date,'%b %Y') as label,
-            DATE_FORMAT(payment_date,'%Y-%m') as ym,
+// ── Daily Revenue (current month) ────────────────────────────────────────
+$dailyRevChart = $db->fetchAll(
+    "SELECT DATE_FORMAT(payment_date,'%d %b') as label,
+            DATE_FORMAT(payment_date,'%Y-%m-%d') as ymd,
             COALESCE(SUM(amount),0) as revenue
      FROM payments
      WHERE branch_id IN ($branchIn)
-     AND payment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-     GROUP BY ym, label ORDER BY ym ASC"
+     AND MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE())
+     GROUP BY ymd, label ORDER BY ymd ASC"
 );
 
-// ── Branch-wise monthly revenue (last 6 months) ───────────────────────────
-$branchMonthlyRev = [];
+// ── Branch-wise daily revenue (current month) ─────────────────────────────
+$branchDailyRev = [];
 foreach ($bizBranches as $br) {
     $rows = $db->fetchAll(
-        "SELECT DATE_FORMAT(payment_date,'%Y-%m') as ym,
+        "SELECT DATE_FORMAT(payment_date,'%Y-%m-%d') as ymd,
                 COALESCE(SUM(amount),0) as revenue
          FROM payments
          WHERE branch_id = ?
-         AND payment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-         GROUP BY ym ORDER BY ym ASC",
+         AND MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE())
+         GROUP BY ymd ORDER BY ymd ASC",
         [$br['id']]
     );
-    $branchMonthlyRev[$br['id']] = [
+    $branchDailyRev[$br['id']] = [
         'name' => $br['name'],
-        'data' => array_column($rows, 'revenue', 'ym'),
+        'data' => array_column($rows, 'revenue', 'ymd'),
     ];
 }
 
@@ -224,8 +224,8 @@ $hour  = (int)date('H');
 $greet = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Evening');
 
 // Prepare chart data
-$chartLabels  = array_column($monthlyRevChart, 'label');
-$chartRevenue = array_column($monthlyRevChart, 'revenue');
+$chartLabels  = array_column($dailyRevChart, 'label');
+$chartRevenue = array_column($dailyRevChart, 'revenue');
 
 $statusMap = [];
 foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
@@ -755,7 +755,7 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
       <div class="od-chart-header">
         <div>
           <div class="od-chart-title">Revenue Trend</div>
-          <div class="od-chart-sub">Branch-wise monthly collections — last 6 months</div>
+          <div class="od-chart-sub">Branch-wise daily collections — <?= date('F Y') ?></div>
         </div>
         <!-- Branch legend -->
         <div class="d-flex gap-3 flex-wrap" id="branchLegend"></div>
@@ -1087,16 +1087,16 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
 <script>
 // ── Branch-wise Revenue Chart ─────────────────────────────────────────────
 const revLabels = <?= json_encode($chartLabels) ?>;
-const branchRevData = <?= json_encode(array_values($branchMonthlyRev)) ?>;
+const branchRevData = <?= json_encode(array_values($branchDailyRev)) ?>;
 const branchColors = ['#c9a84c','#2563eb','#059669','#d97706','#7c3aed','#dc2626','#0891b2'];
 
 // Build datasets: one per branch, filling 0 for missing months
 const revDatasets = branchRevData.map((br, i) => ({
   label: br.name,
   data: revLabels.map((lbl, idx) => {
-    // match by index against the sorted ym keys
-    const ymKeys = Object.keys(br.data);
-    return ymKeys[idx] !== undefined ? parseFloat(br.data[ymKeys[idx]]) : 0;
+    // match by index against the sorted ymd keys
+    const ymdKeys = Object.keys(br.data);
+    return ymdKeys[idx] !== undefined ? parseFloat(br.data[ymdKeys[idx]]) : 0;
   }),
   backgroundColor: branchColors[i % branchColors.length] + 'bb',
   borderColor: branchColors[i % branchColors.length],
