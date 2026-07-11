@@ -437,7 +437,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
       </a>
       <?php endif; ?>
 
-      <?php if (Auth::hasRole(['super_admin','admin','owner','general_manager','hall_manager','manager'])): ?>
+      <?php if (Auth::hasRole(['super_admin','admin','owner','general_manager','manager'])): ?>
       <!-- ADMIN -->
       <div class="sb-section">Administration</div>
 
@@ -451,7 +451,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         <span class="sb-label">Users</span>
       </a>
 
-      <?php if (Auth::hasRole(['super_admin','admin','owner','hall_manager'])): ?>
+      <?php if (Auth::hasRole(['super_admin','admin','owner'])): ?>
       <a href="<?= BASE_URL ?>/modules/branches/index.php" class="sb-item <?= sbActive($_currentPath, '/branches') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -462,6 +462,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
       </a>
       <?php endif; ?>
 
+      <?php if (Auth::hasRole(['super_admin','admin','owner','general_manager'])): ?>
       <a href="<?= BASE_URL ?>/modules/settings/index.php" class="sb-item <?= sbActive($_currentPath, '/settings') ?>">
         <div class="sb-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -471,6 +472,7 @@ function sbActive(string $path, string $match, bool $exact = false): string {
         </div>
         <span class="sb-label">Settings</span>
       </a>
+      <?php endif; ?>
 
       <?php if (Auth::hasRole(['super_admin','admin','owner','general_manager','hall_manager'])): ?>
       <a href="<?= BASE_URL ?>/modules/logs/index.php" class="sb-item <?= sbActive($_currentPath, '/logs') ?>">

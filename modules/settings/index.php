@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../core/bootstrap.php';
 Auth::check();
+if (!Auth::hasRole(['super_admin','admin','owner','general_manager'])) { Helper::flash('error','Access denied.'); Helper::redirect(BASE_URL.'/index.php'); }
 $db = Database::getInstance();
 $cu = Auth::currentUser();
 
@@ -12,7 +13,7 @@ $errors  = [];
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save_settings') {
-    if (!Auth::hasRole(['super_admin','admin','hall_manager','manager','owner','general_manager'])) { Helper::flash('error','Admin only.'); Helper::redirect(BASE_URL.'/modules/settings/index.php'); }
+    if (!Auth::hasRole(['super_admin','admin','owner','general_manager'])) { Helper::flash('error','Admin only.'); Helper::redirect(BASE_URL.'/modules/settings/index.php'); }
     
     // Handle logo upload
     if (isset($_FILES['company_logo']) && $_FILES['company_logo']['error'] === 0) {
