@@ -748,10 +748,10 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
 </div>
 
 <!-- ═══════ CHARTS ROW ═══════ -->
-<div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px;align-items:stretch;">
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px;align-items:start;">
   <!-- Revenue Chart -->
   <div>
-    <div class="od-chart-card h-100">
+    <div class="od-chart-card">
       <div class="od-chart-header">
         <div>
           <div class="od-chart-title">Revenue Trend</div>
@@ -761,7 +761,7 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
         <div class="d-flex gap-3 flex-wrap" id="branchLegend"></div>
       </div>
       <div class="od-chart-body">
-        <div style="position:relative;height:220px;">
+        <div style="position:relative;height:180px;">
           <canvas id="revenueChart"></canvas>
         </div>
       </div>
@@ -770,18 +770,18 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
 
   <!-- Booking Status Donut -->
   <div>
-    <div class="od-chart-card h-100">
+    <div class="od-chart-card">
       <div class="od-chart-header" style="padding-bottom:8px;">
         <div>
           <div class="od-chart-title">Booking Status</div>
           <div class="od-chart-sub">All time breakdown</div>
         </div>
       </div>
-      <div class="od-chart-body d-flex flex-column align-items-center justify-content-between" style="padding-top:1.5rem;padding-bottom:1.5rem; min-height: 260px;">
-        <div style="flex: 1; display: flex; align-items: center; justify-content: center; width: 100%;">
-          <canvas id="statusChart" height="130" style="max-width:150px;"></canvas>
+      <div class="od-chart-body d-flex flex-column align-items-center justify-content-center" style="padding-top:1rem;padding-bottom:1rem;">
+        <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 120px;">
+          <canvas id="statusChart" height="100" style="max-width:130px;"></canvas>
         </div>
-        <div class="mt-4 w-100">
+        <div class="mt-3 w-100">
           <?php
           $statusColors = ['confirmed'=>'#059669','booked'=>'#2563eb','tentative'=>'#d97706','cancelled'=>'#dc2626','completed'=>'#6b7280'];
           foreach ($statusBreakdown as $s):
