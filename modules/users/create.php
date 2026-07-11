@@ -148,23 +148,6 @@ require_once __DIR__ . '/../../includes/header.php';
   <div class="row align-items-center">
     <div class="col">
       <h1 class="vp-page-title">Create Staff Member</h1>
-
-
-        <?php if (Auth::hasRole(["super_admin", "admin", "owner"]) && count($accessible_branches) > 0): ?>
-        <div class="col-12">
-          <label class="form-label">Accessible Branches *</label>
-          <div class="d-flex flex-wrap gap-3">
-            <?php foreach ($accessible_branches as $b): ?>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="accessible_branches[]" value="<?= $b["id"] ?>" id="branch_<?= $b["id"] ?>">
-                <label class="form-check-label" for="branch_<?= $b["id"] ?>">
-                  <?= Helper::sanitize($b["name"]) ?>
-                </label>
-              </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-        <?php endif; ?>
     </div>
   </div>
 </div>
@@ -219,6 +202,23 @@ require_once __DIR__ . '/../../includes/header.php';
             <?php endforeach; ?>
           </select>
         </div>
+
+        <?php if (Auth::hasRole(["super_admin", "admin", "owner"]) && count($accessible_branches) > 0): ?>
+        <div class="col-12">
+          <label class="form-label">Accessible Branches *</label>
+          <div class="d-flex flex-wrap gap-3">
+            <?php foreach ($accessible_branches as $b): ?>
+              <?php $is_checked = in_array($b["id"], (array)($_POST['accessible_branches'] ?? [])) ? 'checked' : ''; ?>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="accessible_branches[]" value="<?= $b["id"] ?>" id="branch_<?= $b["id"] ?>" <?= $is_checked ?>>
+                <label class="form-check-label" for="branch_<?= $b["id"] ?>">
+                  <?= Helper::sanitize($b["name"]) ?>
+                </label>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <?php endif; ?>
 
         <div class="col-12 mt-4">
           <button type="submit" class="btn btn-primary me-2">

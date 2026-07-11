@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$name)   $errors[] = 'Customer name is required.';
     if (!$mobile) $errors[] = 'Mobile number is required.';
-    elseif (!preg_match('/^\d{10}$/', $mobile)) $errors[] = 'Mobile number must be exactly 10 digits.';
+    elseif (!preg_match('/^07\d{8}$/', $mobile)) $errors[] = 'Mobile number must be 10 digits and start with 07 (e.g. 0771234567).';
 
     if (!$errors) {
         $newId = $db->insert(
@@ -276,9 +276,9 @@ require_once __DIR__ . '/../../includes/header.php';
             <label class="form-label required">Primary Mobile</label>
             <div class="input-group">
               <span class="input-group-text" style="border-radius:10px 0 0 10px;border:1.5px solid #e5e7eb;border-right:none;background:#f8fafc;font-size:.82rem;color:#6b7280;white-space:nowrap;">🇱🇰 +94</span>
-              <input type="tel" name="mobile" id="f_mobile" class="form-control" required placeholder="07X XXX XXXX" value="<?= htmlspecialchars($_POST['mobile']??'') ?>" style="border-radius:0 10px 10px 0;" pattern="\d{10}" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'');updatePreview()" title="Mobile must be exactly 10 digits">
+              <input type="tel" name="mobile" id="f_mobile" class="form-control" required placeholder="07XXXXXXXX" value="<?= htmlspecialchars($_POST['mobile']??'') ?>" style="border-radius:0 10px 10px 0;" pattern="07[0-9]{8}" maxlength="10" inputmode="numeric" oninput="validateMobile(this);updatePreview()" onkeydown="blockInvalidMobileKey(event,this)" title="Must be 10 digits starting with 07">
             </div>
-            <div class="form-hint">WhatsApp-compatible number preferred</div>
+            <div class="form-hint" id="mobile-hint">WhatsApp-compatible number preferred</div>
           </div>
           <div class="col-md-4">
             <label class="form-label">Secondary Mobile</label>
@@ -447,8 +447,60 @@ function setCheck(id, ok, okText, failText, optional) {
   }
 }
 
+// ── Phone validation helpers ──────────────────────────────
+// Block non-digit keys immediately
+function blockInvalidMobileKey(e, el) {
+  // Allow: backspace, delete, tab, escape, arrows, home, end
+  var allowed = [8,9,27,37,38,39,40,46,35,36];
+  if (allowed.indexOf(e.keyCode) !== -1) return;
+  // Allow Ctrl/Cmd+A/C/V/X
+  if ((e.ctrlKey||e.metaKey) && [65,67,86,88].indexOf(e.keyCode) !== -1) return;
+  // Block non-digit keys
+  if (e.key && !/^[0-9]$/.test(e.key)) { e.preventDefault(); return; }
+  // Block if already 10 chars (unless deleting)
+  if (el.value.replace(/\D/g,'').length >= 10) { e.preventDefault(); return; }
+  // Block 3rd char onwards if first two chars are not '07'
+  var cur = el.value.replace(/\D/g,'');
+  if (cur.length === 0 && e.key !== '0') { e.preventDefault(); showMobileError('Must start with 07'); return; }
+  if (cur.length === 1 && cur[0] === '0' && e.key !== '7') { e.preventDefault(); showMobileError('Must start with 07'); return; }
+}
+
+function validateMobile(el) {
+  // Strip non-digits
+  var v = el.value.replace(/\D/g,'');
+  // Enforce max 10
+  if (v.length > 10) v = v.substring(0,10);
+  el.value = v;
+  // Visual feedback
+  var hint = document.getElementById('mobile-hint');
+  if (v.length === 0) {
+    el.classList.remove('is-invalid','is-valid');
+    if (hint) { hint.textContent = 'WhatsApp-compatible number preferred'; hint.className = 'form-hint'; }
+  } else if (v.length < 2) {
+    el.classList.remove('is-valid','is-invalid');
+    if (hint) { hint.textContent = 'Must start with 07'; hint.className = 'form-hint'; }
+  } else if (!v.startsWith('07')) {
+    el.classList.add('is-invalid'); el.classList.remove('is-valid');
+    if (hint) { hint.textContent = '✕ Must start with 07 (e.g. 0771234567)'; hint.className = 'form-hint' ; hint.style.color='#dc2626'; }
+  } else if (v.length === 10) {
+    el.classList.add('is-valid'); el.classList.remove('is-invalid');
+    if (hint) { hint.textContent = '✓ Valid mobile number'; hint.className = 'form-hint'; hint.style.color='#059669'; }
+  } else {
+    el.classList.remove('is-invalid','is-valid');
+    if (hint) { hint.textContent = (10-v.length)+' more digit(s) needed'; hint.className = 'form-hint'; hint.style.color='#d97706'; }
+  }
+}
+
+function showMobileError(msg) {
+  var hint = document.getElementById('mobile-hint');
+  if (hint) { hint.textContent = '✕ '+msg; hint.style.color='#dc2626'; }
+}
+
 // Init
 updatePreview();
+// Validate on page load if value pre-filled (e.g. after error)
+var mobileEl = document.getElementById('f_mobile');
+if (mobileEl && mobileEl.value) validateMobile(mobileEl);
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>
