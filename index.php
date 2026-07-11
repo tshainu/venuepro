@@ -2,8 +2,14 @@
 require_once __DIR__ . '/core/bootstrap.php';
 Auth::check();
 
-$db = Database::getInstance();
 $cu = Auth::currentUser();
+// Redirect owner to their dedicated dashboard
+if (($cu['role'] ?? '') === 'owner') {
+    header('Location: ' . BASE_URL . '/owner_dashboard.php');
+    exit;
+}
+
+$db = Database::getInstance();
 $bid = $cu['branch_id'];
 $bFilter = $bid ? "AND b.branch_id = $bid" : "";
 
