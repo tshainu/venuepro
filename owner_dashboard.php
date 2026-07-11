@@ -769,7 +769,7 @@ foreach ($statusBreakdown as $s) $statusMap[$s['status']] = (int)$s['cnt'];
   </div>
 
   <!-- Booking Status Donut -->
-  <div class="col-lg-4">
+  <div class="col-lg-4" style="align-self:flex-start;">
     <div class="od-chart-card" style="height:auto;">
       <div class="od-chart-header" style="padding-bottom:8px;">
         <div>
