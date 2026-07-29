@@ -13,6 +13,7 @@ USE `venuepro`;
 -- ============================================================
 CREATE TABLE `branches` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `business_id` int(11) DEFAULT NULL,
   `name` varchar(150) NOT NULL,
   `address` text DEFAULT NULL,
   `city` varchar(100) DEFAULT NULL,
@@ -21,7 +22,8 @@ CREATE TABLE `branches` (
   `logo` varchar(255) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` timestamp DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `business_id` (`business_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -40,6 +42,8 @@ CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `branch_id` int(11) DEFAULT NULL,
   `role_id` int(11) NOT NULL,
+  `user_id` varchar(20) DEFAULT NULL,
+  `username` varchar(100) DEFAULT NULL,
   `name` varchar(150) NOT NULL,
   `email` varchar(150) NOT NULL,
   `password` varchar(255) NOT NULL,
@@ -52,6 +56,7 @@ CREATE TABLE `users` (
   `updated_at` timestamp DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `user_id` (`user_id`),
   KEY `branch_id` (`branch_id`),
   KEY `role_id` (`role_id`),
   FOREIGN KEY (`branch_id`) REFERENCES `branches`(`id`) ON DELETE SET NULL,
@@ -229,8 +234,11 @@ CREATE TABLE `bookings` (
   `package_id` int(11) DEFAULT NULL,
   `event_type` varchar(100) DEFAULT NULL,
   `bride_name` varchar(150) DEFAULT NULL,
+  `bride_dob` date DEFAULT NULL,
   `groom_name` varchar(150) DEFAULT NULL,
+  `groom_dob` date DEFAULT NULL,
   `hero_name` varchar(150) DEFAULT NULL,
+  `hero_dob` date DEFAULT NULL,
   `event_date` date NOT NULL,
   `event_end_date` date DEFAULT NULL,
   `event_time` time DEFAULT NULL,
@@ -452,6 +460,127 @@ CREATE TABLE `settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
+-- ACTIVITY LOGS (used by Logger::log)
+-- ============================================================
+CREATE TABLE `activity_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `action` enum('create','edit','delete','login','logout') NOT NULL,
+  `module` varchar(50) NOT NULL,
+  `record_id` int(11) DEFAULT NULL,
+  `record_ref` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `old_data` json DEFAULT NULL,
+  `new_data` json DEFAULT NULL,
+  `user_id` int(11) NOT NULL DEFAULT 0,
+  `user_name` varchar(150) NOT NULL DEFAULT '',
+  `branch_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `action` (`action`),
+  KEY `module` (`module`),
+  KEY `branch_id` (`branch_id`),
+  KEY `created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- SUPER ADMIN — SA BUSINESSES (venue businesses managed via /vpsa)
+-- ============================================================
+CREATE TABLE `sa_businesses` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `business_name` varchar(200) NOT NULL,
+  `owner_name` varchar(150) NOT NULL,
+  `email` varchar(150) NOT NULL,
+  `phone` varchar(30) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `country` varchar(100) DEFAULT 'Sri Lanka',
+  `plan` enum('trial','basic','professional','enterprise') DEFAULT 'trial',
+  `status` enum('pending','active','suspended') DEFAULT 'pending',
+  `max_users` int(11) DEFAULT 5,
+  `max_branches` int(11) DEFAULT 1,
+  `notes` text DEFAULT NULL,
+  `admin_user_id` varchar(20) DEFAULT NULL,
+  `admin_username` varchar(100) DEFAULT NULL,
+  `admin_password_plain` varchar(100) DEFAULT NULL,
+  `business_id` int(11) DEFAULT NULL,
+  `trial_ends_at` timestamp NULL DEFAULT NULL,
+  `subscription_ends_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- EXPENSES
+-- ============================================================
+CREATE TABLE `expense_categories` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `business_id` int(11) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `color` varchar(20) DEFAULT '#6366f1',
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `business_id` (`business_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `expenses` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `expense_ref` varchar(30) NOT NULL,
+  `branch_id` int(11) DEFAULT NULL,
+  `category_id` int(11) DEFAULT NULL,
+  `title` varchar(200) NOT NULL,
+  `description` text DEFAULT NULL,
+  `amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `expense_date` date NOT NULL,
+  `payment_method` varchar(50) DEFAULT NULL,
+  `reference_number` varchar(100) DEFAULT NULL,
+  `status` varchar(30) DEFAULT 'paid',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `expense_ref` (`expense_ref`),
+  KEY `branch_id` (`branch_id`),
+  KEY `category_id` (`category_id`),
+  FOREIGN KEY (`branch_id`) REFERENCES `branches`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`category_id`) REFERENCES `expense_categories`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- BIRTHDAY / ANNIVERSARY MESSAGES
+-- ============================================================
+CREATE TABLE `birthday_messages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `customer_id` int(11) DEFAULT NULL,
+  `booking_id` int(11) DEFAULT NULL,
+  `message_type` varchar(50) DEFAULT NULL,
+  `recipient_mobile` varchar(30) DEFAULT NULL,
+  `recipient_email` varchar(150) DEFAULT NULL,
+  `message_text` text DEFAULT NULL,
+  `sent_date` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `customer_id` (`customer_id`),
+  KEY `booking_id` (`booking_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- USER ACCESSIBLE BRANCHES (multi-branch access mapping)
+-- ============================================================
+CREATE TABLE `user_accessible_branches` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `branch_id` int(11) NOT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_branch` (`user_id`,`branch_id`),
+  KEY `branch_id` (`branch_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`branch_id`) REFERENCES `branches`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
 -- SEED DATA
 -- ============================================================
 
@@ -459,14 +588,16 @@ INSERT INTO `roles` (`name`, `slug`, `description`) VALUES
 ('Super Admin', 'super_admin', 'Full system access'),
 ('Hall Manager', 'hall_manager', 'Manage bookings, customers, invoices, packages'),
 ('Reception Staff', 'reception', 'Create inquiries, bookings, receive payments'),
-('Accountant', 'accountant', 'Invoices, payments, financial reports');
+('Accountant', 'accountant', 'Invoices, payments, financial reports'),
+('Manager', 'manager', 'Branch manager access');
 
 INSERT INTO `branches` (`name`, `address`, `city`, `phone`, `email`) VALUES
 ('VenuePro - Main Branch', 'No. 1, Main Street, Colombo 01', 'Colombo', '+94 11 234 5678', 'info@venuepro.lk');
 
-INSERT INTO `users` (`branch_id`, `role_id`, `name`, `email`, `password`, `phone`) VALUES
-(1, 1, 'Super Admin', 'admin@venuepro.lk', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+94 77 000 0000');
+INSERT INTO `users` (`branch_id`, `role_id`, `user_id`, `username`, `name`, `email`, `password`, `phone`) VALUES
+(NULL, 1, 'SA001', 'admin', 'Super Admin', 'admin@venuepro.lk', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+94 77 000 0000');
 -- Default password: password
+-- Login at /vpsa/login.php or /login.php with User ID: SA001, Username: admin, Password: password
 
 INSERT INTO `room_types` (`name`, `description`) VALUES
 ('Bridal Room', 'For the bride preparation'),

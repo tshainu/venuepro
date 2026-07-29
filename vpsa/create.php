@@ -69,25 +69,36 @@ try {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     ");
     $stmt->execute([$business_name, $owner_name, $email, $phone, $address, $city, $country, $plan, $status, $max_users, $max_branches, $notes]);
+    $business_id = $db->lastInsertId();
+
+    // 2b. Stamp business_id onto the branch we just created
+    $stmt = $db->prepare("UPDATE branches SET business_id = ? WHERE id = ?");
+    $stmt->execute([$business_id, $branch_id]);
 
     // 3. Generate credentials
     $user_id  = generateUserId($db);
     $rawPass  = generatePassword();
     $hashed   = password_hash($rawPass, PASSWORD_DEFAULT);
+    $username = 'admin';
 
     // 4. Create admin user
     $stmt = $db->prepare("
-        INSERT INTO users (user_id, branch_id, role_id, name, email, password, is_active, created_at)
-        VALUES (?, ?, 5, 'admin', ?, ?, 1, NOW())
+        INSERT INTO users (user_id, username, branch_id, role_id, name, email, password, is_active, created_at)
+        VALUES (?, ?, ?, 5, 'admin', ?, ?, 1, NOW())
     ");
-    $stmt->execute([$user_id, $branch_id, $email, $hashed]);
+    $stmt->execute([$user_id, $username, $branch_id, $email, $hashed]);
+    $admin_user_db_id = $db->lastInsertId();
+
+    // 4b. Store credentials + link back on sa_businesses (business_id = admin user's id) for the panel cards
+    $stmt = $db->prepare("UPDATE sa_businesses SET admin_user_id = ?, admin_username = ?, admin_password_plain = ?, business_id = ? WHERE id = ?");
+    $stmt->execute([$user_id, $username, $rawPass, $admin_user_db_id, $business_id]);
 
     $db->commit();
 
     $_SESSION['sa_success'] = "Business <strong>\"$business_name\"</strong> created.<br>
         <div style='margin-top:.6rem;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:.75rem 1rem;font-family:monospace;font-size:.9rem;'>
         User ID: <strong>$user_id</strong><br>
-        Username: <strong>admin</strong><br>
+        Username: <strong>$username</strong><br>
         Password: <strong>$rawPass</strong>
         </div>
         <small style='color:#94a3b8;'>Share these credentials with the business owner.</small>";
